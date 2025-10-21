@@ -18,7 +18,7 @@ import {
     Store
 } from 'lucide-react';
 
-import logo from '../assets/LogoNew1.jpg';
+import logo from '../assets/Logo.jpg';
 import AuthService from '../services/AuthService';
 import ApiService from '../services/ApiService';
 

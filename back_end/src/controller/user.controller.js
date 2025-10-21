@@ -155,7 +155,102 @@ async function existedUser(req, res, next) {
     }
 }
 
+async function forgotPassword(req, res, next) {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
 
+        if (!user) {
+            return res.status(404).json({ message: 'Email không tồn tại' });
+        }
+
+        // Tạo mã xác nhận (OTP) gồm 6 số
+        const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+        const resetTokenExpire = Date.now() + 10 * 60 * 1000; // 10 phút
+
+        // Lưu OTP và thời gian hết hạn vào database
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpire = resetTokenExpire;
+        await user.save();
+
+        // Gửi email chứa mã OTP
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                user: process.env.SERVICE_EMAIL, // Thay bằng email của bạn
+                pass: process.env.SERVICE_PASSWORD  // Thay bằng mật khẩu email
+                }
+            });
+
+            const mailOptions = {
+            from: `"CloudCake" `,
+            to: user.email,
+            subject: 'CloudCake - Đặt lại mật khẩu của bạn',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f4;">
+                    <div style="background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="text-align: center;">
+                            <img src="https://via.placeholder.com/150x50?text=CloudCake" alt="CloudCake Logo" style="max-width: 150px; margin-bottom: 20px;">
+                        </div>
+                        <h2 style="color: #15803d; font-size: 24px; margin-bottom: 20px; text-align: center;">Đặt lại mật khẩu CloudCake</h2>
+                        <p style="color: #333333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                            Xin chào ${user.firstName || 'Quý khách'},<br>
+                            Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản CloudCake của mình. Vui lòng sử dụng mã OTP dưới đây để tiếp tục:
+                        </p>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <span style="display: inline-block; background-color: #15803d; color: #ffffff; font-size: 24px; font-weight: bold; padding: 10px 20px; border-radius: 5px; letter-spacing: 2px;">${resetToken}</span>
+                        </div>
+                        <p style="color: #333333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                            Mã OTP này có hiệu lực trong <strong>10 phút</strong>. Vui lòng nhập mã này vào trang đặt lại mật khẩu để hoàn tất quá trình.
+                        </p>
+                        <div style="text-align: center; margin: 20px 0;">
+                            <a href="http://localhost:3000/reset-password" style="display: inline-block; background-color: #15803d; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 5px; font-size: 16px; font-weight: bold;">Đặt lại mật khẩu ngay</a>
+                        </div>
+                        <p style="color: #333333; font-size: 16px; line-height: 1.6;">
+                            Trân trọng,<br>
+                            Đội ngũ CloudCake
+                        </p>
+                    </div>
+                    <div style="text-align: center; color: #999999; font-size: 12px; margin-top: 20px;">
+                        &copy; 2025 CloudCake. All rights reserved.
+                    </div>
+                </div>
+            `
+        };
+
+            await transporter.sendMail(mailOptions);
+
+            res.status(200).json({ message: 'Mã xác nhận đã được gửi vào email' });
+    } catch (error) {
+        next(error);
+    }
+}
+
+async function resetPassword(req, res, next) {
+    try {
+        const { email, otp, newPassword } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: 'Email không tồn tại' });
+        }
+
+        // Kiểm tra mã OTP và thời gian hết hạn
+        if (!user.resetPasswordToken || user.resetPasswordExpire < Date.now() || user.resetPasswordToken !== otp) {
+            return res.status(400).json({ message: 'Mã xác nhận không hợp lệ hoặc đã hết hạn' });
+        }
+
+        // Cập nhật mật khẩu mới
+        user.password = bcrypt.hashSync(newPassword, parseInt(process.env.PASSWORD_KEY));
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        await user.save();
+
+        res.status(200).json({ message: 'Mật khẩu đã được đặt lại thành công' });
+    } catch (error) {
+        next(error);
+    }
+}
 
 const userController = {
     create,
@@ -167,7 +262,9 @@ const userController = {
     accessByMember,
     accessByAdmin,
     accessBySeller,
-    getUserById
+    getUserById,
+    forgotPassword,
+    resetPassword,
 }
 
 module.exports = userController
