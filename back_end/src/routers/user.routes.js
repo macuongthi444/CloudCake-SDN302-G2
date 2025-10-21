@@ -14,4 +14,7 @@ userRouter.get("/find/:email",userController.existedUser)
 userRouter.get("/all", userController.accessAll)
 
 userRouter.get('/:id', userController.getUserById);
+
+userRouter.post('/forgot-password', userController.forgotPassword);
+userRouter.post('/reset-password', userController.resetPassword);
 module.exports = userRouter;

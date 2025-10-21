@@ -12,35 +12,26 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    
+
     // Use auth context
     const { isLoggedIn, login, handleGoogleAuthLogin, userRoles } = useAuth();
 
-    // Function to redirect based on user role - IMPROVED VERSION
+    // Function to redirect based on user role
     const redirectBasedOnRole = (roles = []) => {
-        console.log("Redirecting based on roles:", roles); // Debug log
-        
-        // Default to home page
+        console.log("Redirecting based on roles:", roles);
         let redirectPath = '/';
-        
-        // Ensure roles is an array
         if (!Array.isArray(roles)) {
             console.error("Roles is not an array:", roles);
             roles = [];
         }
-        
-        // Check for both formats: "ROLE_ADMIN", "ADMIN", etc.
-        const hasAdminRole = roles.some(role => {
-            if (typeof role !== 'string') return false;
-            return role.toUpperCase() === 'ROLE_ADMIN' || role.toUpperCase() === 'ADMIN';
-        });
-        
-        const hasSellerRole = roles.some(role => {
-            if (typeof role !== 'string') return false;
-            return role.toUpperCase() === 'ROLE_SELLER' || role.toUpperCase() === 'SELLER';
-        });
-        
-        // Set redirect path based on role
+        const hasAdminRole = roles.some(role =>
+            typeof role === 'string' &&
+            (role.toUpperCase() === 'ROLE_ADMIN' || role.toUpperCase() === 'ADMIN')
+        );
+        const hasSellerRole = roles.some(role =>
+            typeof role === 'string' &&
+            (role.toUpperCase() === 'ROLE_SELLER' || role.toUpperCase() === 'SELLER')
+        );
         if (hasAdminRole) {
             redirectPath = '/admin';
             console.log("Redirecting to admin dashboard");
@@ -50,11 +41,10 @@ const LoginPage = () => {
         } else {
             console.log("Redirecting to home (member role)");
         }
-        
         navigate(redirectPath);
     };
 
-    // Check if user is already logged in and redirect accordingly
+    // Check if user is already logged in
     useEffect(() => {
         if (isLoggedIn && userRoles) {
             console.log("User is already logged in with roles:", userRoles);
@@ -82,17 +72,11 @@ const LoginPage = () => {
         e.preventDefault();
         setLoading(true);
         setError("");
-
         try {
-            // Use context's login function
             const result = await login(formData.email, formData.password);
             console.log("Login successful, result:", result);
-            
-            // Get roles from the result or from context
             const roles = result?.roles || userRoles || [];
             console.log("Roles for redirection:", roles);
-            
-            // Redirect based on user role
             redirectBasedOnRole(roles);
         } catch (error) {
             console.error("Login error:", error);
@@ -102,26 +86,18 @@ const LoginPage = () => {
         }
     };
 
-    // Function to handle Google authentication redirect
     const handleGoogleRedirect = () => {
         window.location.href = `${BE_API_URL}/api/auth/google`;
     };
 
     const processGoogleAuthData = (userDataEncoded) => {
         try {
-            // Decode the user data
             const userData = JSON.parse(decodeURIComponent(userDataEncoded));
             console.log("Google auth data:", userData);
-            
-            // Use the context's function to handle Google auth login
             const success = handleGoogleAuthLogin(userData);
-            
             if (success) {
                 console.log("Google login successful, roles:", userData.roles);
-                
-                // Add a delay before redirect to ensure storage is complete
                 setTimeout(() => {
-                    // Redirect based on user roles from the userData
                     redirectBasedOnRole(userData.roles || []);
                 }, 500);
             } else {
@@ -133,47 +109,46 @@ const LoginPage = () => {
         }
     };
 
-    // The rest of your component remains the same
     return (
-        <div className="flex h-screen w-full">
-            {/* Left side with title and plant image */}
-            <div className="w-5/12 bg-green-600 flex items-center p-16 relative overflow-hidden">
-                <div className="absolute inset-0 bg-black opacity-20"></div>
+        <div className="flex h-screen w-full bg-gradient-to-br from-pink-100 to-cream-100">
+            {/* Left side with title and cake image */}
+            <div className="w-5/12 bg-pink-300 flex items-center p-16 relative overflow-hidden animate__animated animate__fadeIn animate__slow">
+                <div className="absolute inset-0 bg-black opacity-10"></div>
                 <div className="relative z-10">
-                    <h1 className="text-white text-6xl font-bold leading-tight">
-                        The Real<br />
-                        Options On<br />
-                        Customers
+                    <h1 className="text-white text-5xl font-bold leading-tight font-playfair animate__animated animate__fadeInDown">
+                        Sweet Delights<br />
+                        Cake Shop<br />
+                        Welcome Back
                     </h1>
                 </div>
-                <img 
-                    src="https://cellphones.com.vn/sforum/wp-content/uploads/2023/12/hinh-nen-xanh-la-2.jpg" 
-                    alt="Decorative plants" 
-                    className="absolute right-0 bottom-0 w-3/4 h-auto opacity-80"
+                <img
+                    src="https://www.marthastewart.com/thmb/I23am9WHQalDICEqnfOE94GDsxw=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/brooke-shea-wedding-172-d111277_vert-2000-a9a8ab0ce65c4fcc8a2d47ef174eb56e.jpg"
+                    alt="Decorative cake"
+                    className="absolute right-0 bottom-0 h-auto opacity-80"
                 />
             </div>
 
             {/* Right side with login form */}
-            <div className="w-7/12 flex items-center justify-center">
-                <div className="w-full max-w-md px-8">
-                    <h2 className="text-3xl font-bold text-green-600 mb-8">Đăng nhập tài khoản</h2>
+            <div className="w-7/12 flex items-center justify-center bg-cream-50">
+                <div className="w-full max-w-md px-8 py-10 bg-white rounded-lg shadow-lg animate__animated animate__slideInRight">
+                    <h2 className="text-3xl font-bold text-pink-600 mb-8 font-playfair animate__animated animate__fadeIn">Đăng nhập</h2>
 
                     {error && (
-                        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded animate__animated animate__shakeX">
                             {error}
                         </div>
                     )}
 
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
-                            <label className="block mb-1">
-                                <span className="font-medium">Email <span className="text-red-500">*</span></span>
+                            <label className="block mb-1 font-medium text-brown-700">
+                                Email <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="email"
                                 name="email"
                                 placeholder="abcxyz@gmail.com"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                className="w-full px-3 py-2 border border-pink-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400 bg-cream-50 transition duration-300 ease-in-out"
                                 value={formData.email}
                                 onChange={handleChange}
                                 required
@@ -181,14 +156,14 @@ const LoginPage = () => {
                         </div>
 
                         <div>
-                            <label className="block mb-1">
-                                <span className="font-medium">Password <span className="text-red-500">*</span></span>
+                            <label className="block mb-1 font-medium text-brown-700">
+                                Mật khẩu <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="password"
                                 name="password"
                                 placeholder="********"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                className="w-full px-3 py-2 border border-pink-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400 bg-cream-50 transition duration-300 ease-in-out"
                                 value={formData.password}
                                 onChange={handleChange}
                                 required
@@ -197,20 +172,24 @@ const LoginPage = () => {
 
                         <button
                             type="submit"
-                            className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition"
+                            className="w-full py-2 px-4 bg-pink-500 hover:bg-pink-600 text-white font-medium rounded-md transition transform hover:scale-105 animate__animated animate__pulse animate__infinite animate__slow flex items-center justify-center"
                             disabled={loading}
                         >
-                            {loading ? "Đang xử lý..." : "Đăng nhập"}
+                            {loading ? (
+                                <div className="w-6 h-6 border-4 border-t-pink-700 border-pink-200 rounded-full animate-spin"></div>
+                            ) : (
+                                "Đăng nhập"
+                            )}
                         </button>
                     </form>
 
                     <div className="mt-6">
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-300"></div>
+                                <div className="w-full border-t border-pink-200"></div>
                             </div>
                             <div className="relative flex justify-center text-sm">
-                                <span className="px-4 bg-white text-gray-500">Hoặc đăng nhập bằng</span>
+                                <span className="px-4 bg-white text-brown-600">Hoặc đăng nhập bằng</span>
                             </div>
                         </div>
 
@@ -218,7 +197,7 @@ const LoginPage = () => {
                             <button
                                 type="button"
                                 onClick={handleGoogleRedirect}
-                                className="flex items-center justify-center px-6 py-2 border border-gray-300 rounded-md shadow-sm bg-white hover:bg-gray-50"
+                                className="flex items-center justify-center px-6 py-2 border border-pink-300 rounded-md shadow-sm bg-white hover:bg-pink-50 transition transform hover:scale-110 animate__animated animate__fadeInUp"
                             >
                                 <div className="flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512" className="h-5 w-5">
@@ -227,22 +206,23 @@ const LoginPage = () => {
                                         <path fill="#FBBC05" d="M168.9 350.2L212.7 470 340.9 136.1 168.9 350.2z" />
                                         <path fill="#EA4335" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z" />
                                     </svg>
+                                    <span className="ml-2 text-brown-600">Google</span>
                                 </div>
                             </button>
                         </div>
                     </div>
 
-                    <div className="mt-6 text-center">
-                        <a href="/forgot-password" className="text-green-600 hover:underline text-sm">
-                            Bạn quên mật khẩu? Click vào đây
+                    <div className="mt-6 text-center space-y-2">
+                        <a href="/forgot-password" className="text-pink-600 hover:underline text-sm font-medium transition hover:text-pink-700">
+                            Quên mật khẩu?
                         </a>
-                        <div className="mt-1">
-                            <a href="/register" className="text-green-600 hover:underline text-sm">
-                                Đăng kí tài khoản
+                        <div>
+                            <a href="/register" className="text-pink-600 hover:underline text-sm font-medium transition hover:text-pink-700">
+                                Tạo tài khoản mới
                             </a>
                         </div>
-                        <div className="mt-1">
-                            <a href="/" className="text-green-600 hover:underline text-sm">
+                        <div>
+                            <a href="/" className="text-pink-600 hover:underline text-sm font-medium transition hover:text-pink-700">
                                 Về trang chủ
                             </a>
                         </div>

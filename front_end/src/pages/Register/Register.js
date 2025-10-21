@@ -242,57 +242,53 @@ const RegisterPage = () => {
         <div className="h-2 w-full bg-gray-200 rounded">
           <div className={`h-full ${colorClass} rounded`} style={{ width: `${score * 25}%` }}></div>
         </div>
-        <p className="text-xs mt-1">{message}</p>
+        <p className="text-xs text-brown-600 mt-1">{message}</p>
       </div>
     );
   };
 
   return (
-    <div className="flex h-screen w-full">
-      {/* Left side with title and plant image */}
-      <div className="w-5/12 bg-green-600 flex items-center p-16 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black opacity-20"></div>
+    <div className="flex h-screen w-full bg-gradient-to-br from-pink-100 to-cream-100">
+      {/* Left side with title and cake image */}
+      <div className="w-5/12 bg-pink-300 flex items-center p-16 relative overflow-hidden animate__animated animate__fadeIn animate__slow">
+        <div className="absolute inset-0 bg-black opacity-10"></div>
         <div className="relative z-10">
-          <h1 className="text-white text-6xl font-bold leading-tight">
-            The Real
-            <br />
-            Options On
-            <br />
-            Customers
+          <h1 className="text-white text-5xl font-bold leading-tight font-playfair animate__animated animate__fadeInDown">
+            Sweet Delights<br />
+            Cake Shop<br />
+            Join Us
           </h1>
         </div>
         <img 
-          src="https://cellphones.com.vn/sforum/wp-content/uploads/2023/12/hinh-nen-xanh-la-2.jpg" 
-          alt="Decorative plants" 
-          className="absolute right-0 bottom-0 w-3/4 h-auto opacity-80"
+          src="https://www.marthastewart.com/thmb/I23am9WHQalDICEqnfOE94GDsxw=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/brooke-shea-wedding-172-d111277_vert-2000-a9a8ab0ce65c4fcc8a2d47ef174eb56e.jpg" 
+          alt="Decorative cake" 
+          className="absolute right-0 bottom-0 h-auto opacity-80 animate__animated animate__zoomIn animate__delay-1s"
         />
       </div>
 
       {/* Right side with registration form */}
-      <div className="w-7/12 flex items-center justify-center">
-        <div className="w-full max-w-md px-8">
-          <h2 className="text-3xl font-bold text-green-600 mb-8">
+      <div className="w-7/12 flex items-center justify-center bg-cream-50">
+        <div className="w-full max-w-md px-8 py-10 bg-white rounded-lg shadow-lg animate__animated animate__slideInRight">
+          <h2 className="text-3xl font-bold text-pink-600 mb-8 font-playfair animate__animated animate__fadeIn">
             Đăng ký tài khoản
           </h2>
 
           {generalError && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded animate__animated animate__shakeX">
               {generalError}
             </div>
           )}
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="block mb-1">
-                <span className="font-medium">
-                  Họ <span className="text-red-500">*</span>
-                </span>
+              <label className="block mb-1 font-medium text-brown-700">
+                Họ <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 name="lastName"
                 placeholder="Nhập họ"
-                className={`w-full px-3 py-2 border ${touched.lastName && errors.lastName ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-green-500`}
+                className={`w-full px-3 py-2 border ${touched.lastName && errors.lastName ? 'border-red-500' : 'border-pink-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400 bg-cream-50 transition duration-300 ease-in-out`}
                 value={formData.lastName}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -304,16 +300,14 @@ const RegisterPage = () => {
             </div>
 
             <div>
-              <label className="block mb-1">
-                <span className="font-medium">
-                  Tên <span className="text-red-500">*</span>
-                </span>
+              <label className="block mb-1 font-medium text-brown-700">
+                Tên <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 name="firstName"
                 placeholder="Nhập tên"
-                className={`w-full px-3 py-2 border ${touched.firstName && errors.firstName ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-green-500`}
+                className={`w-full px-3 py-2 border ${touched.firstName && errors.firstName ? 'border-red-500' : 'border-pink-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400 bg-cream-50 transition duration-300 ease-in-out`}
                 value={formData.firstName}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -325,38 +319,34 @@ const RegisterPage = () => {
             </div>
 
             <div>
-              <label className="block mb-1">
-                <span className="font-medium">
-                  Số điện thoại <span className="text-red-500">*</span>
-                </span>
+              <label className="block mb-1 font-medium text-brown-700">
+                Số điện thoại <span className="text-red-500">*</span>
               </label>
               <input
                 type="tel"
                 name="phone"
                 placeholder="Nhập số điện thoại"
-                className={`w-full px-3 py-2 border ${touched.phone && errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-green-500`}
+                className={`w-full px-3 py-2 border ${touched.phone && errors.phone ? 'border-red-500' : 'border-pink-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400 bg-cream-50 transition duration-300 ease-in-out`}
                 value={formData.phone}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">Định dạng: 0912345678 hoặc 84912345678</p>
+              <p className="text-xs text-brown-600 mt-1">Định dạng: 0912345678 hoặc 84912345678</p>
               {touched.phone && errors.phone && (
                 <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
               )}
             </div>
 
             <div>
-              <label className="block mb-1">
-                <span className="font-medium">
-                  Email <span className="text-red-500">*</span>
-                </span>
+              <label className="block mb-1 font-medium text-brown-700">
+                Email <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
                 name="email"
                 placeholder="Nhập email"
-                className={`w-full px-3 py-2 border ${touched.email && errors.email ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-green-500`}
+                className={`w-full px-3 py-2 border ${touched.email && errors.email ? 'border-red-500' : 'border-pink-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400 bg-cream-50 transition duration-300 ease-in-out`}
                 value={formData.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -368,23 +358,21 @@ const RegisterPage = () => {
             </div>
 
             <div>
-              <label className="block mb-1">
-                <span className="font-medium">
-                  Mật khẩu <span className="text-red-500">*</span>
-                </span>
+              <label className="block mb-1 font-medium text-brown-700">
+                Mật khẩu <span className="text-red-500">*</span>
               </label>
               <input
                 type="password"
                 name="password"
                 placeholder="Nhập mật khẩu"
-                className={`w-full px-3 py-2 border ${touched.password && errors.password ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-green-500`}
+                className={`w-full px-3 py-2 border ${touched.password && errors.password ? 'border-red-500' : 'border-pink-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400 bg-cream-50 transition duration-300 ease-in-out`}
                 value={formData.password}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 required
               />
               {renderPasswordStrengthIndicator()}
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-brown-600 mt-1">
                 Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ và số
               </p>
               {touched.password && errors.password && (
@@ -394,27 +382,21 @@ const RegisterPage = () => {
 
             <button
               type="submit"
-              className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition flex items-center justify-center"
+              className="w-full py-2 px-4 bg-pink-500 hover:bg-pink-600 text-white font-medium rounded-md transition transform hover:scale-105 animate__animated animate__pulse animate__infinite animate__slow flex items-center justify-center"
               disabled={loading}
             >
               {loading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Đang xử lý...
-                </>
-              ) : "Đăng ký"}
+                <div className="w-6 h-6 border-4 border-t-pink-700 border-pink-200 rounded-full animate-spin"></div>
+              ) : (
+                "Đăng ký"
+              )}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <div className="mt-1">
-              <a href="/login" className="text-green-600 hover:underline text-sm">
-                Bạn đã có tài khoản? Đăng nhập ngay
-              </a>
-            </div>
+            <a href="/login" className="text-pink-600 hover:underline text-sm font-medium transition hover:text-pink-700">
+              Bạn đã có tài khoản? Đăng nhập ngay
+            </a>
           </div>
         </div>
       </div>
