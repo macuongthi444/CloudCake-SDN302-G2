@@ -9,7 +9,9 @@ import UserProfile from "./pages/UserProfile/UserProfile";
 import ResetPassword from './forgotPassword/ResetPassword';
 import ProtectedRoute from './route/ProtectedRoute';
 import RoleRedirect from './route/RoleRedirect'; 
+import AdminLayout from './admin/AdminLayout';
 
+import   AdminRoute from './route/ProtectedRoute';
 
 function App() {
   const location = useLocation();
@@ -39,6 +41,12 @@ function App() {
                 <UserProfile />
               )}
             </ProtectedRoute>
+          } />
+
+          <Route path="/admin/*" element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
           } />
 
         </Routes>
