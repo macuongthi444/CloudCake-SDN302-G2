@@ -481,7 +481,7 @@ const Header = () => {
                                 <button
                                     id="cartbutton"
                                     className="cartbutton flex flex-col items-center text-gray-600 hover:text-purple-600 text-xs"
-                                    onClick={() => setIsCartOpen(true)}
+                                    onClick={() => navigate('/cart')}
                                     aria-label="Mở giỏ hàng"
                                 >
                                     <ShoppingCart size={24} />

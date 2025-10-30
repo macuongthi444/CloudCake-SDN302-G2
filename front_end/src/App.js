@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { Route, Routes, useLocation } from "react-router-dom";
 import LoginPage from "./pages/Login/Login";
 import RegisterPage from "./pages/Register/Register";
@@ -10,18 +9,20 @@ import ResetPassword from './forgotPassword/ResetPassword';
 import ProtectedRoute from './route/ProtectedRoute';
 import RoleRedirect from './route/RoleRedirect'; 
 import AdminLayout from './admin/AdminLayout';
+import CartPage from './pages/Cart/CartPage';
 
 import   AdminRoute from './route/ProtectedRoute';
 
 function App() {
   const location = useLocation();
-  const noHeaderPaths = ['/register', '/login', '/admin', '/forgot-password', '/reset-password'];
+  const noHeaderPaths = ['/register', '/login', '/admin', '/forgot-password', '/reset-password', '/cart'];
   const noHeaderPage = noHeaderPaths.includes(location.pathname) || location.pathname.startsWith('/admin/');
-  const noRedirectPaths = ['/login', '/register', '/admin', '/seller-dashboard', '/forgot-password', '/reset-password'];
+  const noRedirectPaths = ['/login', '/register', '/admin', '/seller-dashboard', '/forgot-password', '/reset-password', '/cart'];
 
   const shouldRedirect = !noRedirectPaths.includes(location.pathname) &&
     !location.pathname.startsWith('/admin/') &&
-    !location.pathname.startsWith('/seller-dashboard/');
+    !location.pathname.startsWith('/seller-dashboard/') &&
+    !location.pathname.startsWith('/cart');
   return (
     <div className="App">
       <AuthProvider>
@@ -47,6 +48,12 @@ function App() {
             <AdminRoute>
               <AdminLayout />
             </AdminRoute>
+          } />
+
+          <Route path="/cart" element={
+            <ProtectedRoute>
+              <CartPage />
+            </ProtectedRoute>
           } />
 
         </Routes>

@@ -10,6 +10,8 @@ const {
   AuthRouter,
   UserRouter,
   RoleRouter,
+  PaymentRouter,
+  CartRouter,
 } = require('./src/routers');
 
 const session = require('express-session');
@@ -55,6 +57,8 @@ app.get("/", (req, res) => {
  app.use('/api/auth', AuthRouter);
 app.use('/api/user', UserRouter);
 app.use('/api/role', RoleRouter);
+app.use('/api/payment', PaymentRouter);
+app.use('/api/cart', CartRouter);
 
 
 // Kiểm soát lỗi

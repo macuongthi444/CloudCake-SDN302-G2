@@ -2,6 +2,8 @@
 const mongoose = require('mongoose');
 const User = require('./user.model');
 const Role = require('./role.model');
+const PaymentMethod = require('./payment-method.model');
+const Cart = require('./cart.model');
 // Cau hinh mongoose dang global
 mongoose.Promise = global.Promise
 // Dinh nghia doi tuong DB
@@ -12,6 +14,8 @@ db.mongoose = mongoose
 // Bo sung cac thuoc tinh cho DB
 db.user = User
 db.role = Role
+db.paymentMethod = PaymentMethod
+db.cart = Cart
 db.ROLES = ["MEMBER", "SELLER", "ADMIN"]
 
 // Thuoc tinh tham chieu toi action ket noi CSDL
