@@ -12,6 +12,10 @@ const {
   RoleRouter,
   PaymentRouter,
   CartRouter,
+  ProductRouter,
+  ProductVariantRouter,
+  CategoryRouter,
+  ShopRouter,
 } = require('./src/routers');
 
 const session = require('express-session');
@@ -27,7 +31,6 @@ const server = http.createServer(app);
 const corsOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:3000'];
 const corsMethods = process.env.CORS_METHODS ? process.env.CORS_METHODS.split(',') : ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'];
 const corsHeaders = process.env.CORS_HEADERS ? process.env.CORS_HEADERS.split(',') : ['Content-Type', 'Authorization', 'x-access-token'];
-
 
 
 app.use(morgan('dev'));
@@ -54,11 +57,15 @@ app.get("/", (req, res) => {
 });
 
 // Đăng ký các route
- app.use('/api/auth', AuthRouter);
+app.use('/api/auth', AuthRouter);
 app.use('/api/user', UserRouter);
 app.use('/api/role', RoleRouter);
 app.use('/api/payment', PaymentRouter);
 app.use('/api/cart', CartRouter);
+app.use('/api/product', ProductRouter);
+app.use('/api/product-variant', ProductVariantRouter);
+app.use('/api/category', CategoryRouter);
+app.use('/api/shop', ShopRouter);
 
 
 // Kiểm soát lỗi
@@ -66,6 +73,16 @@ app.use(async (req, res, next) => {
   next(httpErrors.NotFound());
 });
 app.use((err, req, res, next) => {
+  // Log error details for debugging
+  console.error('Error occurred:', {
+    status: err.status || 500,
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    path: req.path,
+    method: req.method,
+    body: req.body
+  });
+
   res.status(err.status || 500).json({
     error: {
       status: err.status || 500,

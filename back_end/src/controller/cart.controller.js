@@ -1,6 +1,7 @@
 const db = require("../models")
 const Cart = db.cart
 const createHttpError = require('http-errors')
+const cache = require('../utils/cache')
 
 // Create a new cart
 async function createCart(req, res, next) {
@@ -24,6 +25,10 @@ async function createCart(req, res, next) {
         })
 
         await newCart.save()
+        
+        // Xóa cache khi tạo cart mới
+        cache.delete(`cart:${userId}`);
+        
         res.status(201).json(newCart)
     } catch (error) {
         next(error)
@@ -34,16 +39,34 @@ async function createCart(req, res, next) {
 async function getCartByUserId(req, res, next) {
     try {
         const { userID } = req.params
-        const cart = await Cart.findOne({ userId: userID }).populate('userId', 'firstName lastName email')
+        
+        // Cache cart data (cart thay đổi thường xuyên nhưng vẫn cache ngắn hạn)
+        const cacheKey = `cart:${userID}`;
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            res.set('Cache-Control', 'private, max-age=60'); // 1 minute
+            return res.status(200).json(cached);
+        }
+
+        // Sử dụng .lean() để tăng tốc độ
+        const cart = await Cart.findOne({ userId: userID })
+            .populate('userId', 'firstName lastName email')
+            .lean()
 
         if (!cart) {
-            return res.status(200).json({
+            const emptyCart = {
                 userId: userID,
                 items: [],
                 totalPrice: 0
-            })
+            };
+            cache.set(cacheKey, emptyCart, 60000); // Cache 1 phút
+            return res.status(200).json(emptyCart)
         }
 
+        // Cache cart
+        cache.set(cacheKey, cart, 60000); // Cache 1 phút (cart thay đổi thường xuyên)
+        
+        res.set('Cache-Control', 'private, max-age=60');
         res.status(200).json(cart)
     } catch (error) {
         next(error)
@@ -53,10 +76,10 @@ async function getCartByUserId(req, res, next) {
 // Add item to cart
 async function addItem(req, res, next) {
     try {
-        const { userId, productId, productName, quantity, price, image } = req.body
+        const { userId, productId, variantId, productName, variantName, quantity, price, image } = req.body
 
-        if (!userId || !productId || !productName || !quantity || !price) {
-            throw createHttpError.BadRequest("Missing required fields")
+        if (!userId || !productId || !variantId || !productName || !variantName || !quantity || !price) {
+            throw createHttpError.BadRequest("Missing required fields: userId, productId, variantId, productName, variantName, quantity, price")
         }
 
         if (quantity <= 0) {
@@ -78,9 +101,10 @@ async function addItem(req, res, next) {
             })
         }
 
-        // Check if item already exists in cart
+        // Check if same product variant already exists in cart
         const existingItemIndex = cart.items.findIndex(
-            item => item.productId.toString() === productId.toString()
+            item => item.productId.toString() === productId.toString() && 
+                    item.variantId.toString() === variantId.toString()
         )
 
         if (existingItemIndex > -1) {
@@ -90,7 +114,9 @@ async function addItem(req, res, next) {
             // Add new item to cart
             cart.items.push({
                 productId,
+                variantId,
                 productName,
+                variantName,
                 quantity,
                 price,
                 image
@@ -98,6 +124,10 @@ async function addItem(req, res, next) {
         }
 
         await cart.save()
+        
+        // Xóa cache khi update cart
+        cache.delete(`cart:${userId}`);
+        
         res.status(200).json(cart)
     } catch (error) {
         next(error)
@@ -107,10 +137,10 @@ async function addItem(req, res, next) {
 // Update item quantity in cart
 async function updateItem(req, res, next) {
     try {
-        const { userId, productId, quantity } = req.body
+        const { userId, productId, variantId, quantity } = req.body
 
-        if (!userId || !productId || !quantity) {
-            throw createHttpError.BadRequest("Missing required fields")
+        if (!userId || !productId || !variantId || !quantity) {
+            throw createHttpError.BadRequest("Missing required fields: userId, productId, variantId, quantity")
         }
 
         if (quantity <= 0) {
@@ -124,7 +154,8 @@ async function updateItem(req, res, next) {
         }
 
         const itemIndex = cart.items.findIndex(
-            item => item.productId.toString() === productId.toString()
+            item => item.productId.toString() === productId.toString() && 
+                    item.variantId.toString() === variantId.toString()
         )
 
         if (itemIndex === -1) {
@@ -143,11 +174,16 @@ async function updateItem(req, res, next) {
 // Remove item from cart
 async function removeItem(req, res, next) {
     try {
-        const { id } = req.params // product ID
-        const { userId } = req.body
+        const { id } = req.params // variant ID
+        // Get userId from query params or body (DELETE can have query params)
+        const userId = req.query.userId || req.body.userId
 
         if (!userId) {
             throw createHttpError.BadRequest("User ID is required")
+        }
+
+        if (!id) {
+            throw createHttpError.BadRequest("Variant ID is required")
         }
 
         const cart = await Cart.findOne({ userId })
@@ -157,7 +193,7 @@ async function removeItem(req, res, next) {
         }
 
         const itemIndex = cart.items.findIndex(
-            item => item.productId.toString() === id.toString()
+            item => item.variantId && item.variantId.toString() === id.toString()
         )
 
         if (itemIndex === -1) {

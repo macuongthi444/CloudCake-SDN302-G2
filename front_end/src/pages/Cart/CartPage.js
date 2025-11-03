@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Trash2, Plus, Minus, X } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
 import CartService from '../../services/CartService';
 import { useAuth } from '../Login/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { toastSuccess, toastError } from '../../utils/toast';
 const CartPage = () => {
   const navigate = useNavigate();
   const [cart, setCart] = useState(null);
@@ -39,33 +40,57 @@ const CartPage = () => {
     }
   };
 
-  const handleUpdateQuantity = async (productId, newQuantity) => {
+  const handleUpdateQuantity = async (item, newQuantity) => {
     if (newQuantity <= 0) return;
 
     try {
-      await CartService.updateItemQuantity({
+      const itemId = item.variantId || item._id || item.productId;
+      // Use response from update API to avoid an extra GET
+      const updatedCart = await CartService.updateItemQuantity({
         userId: currentUser.id,
-        productId,
+        productId: item.productId,
+        variantId: itemId,
         quantity: newQuantity
       });
-      await loadCart();
+      if (updatedCart) {
+        setCart(updatedCart);
+      } else {
+        // Fallback to refresh if API didn't return updated cart
+        await loadCart();
+      }
+      toastSuccess('Cập nhật số lượng thành công!');
     } catch (err) {
       console.error('Error updating quantity:', err);
-      alert('Không thể cập nhật số lượng');
+      toastError('Không thể cập nhật số lượng: ' + (err.message || err));
     }
   };
 
-  const handleRemoveItem = async (productId) => {
-    if (!window.confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
-      return;
-    }
-
+  const handleRemoveItem = async (item) => {
+    if (!window.confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) return;
+  
+    const itemId = item.variantId || item._id || item.productId;
+    const prevCart = { ...cart }; // rollback nếu lỗi
+  
+    // 1. Optimistic UI: XÓA NGAY
+    setCart(prev => ({
+      ...prev,
+      items: prev.items.filter(i => 
+        (i.variantId || i._id || i.productId) !== itemId
+      ),
+      totalPrice: prev.totalPrice - (item.price * item.quantity)
+    }));
+  
+    toastSuccess('Đã xóa sản phẩm!');
+  
     try {
-      await CartService.removeItemFromCart(productId, currentUser.id);
-      await loadCart();
+      // 2. Gọi API xóa (không chặn UI)
+      await CartService.removeItemFromCart(itemId, currentUser.id);
+  
+      // 3. Tự động đồng bộ từ cache hoặc server (không cần loadCart toàn bộ)
+      // → Vì backend đã xóa cache → lần GET sau sẽ lấy DB mới
     } catch (err) {
-      console.error('Error removing item:', err);
-      alert('Không thể xóa sản phẩm');
+      toastError('Lỗi xóa. Đang khôi phục...');
+      setCart(prevCart); // rollback
     }
   };
 
@@ -77,9 +102,10 @@ const CartPage = () => {
     try {
       await CartService.clearCart(currentUser.id);
       await loadCart();
+      toastSuccess('Đã xóa tất cả sản phẩm khỏi giỏ hàng!');
     } catch (err) {
       console.error('Error clearing cart:', err);
-      alert('Không thể xóa giỏ hàng');
+      toastError('Không thể xóa giỏ hàng: ' + (err.message || err));
     }
   };
 
@@ -159,6 +185,7 @@ const CartPage = () => {
                             src={item.image}
                             alt={item.productName}
                             className="w-24 h-24 object-cover rounded-lg"
+                            loading="lazy"
                           />
                         ) : (
                           <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -178,7 +205,7 @@ const CartPage = () => {
                             <span className="text-sm text-gray-600">Số lượng:</span>
                             <div className="flex items-center gap-2 border border-gray-300 rounded-lg">
                               <button
-                                onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
+                                onClick={() => handleUpdateQuantity(item, item.quantity - 1)}
                                 className="p-1 hover:bg-gray-100 rounded"
                                 disabled={item.quantity <= 1}
                               >
@@ -186,7 +213,7 @@ const CartPage = () => {
                               </button>
                               <span className="px-3 py-1">{item.quantity}</span>
                               <button
-                                onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}
+                                onClick={() => handleUpdateQuantity(item, item.quantity + 1)}
                                 className="p-1 hover:bg-gray-100 rounded"
                               >
                                 <Plus size={16} />
@@ -201,7 +228,7 @@ const CartPage = () => {
                             {(item.price * item.quantity).toLocaleString('vi-VN')} ₫
                           </p>
                           <button
-                            onClick={() => handleRemoveItem(item.productId)}
+                            onClick={() => handleRemoveItem(item)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
                             title="Xóa sản phẩm"
                           >
@@ -257,5 +284,10 @@ const CartPage = () => {
 };
 
 export default CartPage;
+
+
+
+
+
 
 

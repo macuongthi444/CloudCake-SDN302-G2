@@ -5,12 +5,23 @@ const cartItemSchema = new Schema({
     productId: {
         type: Schema.Types.ObjectId,
         required: [true, "Product ID is required"],
-        ref: 'Product' // Reference to product model if exists
+        ref: 'Product'
+    },
+    variantId: {
+        type: Schema.Types.ObjectId,
+        required: [true, "Product Variant ID is required"],
+        ref: 'ProductVariant'
     },
     productName: {
         type: String,
         required: [true, "Product name is required"],
         trim: true
+    },
+    variantName: {
+        type: String,
+        required: [true, "Variant name is required"],
+        trim: true
+        // VD: "Nhỏ - Vị Dâu"
     },
     quantity: {
         type: Number,
@@ -23,7 +34,7 @@ const cartItemSchema = new Schema({
         min: [0, "Price must be positive"]
     },
     image: {
-        type: String, // URL to product image
+        type: String, // URL to product or variant image
         trim: true
     }
 })

@@ -71,9 +71,65 @@ const isAdmin = async (req, res, next) => {
     }
 }
 
+// Middleware to check if user has seller role
+const isSeller = async (req, res, next) => {
+    try {
+        if (!req.user || !req.user.roles) {
+            return next(createHttpError.Forbidden("Require Seller role"))
+        }
+
+        const userRoles = req.user.roles;
+        let isSellerUser = false;
+
+        for (let i = 0; i < userRoles.length; i++) {
+            if (userRoles[i].name === "SELLER") {
+                isSellerUser = true;
+                break;
+            }
+        }
+
+        if (!isSellerUser) {
+            return next(createHttpError.Forbidden("Require Seller role"))
+        }
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+}
+
+// Middleware to check if user has seller or admin role
+const isSellerOrAdmin = async (req, res, next) => {
+    try {
+        if (!req.user || !req.user.roles) {
+            return next(createHttpError.Forbidden("Require Seller or Admin role"))
+        }
+
+        const userRoles = req.user.roles;
+        let hasPermission = false;
+
+        for (let i = 0; i < userRoles.length; i++) {
+            if (userRoles[i].name === "SELLER" || userRoles[i].name === "ADMIN") {
+                hasPermission = true;
+                break;
+            }
+        }
+
+        if (!hasPermission) {
+            return next(createHttpError.Forbidden("Require Seller or Admin role"))
+        }
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+}
+
 const authJwt = {
     verifyToken,
-    isAdmin
+    isAdmin,
+    isSeller,
+    isSellerOrAdmin
 }
 
 module.exports = authJwt

@@ -46,9 +46,10 @@ class CartService {
   }
 
   // Remove item from cart
-  async removeItemFromCart(productId, userId) {
+  async removeItemFromCart(variantId, userId) {
     try {
-      const data = await ApiService.delete(`/cart/remove-items/${productId}`, false);
+      // DELETE with query params for userId
+      const data = await ApiService.delete(`/cart/remove-items/${variantId}?userId=${userId}`, false);
       return data;
     } catch (error) {
       console.error('Error removing cart item:', error);
@@ -69,5 +70,10 @@ class CartService {
 }
 
 export default new CartService();
+
+
+
+
+
 
 

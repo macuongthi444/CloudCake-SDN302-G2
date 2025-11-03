@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Power, Search, X } from 'lucide-react';
 import PaymentService from '../../services/PaymentService';
 import { useAuth } from '../../pages/Login/context/AuthContext';
+import { toastSuccess, toastError } from '../../utils/toast';
 
 const PaymentManagement = () => {
   const [paymentMethods, setPaymentMethods] = useState([]);
@@ -34,7 +35,7 @@ const PaymentManagement = () => {
       setPaymentMethods(data);
     } catch (error) {
       console.error('Error loading payment methods:', error);
-      alert('Không thể tải danh sách phương thức thanh toán');
+        toastError('Không thể tải danh sách phương thức thanh toán');
     } finally {
       setLoading(false);
     }
@@ -84,10 +85,10 @@ const PaymentManagement = () => {
         icon: '',
         paymentCode: ''
       });
-      alert('Lưu thành công!');
+        toastSuccess('Lưu thành công!');
     } catch (error) {
       console.error('Error saving payment method:', error);
-      alert('Không thể lưu phương thức thanh toán');
+        toastError('Không thể lưu phương thức thanh toán: ' + (error.message || 'Lỗi không xác định'));
     }
   };
 
@@ -97,10 +98,10 @@ const PaymentManagement = () => {
       await loadPaymentMethods();
       setShowDeleteModal(false);
       setSelectedPayment(null);
-      alert('Xóa thành công!');
+        toastSuccess('Xóa thành công!');
     } catch (error) {
       console.error('Error deleting payment method:', error);
-      alert('Không thể xóa phương thức thanh toán');
+        toastError('Không thể xóa phương thức thanh toán: ' + (error.message || 'Lỗi không xác định'));
     }
   };
 
@@ -110,7 +111,7 @@ const PaymentManagement = () => {
       await loadPaymentMethods();
     } catch (error) {
       console.error('Error toggling status:', error);
-      alert('Không thể thay đổi trạng thái');
+        toastError('Không thể thay đổi trạng thái: ' + (error.message || 'Lỗi không xác định'));
     }
   };
 
@@ -361,5 +362,10 @@ const PaymentManagement = () => {
 };
 
 export default PaymentManagement;
+
+
+
+
+
 
 

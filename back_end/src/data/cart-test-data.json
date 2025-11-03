@@ -1,0 +1,147 @@
+{
+  "testCartItems": [
+    {
+      "note": "Add this item to cart - Bánh Sinh Nhật Chocolate Nhỏ",
+      "requestBody": {
+        "userId": "YOUR_USER_ID_HERE",
+        "productId": "PRODUCT_ID_1",
+        "variantId": "VARIANT_ID_1",
+        "productName": "Bánh Sinh Nhật Chocolate Premium",
+        "variantName": "Nhỏ - Hình Tròn",
+        "quantity": 1,
+        "price": 320000,
+        "image": "https://example.com/images/variants/birthday-chocolate-small-round.jpg"
+      },
+      "endpoint": "POST /api/cart/add-item"
+    },
+    {
+      "note": "Add this item to cart - Bánh Kem Dâu Vừa",
+      "requestBody": {
+        "userId": "YOUR_USER_ID_HERE",
+        "productId": "PRODUCT_ID_2",
+        "variantId": "VARIANT_ID_5",
+        "productName": "Bánh Kem Dâu Tây Tươi",
+        "variantName": "Vừa - Vị Dâu",
+        "quantity": 2,
+        "price": 280000,
+        "image": "https://example.com/images/variants/strawberry-cake-medium.jpg"
+      },
+      "endpoint": "POST /api/cart/add-item"
+    },
+    {
+      "note": "Update quantity of item in cart",
+      "requestBody": {
+        "userId": "YOUR_USER_ID_HERE",
+        "productId": "PRODUCT_ID_1",
+        "variantId": "VARIANT_ID_1",
+        "quantity": 3
+      },
+      "endpoint": "PUT /api/cart/update-item"
+    },
+    {
+      "note": "Get user cart",
+      "endpoint": "GET /api/cart/user/YOUR_USER_ID_HERE"
+    },
+    {
+      "note": "Remove item from cart (use variantId)",
+      "endpoint": "DELETE /api/cart/remove-items/VARIANT_ID_1",
+      "requestBody": {
+        "userId": "YOUR_USER_ID_HERE"
+      }
+    },
+    {
+      "note": "Clear entire cart",
+      "endpoint": "DELETE /api/cart/clear/YOUR_USER_ID_HERE"
+    }
+  ],
+  "exampleCurlCommands": {
+    "addItem": "curl -X POST http://localhost:9999/api/cart/add-item \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"userId\":\"YOUR_USER_ID\",\"productId\":\"PRODUCT_ID\",\"variantId\":\"VARIANT_ID\",\"productName\":\"Bánh Sinh Nhật Chocolate Premium\",\"variantName\":\"Nhỏ - Hình Tròn\",\"quantity\":1,\"price\":320000,\"image\":\"https://example.com/image.jpg\"}'",
+    "getCart": "curl -X GET http://localhost:9999/api/cart/user/YOUR_USER_ID",
+    "updateItem": "curl -X PUT http://localhost:9999/api/cart/update-item \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"userId\":\"YOUR_USER_ID\",\"productId\":\"PRODUCT_ID\",\"variantId\":\"VARIANT_ID\",\"quantity\":3}'",
+    "removeItem": "curl -X DELETE http://localhost:9999/api/cart/remove-items/VARIANT_ID \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"userId\":\"YOUR_USER_ID\"}'",
+    "clearCart": "curl -X DELETE http://localhost:9999/api/cart/clear/YOUR_USER_ID"
+  },
+  "postmanCollection": {
+    "info": {
+      "name": "Cloud-Cake Cart API",
+      "description": "Collection for testing Cart functionality"
+    },
+    "item": [
+      {
+        "name": "Add Item to Cart",
+        "request": {
+          "method": "POST",
+          "header": [{"key": "Content-Type", "value": "application/json"}],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"userId\": \"YOUR_USER_ID\",\n  \"productId\": \"PRODUCT_ID\",\n  \"variantId\": \"VARIANT_ID\",\n  \"productName\": \"Bánh Sinh Nhật Chocolate Premium\",\n  \"variantName\": \"Nhỏ - Hình Tròn\",\n  \"quantity\": 1,\n  \"price\": 320000,\n  \"image\": \"https://example.com/image.jpg\"\n}"
+          },
+          "url": {
+            "raw": "{{base_url}}/api/cart/add-item",
+            "host": ["{{base_url}}"],
+            "path": ["api", "cart", "add-item"]
+          }
+        }
+      },
+      {
+        "name": "Get User Cart",
+        "request": {
+          "method": "GET",
+          "url": {
+            "raw": "{{base_url}}/api/cart/user/{{userId}}",
+            "host": ["{{base_url}}"],
+            "path": ["api", "cart", "user", "{{userId}}"]
+          }
+        }
+      },
+      {
+        "name": "Update Item Quantity",
+        "request": {
+          "method": "PUT",
+          "header": [{"key": "Content-Type", "value": "application/json"}],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"productId\": \"{{productId}}\",\n  \"variantId\": \"{{variantId}}\",\n  \"quantity\": 3\n}"
+          },
+          "url": {
+            "raw": "{{base_url}}/api/cart/update-item",
+            "host": ["{{base_url}}"],
+            "path": ["api", "cart", "update-item"]
+          }
+        }
+      },
+      {
+        "name": "Remove Item",
+        "request": {
+          "method": "DELETE",
+          "header": [{"key": "Content-Type", "value": "application/json"}],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"userId\": \"{{userId}}\"\n}"
+          },
+          "url": {
+            "raw": "{{base_url}}/api/cart/remove-items/{{variantId}}",
+            "host": ["{{base_url}}"],
+            "path": ["api", "cart", "remove-items", "{{variantId}}"]
+          }
+        }
+      },
+      {
+        "name": "Clear Cart",
+        "request": {
+          "method": "DELETE",
+          "url": {
+            "raw": "{{base_url}}/api/cart/clear/{{userId}}",
+            "host": ["{{base_url}}"],
+            "path": ["api", "cart", "clear", "{{userId}}"]
+          }
+        }
+      }
+    ]
+  }
+}
+
+
+
+
+
