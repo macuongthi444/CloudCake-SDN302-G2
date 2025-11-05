@@ -165,6 +165,13 @@ async function updateItem(req, res, next) {
         cart.items[itemIndex].quantity = quantity
         await cart.save()
 
+        // Invalidate cache for this user's cart
+        try {
+            cache.delete(`cart:${userId}`)
+        } catch (e) {
+            console.warn('Cache delete failed for updateItem:', e.message)
+        }
+
         res.status(200).json(cart)
     } catch (error) {
         next(error)
@@ -203,6 +210,13 @@ async function removeItem(req, res, next) {
         cart.items.splice(itemIndex, 1)
         await cart.save()
 
+        // Invalidate cache when item removed
+        try {
+            cache.delete(`cart:${userId}`)
+        } catch (e) {
+            console.warn('Cache delete failed for removeItem:', e.message)
+        }
+
         res.status(200).json({
             message: "Item removed from cart successfully",
             cart
@@ -226,6 +240,13 @@ async function clearCart(req, res, next) {
         cart.items = []
         cart.totalPrice = 0
         await cart.save()
+
+        // Invalidate cache when cart cleared
+        try {
+            cache.delete(`cart:${id}`)
+        } catch (e) {
+            console.warn('Cache delete failed for clearCart:', e.message)
+        }
 
         res.status(200).json({
             message: "Cart cleared successfully",

@@ -5,12 +5,14 @@ import ProductService from '../../services/ProductService';
 import CategoryService from '../../services/CategoryService';
 import CartService from '../../services/CartService';
 import { useAuth } from '../Login/context/AuthContext';
+import { useCart } from '../Login/context/CartContext';
 import { toastSuccess, toastError, toastWarning } from '../../utils/toast';
 import logo from '../../assets/Logo.jpg';
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const { setCart } = useCart();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +57,7 @@ const HomePage = () => {
     }
 
     try {
-      await CartService.addItemToCart({
+      const resp = await CartService.addItemToCart({
         userId: currentUser.id,
         productId: product._id,
         variantId: defaultVariant._id,
@@ -65,6 +67,11 @@ const HomePage = () => {
         price: defaultVariant.discountedPrice || defaultVariant.price,
         image: defaultVariant.image || (product.images && product.images[0]?.url)
       });
+
+      if (resp) {
+        try { setCart(resp); } catch (e) {}
+      }
+
       toastSuccess('Đã thêm vào giỏ hàng!');
     } catch (error) {
       console.error('Error adding to cart:', error);

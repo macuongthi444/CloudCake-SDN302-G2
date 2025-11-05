@@ -1,44 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
 import CartService from '../../services/CartService';
 import { useAuth } from '../Login/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toastSuccess, toastError } from '../../utils/toast';
+import { useCart } from '../Login/context/CartContext';
+
 const CartPage = () => {
   const navigate = useNavigate();
-  const [cart, setCart] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  
   const { currentUser } = useAuth();
+  // Use global cart from context to avoid duplicate GETs
+  const { cart, setCart, loadCart, loading } = useCart();
 
-  
-  useEffect(() => {
-    if (currentUser && currentUser.id) {
-      loadCart();
-    }
-  }, [currentUser]);
-
-  const loadCart = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await CartService.getCartByUserId(currentUser.id);
-      setCart(data);
-    } catch (err) {
-      console.error('Error loading cart:', err);
-      setError('Không thể tải giỏ hàng');
-      // Create empty cart if user doesn't have one
-      setCart({
-        userId: currentUser.id,
-        items: [],
-        totalPrice: 0
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (!cart) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   const handleUpdateQuantity = async (item, newQuantity) => {
     if (newQuantity <= 0) return;
@@ -84,10 +64,12 @@ const CartPage = () => {
   
     try {
       // 2. Gọi API xóa (không chặn UI)
-      await CartService.removeItemFromCart(itemId, currentUser.id);
-  
-      // 3. Tự động đồng bộ từ cache hoặc server (không cần loadCart toàn bộ)
-      // → Vì backend đã xóa cache → lần GET sau sẽ lấy DB mới
+      const resp = await CartService.removeItemFromCart(itemId, currentUser.id);
+
+      // If backend returns updated cart, use it to sync instantly.
+      if (resp && resp.cart) {
+        setCart(resp.cart);
+      }
     } catch (err) {
       toastError('Lỗi xóa. Đang khôi phục...');
       setCart(prevCart); // rollback
@@ -100,8 +82,15 @@ const CartPage = () => {
     }
 
     try {
-      await CartService.clearCart(currentUser.id);
-      await loadCart();
+      const resp = await CartService.clearCart(currentUser.id);
+
+      // Use returned cart if available to avoid an extra GET
+      if (resp && resp.cart) {
+        setCart(resp.cart);
+      } else {
+        await loadCart();
+      }
+
       toastSuccess('Đã xóa tất cả sản phẩm khỏi giỏ hàng!');
     } catch (err) {
       console.error('Error clearing cart:', err);
@@ -117,21 +106,7 @@ const CartPage = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={loadCart}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Thử lại
-          </button>
-        </div>
-      </div>
-    );
-  }
+  
 
   const items = cart?.items || [];
   const totalPrice = cart?.totalPrice || 0;

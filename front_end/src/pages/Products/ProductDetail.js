@@ -4,12 +4,14 @@ import { Star, ShoppingCart, Plus, Minus, Package, Heart } from 'lucide-react';
 import ProductService from '../../services/ProductService';
 import CartService from '../../services/CartService';
 import { useAuth } from '../../pages/Login/context/AuthContext';
+import { useCart } from '../Login/context/CartContext';
 import { toastSuccess, toastError, toastWarning } from '../../utils/toast';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const { setCart } = useCart();
   const [product, setProduct] = useState(null);
   const [variants, setVariants] = useState([]);
   const [selectedVariant, setSelectedVariant] = useState(null);
@@ -57,7 +59,7 @@ const ProductDetail = () => {
 
     try {
       setAddingToCart(true);
-      await CartService.addItemToCart({
+      const resp = await CartService.addItemToCart({
         userId: currentUser.id,
         productId: product._id,
         variantId: selectedVariant._id,
@@ -67,6 +69,13 @@ const ProductDetail = () => {
         price: selectedVariant.discountedPrice || selectedVariant.price,
         image: selectedVariant.image || (product.images && product.images[0]?.url)
       });
+
+      // Update global cart if available to avoid an extra GET when opening cart page
+      if (resp) {
+        // Backend returns the updated cart object
+        try { setCart(resp); } catch (e) { /* ignore if context not available */ }
+      }
+
       toastSuccess('Đã thêm vào giỏ hàng!');
     } catch (error) {
       console.error('Error adding to cart:', error);
