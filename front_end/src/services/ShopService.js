@@ -4,6 +4,78 @@ import ApiService from './ApiService';
 import AuthService from './AuthService';
 
 class ShopService {
+    // Get all shops (public)
+    async getShops(filters = {}) {
+        try {
+            const queryParams = new URLSearchParams();
+            if (filters.status) queryParams.append('status', filters.status);
+            if (filters.isActive !== undefined) queryParams.append('isActive', filters.isActive);
+
+            const queryString = queryParams.toString();
+            const endpoint = `/shop/list${queryString ? `?${queryString}` : ''}`;
+            const data = await ApiService.get(endpoint, false);
+            return data;
+        } catch (error) {
+            console.error('Error fetching shops:', error);
+            throw error;
+        }
+    }
+
+    // Get shop by ID (public)
+    async getShopById(id) {
+        try {
+            const data = await ApiService.get(`/shop/find/${id}`, false);
+            return data;
+        } catch (error) {
+            console.error('Error fetching shop:', error);
+            throw error;
+        }
+    }
+
+    // Get my shop (Seller only)
+    async getMyShop() {
+        try {
+            const data = await ApiService.get('/shop/my-shop', true);
+            return data;
+        } catch (error) {
+            console.error('Error fetching my shop:', error);
+            throw error;
+        }
+    }
+
+    // Create shop (Seller only)
+    async createShop(shopData) {
+        try {
+            const data = await ApiService.post('/shop/create', shopData, true);
+            return data;
+        } catch (error) {
+            console.error('Error creating shop:', error);
+            throw error;
+        }
+    }
+
+    // Update shop (Owner or Admin)
+    async updateShop(id, shopData) {
+        try {
+            const data = await ApiService.put(`/shop/edit/${id}`, shopData, true);
+            return data;
+        } catch (error) {
+            console.error('Error updating shop:', error);
+            throw error;
+        }
+    }
+
+    // Update shop status (Admin only)
+    async updateShopStatus(id, status) {
+        try {
+            const data = await ApiService.put(`/shop/status/${id}`, { status }, true);
+            return data;
+        } catch (error) {
+            console.error('Error updating shop status:', error);
+            throw error;
+        }
+    }
+
     // Kiểm tra trạng thái hoạt động của cửa hàng người bán
     async checkShopStatus() {
         try {
@@ -15,18 +87,18 @@ class ShopService {
             }
             
             // Gọi API để lấy thông tin cửa hàng của người dùng hiện tại
-            const shop = await ApiService.get(`/shops/my-shop`);
+            const shop = await this.getMyShop();
             
             // Kiểm tra nếu cửa hàng tồn tại
             if (shop) {
                 return {
-                    isActive: shop.is_active === 1,
-                    status: shop.status, // "active", "pending", "rejected"
+                    isActive: shop.isActive === true,
+                    status: shop.status, // "PENDING", "ACTIVE", "SUSPENDED", "REJECTED"
                     shopData: shop
                 };
             }
             
-            return null;
+            return { notFound: true };
         } catch (error) {
             console.error("Không thể kiểm tra trạng thái cửa hàng:", error);
             // Nếu là lỗi 404, có thể người dùng chưa đăng ký cửa hàng
@@ -50,7 +122,7 @@ class ShopService {
                 };
             }
             
-            // Kiểm tra is_active và status
+            // Kiểm tra isActive và status
             if (!shopStatus.isActive) {
                 return { 
                     canAccess: false, 
@@ -58,10 +130,10 @@ class ShopService {
                 };
             }
             
-            if (shopStatus.status !== "active") {
+            if (shopStatus.status !== "ACTIVE") {
                 return { 
                     canAccess: false, 
-                    reason: shopStatus.status // "pending" hoặc "rejected"
+                    reason: shopStatus.status // "PENDING" hoặc "REJECTED"
                 };
             }
             

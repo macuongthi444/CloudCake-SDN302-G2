@@ -1,8 +1,9 @@
 import React from 'react';
 import { Search, ChevronDown, User } from 'lucide-react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-// import ProductManagement from './product/ProductManagement';
+import ProductManagement from './product/ProductManagement';
 // import CategoryManagement from './category/CategoryManagement';
+import PaymentManagement from './payment/PaymentManagement';
 
 import logo from '../assets/Logo.jpg'
 
@@ -44,9 +45,11 @@ const MainContent = () => {
         <Routes>
           {/* <Route path="/dashboard" element={<Dashboard />} /> */}
 
-          {/* <Route path="/products" element={<ProductManagement />} />
+          <Route path="/products" element={<ProductManagement />} />
 
-          <Route path="/categories" element={<CategoryManagement />} /> */}
+          {/* <Route path="/categories" element={<CategoryManagement />} /> */}
+          
+          <Route path="/payments" element={<PaymentManagement />} />
         
           <Route path="/support" element={<div className="p-6">Nội dung Hỗ trợ</div>} />
           <Route path="/settings" element={<div className="p-6">Nội dung Cài đặt</div>} />

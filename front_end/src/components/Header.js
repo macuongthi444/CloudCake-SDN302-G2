@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
     Menu,
     Search,
@@ -280,7 +280,7 @@ const Header = () => {
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            navigate(`/categories?search=${encodeURIComponent(searchQuery.trim())}`);
+            navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
         }
     };
 
@@ -322,17 +322,16 @@ const Header = () => {
                     style={{ zIndex: 1800 }}
                 >
                     <div className="flex items-center justify-between">
-                        <a href="/" className="navbar-logo relative">
-                            <img src={logo} alt="GreenGarden" className="w-28 h-16 object-contain scale-125" />
-                        </a>
+                        <Link to="/" className="navbar-logo relative">
+                            <img src={logo} alt="CloudCake" className="w-28 h-16 object-contain scale-125" />
+                        </Link>
                         <div className="flex items-center justify-between mt-2 space-x-6 text-sm px-8">
-                            <a href="/introduction" className="hover:text-purple-600 font-semibold">Giới Thiệu</a>
-                           
-                            <a href="/categories" className="hover:text-purple-600 font-semibold">Sản phẩm</a>
+                            <Link to="/introduction" className="hover:text-purple-600 font-semibold">Giới Thiệu</Link>
+                            <Link to="/products" className="hover:text-purple-600 font-semibold">Sản phẩm</Link>
                             {!isSeller() && (
-                                <a href="/shop-registration" className="text-red-500 font-semibold hover:text-red-600">
+                                <Link to="/register" className="text-red-500 font-semibold hover:text-red-600">
                                     Đăng ký bán hàng
-                                </a>
+                                </Link>
                             )}
                         </div>
                         <div className="flex-grow flex items-center space-x-4 px-4">
@@ -391,26 +390,26 @@ const Header = () => {
                                         <div className="px-4 py-2 border-b">
                                             <div className="font-medium text-gray-900">{currentUser?.email}</div>
                                         </div>
-                                        <a
-                                            href="/user-profile"
+                                        <Link
+                                            to="/user-profile"
                                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                             role="menuitem"
                                             onClick={() => setIsUserDropdownOpen(false)}
                                         >
                                             <UserCircle size={16} className="mr-2" />
                                             Tài khoản của tôi
-                                        </a>
-                                        <a
-                                            href="/user-profile/orders"
+                                        </Link>
+                                        <Link
+                                            to="/user-profile/orders"
                                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                             role="menuitem"
                                             onClick={() => setIsUserDropdownOpen(false)}
                                         >
                                             <Package size={16} className="mr-2" />
                                             Đơn mua
-                                        </a>
-                                        <a
-                                            href="/user-profile/messages"
+                                        </Link>
+                                        <Link
+                                            to="/user-profile/messages"
                                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center relative"
                                             role="menuitem"
                                             onClick={() => setIsUserDropdownOpen(false)}
@@ -422,44 +421,44 @@ const Header = () => {
                                                     {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
                                                 </div>
                                             )}
-                                        </a>
-                                        <a
-                                            href="/user-profile/addresses"
+                                        </Link>
+                                        <Link
+                                            to="/user-profile/addresses"
                                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                             role="menuitem"
                                             onClick={() => setIsUserDropdownOpen(false)}
                                         >
                                             <MapPin size={16} className="mr-2" />
                                             Địa chỉ nhận hàng
-                                        </a>
-                                        <a
-                                            href="/user-profile/followed-shops"
+                                        </Link>
+                                        <Link
+                                            to="/user-profile/followed-shops"
                                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                             role="menuitem"
                                             onClick={() => setIsUserDropdownOpen(false)}
                                         >
                                             <Store size={16} className="mr-2" />
                                             Cửa hàng đã theo dõi
-                                        </a>
-                                        <a
-                                            href="/user-profile/password"
+                                        </Link>
+                                        <Link
+                                            to="/user-profile/password"
                                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                             role="menuitem"
                                             onClick={() => setIsUserDropdownOpen(false)}
                                         >
                                             <Lock size={16} className="mr-2" />
                                             Đổi mật khẩu
-                                        </a>
+                                        </Link>
                                         {isSeller() && (
-                                            <a
-                                                href="/seller-dashboard"
+                                            <Link
+                                                to="/admin"
                                                 className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center"
                                                 role="menuitem"
                                                 onClick={() => setIsUserDropdownOpen(false)}
                                             >
                                                 <Store size={16} className="mr-2" />
                                                 Quản lý cửa hàng
-                                            </a>
+                                            </Link>
                                         )}
                                         <div className="border-t mt-1">
                                             <button
@@ -481,7 +480,7 @@ const Header = () => {
                                 <button
                                     id="cartbutton"
                                     className="cartbutton flex flex-col items-center text-gray-600 hover:text-purple-600 text-xs"
-                                    onClick={() => setIsCartOpen(true)}
+                                    onClick={() => navigate('/cart')}
                                     aria-label="Mở giỏ hàng"
                                 >
                                     <ShoppingCart size={24} />
