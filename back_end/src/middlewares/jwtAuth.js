@@ -1,8 +1,9 @@
 const jwt = require('jsonwebtoken')
 const config = require('../config/auth.config')
 const db = require("../models")
-const User = db.user
+
 const createHttpError = require('http-errors')
+const { user: User, role: Role, shop: Shop } = db;
 
 // Middleware to verify JWT token
 const verifyToken = async (req, res, next) => {
@@ -124,12 +125,39 @@ const isSellerOrAdmin = async (req, res, next) => {
         next(error);
     }
 }
+async function isShopOwner(req, res, next) {
+    try {
+        const shopId = req.params.id;
+        const userId = req.userId;
 
+        const shop = await Shop.findById(shopId);
+        if (!shop || shop.is_active === 0) {
+            throw createHttpError.NotFound("Shop not found");
+        }
+
+        if (shop.user_id.toString() === userId.toString()) {
+            return next();
+        }
+
+        const existUser = await User.findById(userId).exec();
+        const roles = await Role.find({ _id: { $in: existUser.roles } });
+
+        if (roles.some(role => role.name === "ADMIN")) {
+            req.isAdmin = true;
+            return next();
+        }
+
+        throw createHttpError.Forbidden("You are not the owner of this shop");
+    } catch (error) {
+        next(error);
+    }
+}
 const authJwt = {
     verifyToken,
     isAdmin,
     isSeller,
-    isSellerOrAdmin
+    isSellerOrAdmin,
+    isShopOwner
 }
 
 module.exports = authJwt

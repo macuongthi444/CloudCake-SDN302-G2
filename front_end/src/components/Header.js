@@ -1,14 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
-    Menu,
+   
     Search,
     User,
-    Heart,
+   
     ShoppingCart,
-    Globe,
-    PiggyBank,
-    ChevronRight,
+    
     LogOut,
     MessageSquare,
     Package,
@@ -394,7 +392,7 @@ const Header = () => {
                             <Link to="/introduction" className="hover:text-purple-600 font-semibold">Giới Thiệu</Link>
                             <Link to="/products" className="hover:text-purple-600 font-semibold">Sản phẩm</Link>
                             {!isSeller() && (
-                                <Link to="/register" className="text-red-500 font-semibold hover:text-red-600">
+                                <Link to="/shop-registration" className="text-red-500 font-semibold hover:text-red-600">
                                     Đăng ký bán hàng
                                 </Link>
                             )}
