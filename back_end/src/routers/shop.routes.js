@@ -14,9 +14,7 @@ ShopRouter.get("/find/:id", shopController.getById)
 // Protected routes
 ShopRouter.get("/my-shop", authJwt.verifyToken, shopController.getMyShop)
 ShopRouter.post("/create", authJwt.verifyToken, shopController.create);
-
 ShopRouter.put("/edit/:id", [authJwt.verifyToken, authJwt.isShopOwner], shopController.update);
-
 
 
 // Lấy cửa hàng theo ID (chi tiết hơn, chỉ admin)
@@ -41,13 +39,4 @@ ShopRouter.post(
   shopController.uploadShopImage
 );
 module.exports = ShopRouter
-
-
-
-
-
-
-
-
-
 
