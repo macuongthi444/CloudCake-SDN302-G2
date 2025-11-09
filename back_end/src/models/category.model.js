@@ -24,11 +24,6 @@ const categorySchema = new Schema({
         type: Boolean,
         default: true
     },
-    parentId: {
-        type: Schema.Types.ObjectId,
-        ref: 'Category',
-        default: null // For sub-categories
-    },
     sortOrder: {
         type: Number,
         default: 0
@@ -43,6 +38,14 @@ categorySchema.index({ parentId: 1 })
 
 const Category = mongoose.model("Category", categorySchema)
 module.exports = Category
+
+
+
+
+
+
+
+
 
 
 

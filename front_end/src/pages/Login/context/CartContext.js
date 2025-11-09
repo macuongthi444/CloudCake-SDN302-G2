@@ -12,7 +12,7 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const loadCart = async () => {
+  const loadCart = async (showLoading = false) => {
     if (!currentUser?.id) {
       setCart(null);
       setLoading(false);
@@ -20,19 +20,25 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
+      // Add timestamp to bypass cache if needed
       const data = await CartService.getCartByUserId(currentUser.id);
       setCart(data);
     } catch (err) {
       console.error("Load cart failed:", err);
       setCart({ userId: currentUser.id, items: [], totalPrice: 0 });
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     loadCart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   return (
@@ -41,3 +47,4 @@ export const CartProvider = ({ children }) => {
     </CartContext.Provider>
   );
 };
+

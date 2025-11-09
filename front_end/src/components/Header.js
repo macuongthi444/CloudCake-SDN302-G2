@@ -199,12 +199,48 @@ const Header = () => {
         return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
+    const getUserRoleStrings = () => {
+        if (!currentUser) return [];
+        const candidates = [];
+        // Common shapes
+        if (Array.isArray(currentUser.roles)) candidates.push(...currentUser.roles);
+        if (Array.isArray(currentUser.authorities)) candidates.push(...currentUser.authorities);
+        if (currentUser.role) candidates.push(currentUser.role);
+        if (currentUser.roleName) candidates.push(currentUser.roleName);
+        if (currentUser.roleNames) candidates.push(...(Array.isArray(currentUser.roleNames) ? currentUser.roleNames : [currentUser.roleNames]));
+        // Normalize to strings
+        const strings = candidates.map(r => {
+            if (!r) return '';
+            if (typeof r === 'string') return r;
+            if (typeof r === 'object' && r.name) return r.name;
+            if (typeof r === 'object' && r.role) return r.role;
+            return String(r);
+        });
+        return strings.filter(Boolean);
+    };
+
+    const hasPermissionString = (perm) => {
+        const p = currentUser?.permissions;
+        if (!p) return false;
+        if (typeof p === 'string') return p.toLowerCase().includes(perm);
+        if (Array.isArray(p)) return p.some(x => String(x).toLowerCase().includes(perm));
+        return false;
+    };
+
     const isSeller = () => {
-        if (!isLoggedIn || !currentUser?.roles) return false;
-        return currentUser.roles.some(role =>
-            (typeof role === 'object' && role?.name && (role.name === 'SELLER' || role.name === 'ROLE_SELLER')) ||
-            (typeof role === 'string' && (role === 'SELLER' || role === 'ROLE_SELLER'))
-        );
+        if (!isLoggedIn || !currentUser) return false;
+        const roleStrings = getUserRoleStrings().map(r => r.toUpperCase());
+        const hasSellerRole = roleStrings.some(up => up === 'SELLER' || up === 'ROLE_SELLER' || up.includes('SELLER'));
+        const hasSellerPermission = hasPermissionString('sell');
+        return hasSellerRole || hasSellerPermission;
+    };
+
+    const isAdmin = () => {
+        if (!isLoggedIn || !currentUser) return false;
+        const roleStrings = getUserRoleStrings().map(r => r.toUpperCase());
+        const hasAdminRole = roleStrings.some(up => up === 'ADMIN' || up === 'ROLE_ADMIN' || up.includes('ADMIN'));
+        const hasAdminPermission = hasPermissionString('delete');
+        return hasAdminRole || hasAdminPermission;
     };
 
     const formatPrice = (price) => {
@@ -451,13 +487,24 @@ const Header = () => {
                                         </Link>
                                         {isSeller() && (
                                             <Link
+                                                to="/seller"
+                                                className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center"
+                                                role="menuitem"
+                                                onClick={() => setIsUserDropdownOpen(false)}
+                                            >
+                                                <Store size={16} className="mr-2" />
+                                                Seller Dashboard
+                                            </Link>
+                                        )}
+                                        {isAdmin() && (
+                                            <Link
                                                 to="/admin"
                                                 className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center"
                                                 role="menuitem"
                                                 onClick={() => setIsUserDropdownOpen(false)}
                                             >
                                                 <Store size={16} className="mr-2" />
-                                                Quản lý cửa hàng
+                                                Admin Dashboard
                                             </Link>
                                         )}
                                         <div className="border-t mt-1">
@@ -499,3 +546,4 @@ const Header = () => {
 };
 
 export default Header;
+                                              

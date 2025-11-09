@@ -1,0 +1,187 @@
+const createHttpError = require('http-errors')
+const db = require('../models')
+const Order = db.order
+const Cart = db.cart
+const vnpayService = require('../services/vnpay.service')
+const cache = require('../utils/cache')
+
+async function createPaymentUrl(req, res, next) {
+  try {
+    const { orderId } = req.body
+    if (!orderId) throw createHttpError.BadRequest('orderId is required')
+    
+    const order = await Order.findById(orderId).lean()
+    if (!order) throw createHttpError.NotFound('Order not found')
+    
+    // Validate order has valid totalAmount
+    if (!order.totalAmount || order.totalAmount <= 0) {
+      console.error('VNPay: Order has invalid totalAmount', {
+        orderId: order._id,
+        totalAmount: order.totalAmount,
+        subtotal: order.subtotal
+      })
+      throw createHttpError.BadRequest(`Order has invalid total amount: ${order.totalAmount}. Cannot proceed with payment.`)
+    }
+    
+    const clientIp = req.headers['x-forwarded-for']?.split(',')[0] || req.ip || '127.0.0.1'
+    const { paymentUrl } = await vnpayService.createPaymentUrl(order, clientIp)
+    res.status(200).json({ paymentUrl })
+  } catch (error) {
+    console.error('VNPay createPaymentUrl error:', error)
+    next(error)
+  }
+}
+
+async function returnCallback(req, res, next) {
+  console.log('\n========== VNPay: RETURN CALLBACK - START ==========')
+  console.log('Request method:', req.method)
+  console.log('Request URL:', req.url)
+  console.log('Request query keys:', Object.keys(req.query))
+  console.log('Request query:', JSON.stringify(req.query, null, 2))
+  
+  try {
+    // VNPay may send URL-encoded values, ensure we decode them properly
+    // Express usually handles this automatically, but let's ensure all values are properly decoded
+    const queryParams = { ...req.query }
+    
+    // Decode any URL-encoded values (Express should do this, but ensure it's done)
+    Object.keys(queryParams).forEach(key => {
+      if (typeof queryParams[key] === 'string') {
+        // Decode if needed (Express usually does this, but double-check)
+        try {
+          queryParams[key] = decodeURIComponent(queryParams[key])
+        } catch (e) {
+          // If decode fails, use original value
+          console.warn(`Warning: Could not decode param ${key}:`, queryParams[key])
+        }
+      }
+    })
+    
+    console.log('Processed query params:', JSON.stringify(queryParams, null, 2))
+    console.log('Calling vnpayService.verifyReturn...')
+    const result = vnpayService.verifyReturn(queryParams)
+    const orderId = result.orderId
+    
+    console.log('Verify result:', {
+      isValid: result.isValid,
+      isSuccess: result.isSuccess,
+      orderId: result.orderId,
+      responseCode: result.responseCode
+    })
+    
+    // Update order status if payment is successful
+    if (result.isValid && result.isSuccess && orderId) {
+      try {
+        const order = await Order.findById(orderId)
+        if (order) {
+          // Only update if order is still PENDING (not already processed)
+          if (order.paymentStatus === 'PENDING' && order.status === 'PENDING') {
+            order.paymentStatus = 'PAID'
+            order.status = 'CONFIRMED' // Change status to CONFIRMED after successful payment
+            order.transactionId = req.query.vnp_TransactionNo || req.query.vnp_BankTranNo
+            order.paymentMeta = { ...(order.paymentMeta || {}), vnpay: req.query }
+            await order.save()
+            
+            console.log('Order updated after successful VNPay payment:', {
+              orderId: order._id,
+              orderNumber: order.orderNumber,
+              paymentStatus: order.paymentStatus,
+              status: order.status
+            })
+          } else {
+            console.warn('Order already processed, skipping update:', {
+              orderId: order._id,
+              currentPaymentStatus: order.paymentStatus,
+              currentStatus: order.status
+            })
+          }
+          
+          // Clear cart after successful VNPay payment
+          try {
+            const cart = await Cart.findOne({ userId: order.userId })
+            if (cart) {
+              cart.items = []
+              cart.totalPrice = 0
+              await cart.save()
+              
+              // Invalidate cache
+              cache.delete(`cart:${order.userId}`)
+              
+              console.log('Cart cleared after successful VNPay payment:', orderId)
+            }
+          } catch (clearError) {
+            console.error('Error clearing cart after VNPay payment:', clearError)
+            // Don't fail the payment confirmation if cart clearing fails
+          }
+        }
+      } catch (updateError) {
+        console.error('Error updating order status:', updateError)
+        // Continue even if update fails
+      }
+    } else if (result.isValid && !result.isSuccess && orderId) {
+      // Payment failed but signature is valid
+      // DO NOT clear cart - user may want to retry payment
+      // Update order paymentStatus to FAILED but keep status as PENDING (user can retry)
+      try {
+        const order = await Order.findById(orderId)
+        if (order) {
+          // Only update if order is still PENDING
+          if (order.paymentStatus === 'PENDING' && order.status === 'PENDING') {
+            order.paymentStatus = 'FAILED'
+            order.paymentMeta = { ...(order.paymentMeta || {}), vnpay: req.query }
+            await order.save()
+            console.log('VNPay payment failed, order updated to FAILED (can retry):', {
+              orderId: order._id,
+              orderNumber: order.orderNumber,
+              paymentStatus: order.paymentStatus,
+              status: order.status
+            })
+          }
+        }
+      } catch (updateError) {
+        console.error('Error updating order status:', updateError)
+      }
+    } else if (!result.isValid && orderId) {
+      // Invalid signature - order remains PENDING, user can retry
+      console.warn('VNPay signature invalid, order remains PENDING:', {
+        orderId,
+        isValid: result.isValid,
+        isSuccess: result.isSuccess
+      })
+    }
+    
+    // Redirect to frontend with payment result
+    const frontendUrl = vnpayService.frontendUrl || 'http://localhost:3000'
+    const redirectUrl = `${frontendUrl}/payment-result?` + new URLSearchParams({
+      success: result.isSuccess ? 'true' : 'false',
+      orderId: orderId || '',
+      message: result.isSuccess ? 'Thanh toán thành công' : (result.isValid ? 'Thanh toán thất bại' : 'Chữ ký không hợp lệ')
+    }).toString()
+    
+    res.redirect(redirectUrl)
+  } catch (error) {
+    console.error('VNPay return callback error:', error)
+    const frontendUrl = vnpayService.frontendUrl || 'http://localhost:3000'
+    res.redirect(`${frontendUrl}/payment-result?success=false&message=Lỗi xử lý thanh toán`)
+  }
+}
+
+async function ipn(req, res, next) {
+  try {
+    const result = await vnpayService.handleIpn(req.query)
+    if (result.status) {
+      return res.status(200).json({ RspCode: '00', Message: 'Confirm Success' })
+    }
+    return res.status(200).json({ RspCode: '97', Message: result.reason || 'Signature/Amount invalid' })
+  } catch (error) {
+    console.error('VNPay IPN error:', error)
+    res.status(200).json({ RspCode: '99', Message: 'Unknown error' })
+  }
+}
+
+module.exports = { createPaymentUrl, returnCallback, ipn }
+
+
+
+
+

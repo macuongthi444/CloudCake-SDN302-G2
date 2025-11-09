@@ -39,17 +39,23 @@ async function createCart(req, res, next) {
 async function getCartByUserId(req, res, next) {
     try {
         const { userID } = req.params
+        // Check if client wants to bypass cache (via query param _t)
+        const bypassCache = req.query._t !== undefined;
         
         // Cache cart data (cart thay đổi thường xuyên nhưng vẫn cache ngắn hạn)
         const cacheKey = `cart:${userID}`;
+        
+        // Only use cache if not bypassing
+        if (!bypassCache) {
         const cached = cache.get(cacheKey);
         if (cached) {
             res.set('Cache-Control', 'private, max-age=60'); // 1 minute
             return res.status(200).json(cached);
+            }
         }
 
         // Sử dụng .lean() để tăng tốc độ
-        const cart = await Cart.findOne({ userId: userID })
+        let cart = await Cart.findOne({ userId: userID })
             .populate('userId', 'firstName lastName email')
             .lean()
 
@@ -61,6 +67,50 @@ async function getCartByUserId(req, res, next) {
             };
             cache.set(cacheKey, emptyCart, 60000); // Cache 1 phút
             return res.status(200).json(emptyCart)
+        }
+
+        // Ensure each cart item has an image and stock info; fallback to product primary image
+        try {
+            const Product = db.product;
+            const ProductVariant = db.productVariant;
+            const items = Array.isArray(cart.items) ? [...cart.items] : [];
+            for (let i = 0; i < items.length; i++) {
+                const it = items[i];
+                // Enrich image
+                if (!it.image) {
+                    const p = await Product.findById(it.productId).lean();
+                    if (p && Array.isArray(p.images) && p.images.length > 0) {
+                        const primary = p.images.find(img => img.isPrimary);
+                        it.image = (primary && primary.url) || p.images[0].url || p.images[0];
+                    }
+                } else if (typeof it.image === 'object' && it.image.url) {
+                    it.image = it.image.url; // normalize to string for FE
+                }
+                
+                // Enrich stock info
+                try {
+                    if (it.variantId) {
+                        const variant = await ProductVariant.findById(it.variantId).lean();
+                        if (variant && variant.inventory) {
+                            it.stock = {
+                                quantity: variant.inventory.quantity || 0,
+                                trackInventory: variant.inventory.trackInventory !== false,
+                                lowStockThreshold: variant.inventory.lowStockThreshold || 10
+                            };
+                        }
+                    }
+                } catch (stockErr) {
+                    // ignore stock lookup failures, set default
+                    it.stock = {
+                        quantity: 0,
+                        trackInventory: false,
+                        lowStockThreshold: 10
+                    };
+                }
+            }
+            cart = { ...cart, items };
+        } catch (e) {
+            // ignore image enrichment failures
         }
 
         // Cache cart
@@ -90,6 +140,41 @@ async function addItem(req, res, next) {
             throw createHttpError.BadRequest("Price must be greater than 0")
         }
 
+        // Check stock availability
+        const ProductVariant = db.productVariant
+        const variant = await ProductVariant.findById(variantId).lean()
+        
+        if (!variant) {
+            throw createHttpError.NotFound("Product variant not found")
+        }
+
+        // Check if inventory tracking is enabled and validate stock
+        if (variant.inventory && variant.inventory.trackInventory) {
+            const availableStock = variant.inventory.quantity || 0
+            
+            // Find or create cart to check existing quantity
+            let cart = await Cart.findOne({ userId })
+            let existingQuantity = 0
+            
+            if (cart) {
+                const existingItem = cart.items.find(
+                    item => item.productId.toString() === productId.toString() && 
+                        item.variantId.toString() === variantId.toString()
+                )
+                if (existingItem) {
+                    existingQuantity = existingItem.quantity
+                }
+            }
+            
+            const requestedQuantity = existingQuantity + quantity
+            
+            if (requestedQuantity > availableStock) {
+                throw createHttpError.BadRequest(
+                    `Số lượng sản phẩm không đủ. Hiện có ${availableStock} sản phẩm trong kho.`
+                )
+            }
+        }
+
         // Find or create cart
         let cart = await Cart.findOne({ userId })
         
@@ -112,6 +197,19 @@ async function addItem(req, res, next) {
             cart.items[existingItemIndex].quantity += quantity
         } else {
             // Add new item to cart
+            let finalImage = image
+            try {
+                if (!finalImage) {
+                    const Product = db.product
+                    const p = await Product.findById(productId).lean()
+                    if (p && Array.isArray(p.images) && p.images.length > 0) {
+                        const primary = p.images.find(img => img.isPrimary)
+                        finalImage = (primary && primary.url) || p.images[0].url || p.images[0]
+                    }
+                }
+            } catch (e) {
+                // ignore image lookup failures
+            }
             cart.items.push({
                 productId,
                 variantId,
@@ -119,7 +217,7 @@ async function addItem(req, res, next) {
                 variantName,
                 quantity,
                 price,
-                image
+                image: finalImage
             })
         }
 
@@ -145,6 +243,25 @@ async function updateItem(req, res, next) {
 
         if (quantity <= 0) {
             throw createHttpError.BadRequest("Quantity must be greater than 0")
+        }
+
+        // Check stock availability
+        const ProductVariant = db.productVariant
+        const variant = await ProductVariant.findById(variantId).lean()
+        
+        if (!variant) {
+            throw createHttpError.NotFound("Product variant not found")
+        }
+
+        // Check if inventory tracking is enabled and validate stock
+        if (variant.inventory && variant.inventory.trackInventory) {
+            const availableStock = variant.inventory.quantity || 0
+            
+            if (quantity > availableStock) {
+                throw createHttpError.BadRequest(
+                    `Số lượng sản phẩm không đủ. Hiện có ${availableStock} sản phẩm trong kho.`
+                )
+            }
         }
 
         const cart = await Cart.findOne({ userId })
@@ -267,5 +384,3 @@ const cartController = {
 }
 
 module.exports = cartController
-
-

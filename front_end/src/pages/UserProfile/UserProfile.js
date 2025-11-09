@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProfileContent from './components/ProfileContent'
 import PasswordChange from './components/PasswordChange'
+import AddressManagement from './components/AddressManagement'
+import OrderManagement from './components/OrderManagement'
+import OrderDetail from './components/OrderDetail'
 import Sidebar from './Sidebar'
 
 import ApiService from '../../services/ApiService';
@@ -154,10 +157,11 @@ const UserProfile = () => {
            
         
             <Route path="/password" element={<PasswordChange />} />
+            <Route path="/addresses" element={<AddressManagement />} />
+            <Route path="/orders" element={<OrderManagement />} />
+            <Route path="/orders/:orderId" element={<OrderDetail />} />
             {/* Bổ sung route mặc định để redirect về profile */}
             <Route path="*" element={<Navigate to="/user-profile" replace />} />
-
-            {/* Thêm routes cho đơn hàng */}
            
           </Routes>
         </div>
