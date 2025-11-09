@@ -8,6 +8,8 @@ const productController = require('./product.controller')
 const productVariantController = require('./product-variant.controller')
 const categoryController = require('./category.controller')
 const shopController = require('./shop.controller')
+const orderController = require('./order.controller')
+const addressController = require('./address.controller')
 
 module.exports = {
     authController,
@@ -18,5 +20,7 @@ module.exports = {
     productController,
     productVariantController,
     categoryController,
-    shopController
+    shopController,
+    orderController,
+    addressController,
 }

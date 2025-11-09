@@ -7,6 +7,8 @@ const ProductRouter = require('./product.routes')
 const ProductVariantRouter = require('./product-variant.routes')
 const CategoryRouter = require('./category.routes')
 const ShopRouter = require('./shop.routes')
+const OrderRouter = require('./order.routes')
+const AddressRouter = require('./address.routes')
 const rateLimit = require('express-rate-limit');
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -23,6 +25,8 @@ ProductRouter.use(limiter);
 ProductVariantRouter.use(limiter);
 CategoryRouter.use(limiter);
 ShopRouter.use(limiter);
+OrderRouter.use(limiter);
+AddressRouter.use(limiter);
 module.exports = {
     AuthRouter,
     UserRouter,
@@ -32,5 +36,8 @@ module.exports = {
     ProductRouter,
     ProductVariantRouter,
     CategoryRouter,
-    ShopRouter
+    ShopRouter,
+    OrderRouter,
+    AddressRouter
 }
+
