@@ -1,6 +1,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const { paymentController } = require('../controller')
+const vnpayController = require('../controller/vnpay.controller')
 const authJwt = require('../middlewares/jwtAuth')
 
 const PaymentRouter = express.Router()
@@ -23,6 +24,11 @@ PaymentRouter.delete("/delete/:id", authJwt.verifyToken, authJwt.isAdmin, paymen
 
 // Toggle payment method status (requires Admin)
 PaymentRouter.put("/toggle-status/:id", authJwt.verifyToken, authJwt.isAdmin, paymentController.toggleStatus)
+
+// VNPay payment endpoints (public callbacks; creation requires auth)
+PaymentRouter.post('/vnpay/create', authJwt.verifyToken, vnpayController.createPaymentUrl)
+PaymentRouter.get('/vnpay/return', vnpayController.returnCallback)
+PaymentRouter.post('/vnpay/ipn', vnpayController.ipn)
 
 module.exports = PaymentRouter
 
