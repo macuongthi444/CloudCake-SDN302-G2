@@ -100,20 +100,34 @@ const HomePage = () => {
         <section className="py-12 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Danh mục Sản phẩm</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
               {categories.map((category) => (
                 <button
                   key={category._id}
                   onClick={() => navigate(`/products?categoryId=${category._id}`)}
-                  className="bg-gray-50 hover:bg-gray-100 rounded-lg p-6 text-center transition group"
+                  /* 2. Thay đổi style của button để làm card ảnh */
+                  className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-lg text-center transition group overflow-hidden"
                 >
-                  <div className="text-4xl mb-3">{category.icon || '🍰'}</div>
-                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition">
-                    {category.name}
-                  </h3>
+                  {/* 3. Thay thế div icon cũ bằng thẻ img */}
+                  <img
+                    // Sử dụng category.image, nếu không có thì dùng ảnh placeholder
+                    src={category.image || 'https://via.placeholder.com/200x200.png?text=Category'}
+                    alt={category.name}
+                    className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300" 
+                  />
+                  
+                  {/* Bọc tên danh mục trong 1 div để padding và làm to chữ */}
+                  <div className="p-4">
+                    <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition">
+                      {category.name}
+                    </h3>
+                  </div>
                 </button>
               ))}
             </div>
+            {/* --- KẾT THÚC CHỈNH SỬA --- */}
           </div>
         </section>
       )}

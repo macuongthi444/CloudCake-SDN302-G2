@@ -14,6 +14,8 @@ import RoleRedirect from "./route/RoleRedirect";
 import AdminLayout from "./admin/AdminLayout";
 import SellerLayout from "./seller/SellerLayout";
 import CartPage from "./pages/Cart/CartPage";
+import CheckoutPage from "./pages/Cart/CheckoutPage";
+import PaymentResultPage from "./pages/Payment/PaymentResultPage";
 import ProductList from "./pages/Products/ProductList";
 import ProductDetail from "./pages/Products/ProductDetail";
 import HomePage from "./pages/Home/HomePage";
@@ -53,10 +55,8 @@ function App() {
   return (
     <div className="App">
       <AuthProvider>
-        {!noHeaderPage && <Header />}
-
-        {/* THÊM CartProvider Ở ĐÂY */}
         <CartProvider>
+          {!noHeaderPage && <Header />}
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/introduction" element={<IntroductionPage />} />
@@ -106,6 +106,18 @@ function App() {
                   <CartPage />
                 </ProtectedRoute>
               }
+            />
+            <Route
+              path="/checkout"
+              element={
+                <ProtectedRoute>
+                  <CheckoutPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/payment-result"
+              element={<PaymentResultPage />}
             />
 
             <Route path="/products" element={<ProductList />} />

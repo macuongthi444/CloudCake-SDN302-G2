@@ -13,9 +13,13 @@ class CartService {
   }
 
   // Get cart by user ID
-  async getCartByUserId(userId) {
+  // Add timestamp query param to bypass browser cache if needed
+  async getCartByUserId(userId, bypassCache = false) {
     try {
-      const data = await ApiService.get(`/cart/user/${userId}`, false);
+      const url = bypassCache 
+        ? `/cart/user/${userId}?_t=${Date.now()}`
+        : `/cart/user/${userId}`;
+      const data = await ApiService.get(url, false);
       return data;
     } catch (error) {
       console.error('Error fetching cart:', error);
@@ -69,11 +73,5 @@ class CartService {
   }
 }
 
-export default new CartService();
-
-
-
-
-
-
-
+const cartService = new CartService();
+export default cartService;

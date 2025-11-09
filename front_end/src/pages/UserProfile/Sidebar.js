@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { User, LogOut, Lock } from 'lucide-react'
+import { User, LogOut, Lock, MapPin, Package } from 'lucide-react'
 import avatar from '../../assets/avatar.png'
 import { useEffect, useState } from 'react';
 
@@ -12,8 +12,8 @@ const Sidebar = ({ profile }) => {
 
   const sidebarItems = [
     { icon: User, label: 'Tài khoản của tôi', key: 'profile', path: '/user-profile' },
-    
-    
+    { icon: Package, label: 'Đơn hàng', key: 'orders', path: '/user-profile/orders' },
+    { icon: MapPin, label: 'Địa chỉ nhận hàng', key: 'addresses', path: '/user-profile/addresses' },
     { icon: Lock, label: 'Đổi mật khẩu', key: 'password', path: '/user-profile/password' },
   ];
 

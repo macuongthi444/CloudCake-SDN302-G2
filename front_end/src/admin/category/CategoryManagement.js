@@ -7,7 +7,6 @@ import {
   X,
   Grid as GridIcon,
   Image as ImageIcon,
-  ChevronDown,
 } from "lucide-react";
 import CategoryService from "../../services/CategoryService";
 import { toastError, toastSuccess, toastWarning } from "../../utils/toast";
@@ -242,11 +241,6 @@ const CategoryManagement = () => {
                     {cat.description || "-"}
                   </div>
                 </td>
-                {/* <td className="px-6 py-4 text-gray-700">
-                  {categories.find(
-                    (c) => c._id === (cat.parentId?._id || cat.parentId)
-                  )?.name || "-"}
-                </td> */}
                 <td className="px-6 py-4 text-gray-700">
                   {cat.sortOrder ?? 0}
                 </td>
@@ -323,8 +317,6 @@ const CategoryManagement = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                 </div>
-
-                
               </div>
 
               <div>

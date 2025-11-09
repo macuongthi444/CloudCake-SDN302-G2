@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
 import CartService from '../../services/CartService';
 import { useAuth } from '../Login/context/AuthContext';
@@ -12,6 +12,21 @@ const CartPage = () => {
   // Use global cart from context to avoid duplicate GETs
   const { cart, setCart, loadCart, loading } = useCart();
 
+  
+  // Force reload cart when component mounts to ensure fresh data
+  useEffect(() => {
+    if (currentUser?.id) {
+      // Reload cart to get latest data (bypass cache)
+      CartService.getCartByUserId(currentUser.id, true)
+        .then(data => {
+          setCart(data);
+        })
+        .catch(err => {
+          console.error('Error reloading cart:', err);
+        });
+    }
+  }, [currentUser?.id, setCart]);
+
   if (!cart) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -23,9 +38,30 @@ const CartPage = () => {
   const handleUpdateQuantity = async (item, newQuantity) => {
     if (newQuantity <= 0) return;
 
+    // Check stock limit before updating
+    if (item.stock && item.stock.trackInventory) {
+      const maxQuantity = item.stock.quantity || 0;
+      if (newQuantity > maxQuantity) {
+        toastError(`Số lượng không được vượt quá ${maxQuantity} sản phẩm trong kho`);
+        return;
+      }
+    }
+
+    // Optimistic update: Update UI immediately
+    const prevCart = { ...cart };
+    const itemIndex = cart.items.findIndex(
+      i => (i.variantId || i._id || i.productId) === (item.variantId || item._id || item.productId)
+    );
+    if (itemIndex !== -1) {
+      const updatedItems = [...cart.items];
+      updatedItems[itemIndex] = { ...updatedItems[itemIndex], quantity: newQuantity };
+      const newTotalPrice = updatedItems.reduce((sum, it) => sum + (it.quantity || 0) * (it.price || 0), 0);
+      setCart({ ...cart, items: updatedItems, totalPrice: newTotalPrice });
+    }
+
     try {
       const itemId = item.variantId || item._id || item.productId;
-      // Use response from update API to avoid an extra GET
+      // Use response from update API to sync with backend
       const updatedCart = await CartService.updateItemQuantity({
         userId: currentUser.id,
         productId: item.productId,
@@ -41,7 +77,10 @@ const CartPage = () => {
       toastSuccess('Cập nhật số lượng thành công!');
     } catch (err) {
       console.error('Error updating quantity:', err);
-      toastError('Không thể cập nhật số lượng: ' + (err.message || err));
+      // Rollback on error
+      setCart(prevCart);
+      const errorMessage = err?.response?.data?.error?.message || err?.message || 'Không thể cập nhật số lượng';
+      toastError(errorMessage);
     }
   };
 
@@ -81,19 +120,26 @@ const CartPage = () => {
       return;
     }
 
+    // Optimistic update: Clear cart immediately in UI
+    const prevCart = { ...cart };
+    const emptyCart = { ...cart, items: [], totalPrice: 0 };
+    setCart(emptyCart);
+    toastSuccess('Đã xóa tất cả sản phẩm khỏi giỏ hàng!');
+
     try {
       const resp = await CartService.clearCart(currentUser.id);
 
-      // Use returned cart if available to avoid an extra GET
+      // Use returned cart if available to sync with backend
       if (resp && resp.cart) {
         setCart(resp.cart);
       } else {
-        await loadCart();
+        // Reload in background, don't block UI
+        loadCart().catch(err => console.error('Error reloading cart:', err));
       }
-
-      toastSuccess('Đã xóa tất cả sản phẩm khỏi giỏ hàng!');
     } catch (err) {
       console.error('Error clearing cart:', err);
+      // Rollback on error
+      setCart(prevCart);
       toastError('Không thể xóa giỏ hàng: ' + (err.message || err));
     }
   };
@@ -155,9 +201,9 @@ const CartPage = () => {
                     <div key={item.productId} className="p-4 hover:bg-gray-50 transition">
                       <div className="flex gap-4">
                         {/* Product Image */}
-                        {item.image ? (
+                        {(item.image || item.image?.url) ? (
                           <img
-                            src={item.image}
+                            src={typeof item.image === 'string' ? item.image : item.image?.url}
                             alt={item.productName}
                             className="w-24 h-24 object-cover rounded-lg"
                             loading="lazy"
@@ -181,19 +227,40 @@ const CartPage = () => {
                             <div className="flex items-center gap-2 border border-gray-300 rounded-lg">
                               <button
                                 onClick={() => handleUpdateQuantity(item, item.quantity - 1)}
-                                className="p-1 hover:bg-gray-100 rounded"
+                                className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                                 disabled={item.quantity <= 1}
                               >
                                 <Minus size={16} />
                               </button>
-                              <span className="px-3 py-1">{item.quantity}</span>
+                              <span className="px-3 py-1 min-w-[3rem] text-center">{item.quantity}</span>
                               <button
                                 onClick={() => handleUpdateQuantity(item, item.quantity + 1)}
-                                className="p-1 hover:bg-gray-100 rounded"
+                                className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={
+                                  item.stock && 
+                                  item.stock.trackInventory && 
+                                  item.quantity >= (item.stock.quantity || 0)
+                                }
+                                title={
+                                  item.stock && 
+                                  item.stock.trackInventory && 
+                                  item.quantity >= (item.stock.quantity || 0)
+                                    ? `Chỉ còn ${item.stock.quantity} sản phẩm trong kho`
+                                    : 'Tăng số lượng'
+                                }
                               >
                                 <Plus size={16} />
                               </button>
                             </div>
+                            {item.stock && item.stock.trackInventory && (
+                              <span className={`text-xs ${
+                                item.stock.quantity <= item.stock.lowStockThreshold
+                                  ? 'text-orange-600'
+                                  : 'text-gray-500'
+                              }`}>
+                                Còn {item.stock.quantity} sản phẩm
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -242,11 +309,11 @@ const CartPage = () => {
                   </div>
                 </div>
 
-                <button className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition mb-3">
+                <button onClick={() => navigate('/checkout')} className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition mb-3">
                   Tiến hành thanh toán
                 </button>
 
-                <button className="w-full py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                <button onClick={() => navigate('/products')} className="w-full py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
                   Tiếp tục mua sắm
                 </button>
               </div>
