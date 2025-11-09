@@ -52,17 +52,17 @@ const uploadOptionalMultiple = (req, res, next) => {
         // Not multipart, skip upload middleware
         return next();
     }
-    
+
     // First, use memory storage to parse and check if files exist
     multerMemory.any()(req, res, (parseErr) => {
         if (parseErr) {
             console.error('Error parsing multipart data:', parseErr.message || parseErr);
             return next(parseErr);
         }
-        
+
         // Check if there are any 'images' files
         const imageFiles = req.files ? req.files.filter(f => f.fieldname === 'images') : [];
-        
+
         if (imageFiles.length === 0) {
             // No image files to upload, skip Cloudinary upload
             console.log('No image files to upload, skipping Cloudinary');
@@ -71,12 +71,12 @@ const uploadOptionalMultiple = (req, res, next) => {
             req.files = []; // Clear memory files
             return next();
         }
-        
+
         // There are image files, now use Cloudinary storage to upload
         // Re-parse with Cloudinary storage (this will re-read from request)
         // Actually, we need to recreate the request stream or use the files we have
         // For now, let's use a different approach: upload files we found
-        
+
         // Use Cloudinary upload for each file
         const cloudinary = require('../config/cloudinary.config');
         const uploadPromises = imageFiles.map(file => {
@@ -99,7 +99,7 @@ const uploadOptionalMultiple = (req, res, next) => {
                 uploadStream.end(file.buffer);
             });
         });
-        
+
         Promise.all(uploadPromises)
             .then(uploadedFiles => {
                 // Replace memory files with Cloudinary URLs
@@ -119,12 +119,25 @@ const uploadOptionalMultiple = (req, res, next) => {
             });
     });
 };
-
+const uploadShopImage = (req, res, next) => {
+  cloudinaryUploadShopImage(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return next(createHttpError.BadRequest('File size exceeds limit (5MB)'));
+      }
+      return next(createHttpError.BadRequest(`Upload error: ${err.message}`));
+    } else if (err) {
+      return next(err);
+    }
+    next();
+  });
+};
 module.exports = {
     uploadSingle,
     uploadMultiple,
     uploadOptionalMultiple,
-    upload
+    upload,
+    uploadShopImage
 };
 
 

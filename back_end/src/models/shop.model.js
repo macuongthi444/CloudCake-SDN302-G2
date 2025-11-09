@@ -33,23 +33,14 @@ const shopSchema = new Schema({
         postalCode: String
     },
     phone: {
-        type: String,
-        validate: {
-            validator: function (v) {
-                return /^[1-9][0-9]{0,3}[0-9]{7,15}$/.test(v);
-            },
-            message: props => `${props.value} is not a valid phone number`
-        }
-    },
+         type: String,
+         default: null
+       },
     email: {
-        type: String,
-        validate: {
-            validator: function (v) {
-                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
-            },
-            message: props => `${props.value} is not a valid email`
-        }
-    },
+         type: String,
+         required: true,
+         unique: true
+       },
     status: {
         type: String,
         enum: ['PENDING', 'ACTIVE', 'SUSPENDED', 'REJECTED'],

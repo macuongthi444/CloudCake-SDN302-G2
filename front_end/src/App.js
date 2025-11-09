@@ -19,7 +19,8 @@ import ProductDetail from "./pages/Products/ProductDetail";
 import HomePage from "./pages/Home/HomePage";
 import IntroductionPage from "./pages/Introduction/IntroductionPage";
 import AdminRoute from "./route/ProtectedRoute";
-    
+import ShopRegistration from "./sellerRegistration/ShopRegistration";
+
 function App() {
   const location = useLocation();
   const noHeaderPaths = [
@@ -63,6 +64,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/shop-registration" element={<ShopRegistration />} />
 
             <Route
               path="/user-profile/*"
@@ -108,6 +110,8 @@ function App() {
 
             <Route path="/products" element={<ProductList />} />
             <Route path="/products/:id" element={<ProductDetail />} />
+
+            
           </Routes>
         </CartProvider>
 
