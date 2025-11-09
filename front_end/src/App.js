@@ -12,13 +12,14 @@ import ResetPassword from "./forgotPassword/ResetPassword";
 import ProtectedRoute from "./route/ProtectedRoute";
 import RoleRedirect from "./route/RoleRedirect";
 import AdminLayout from "./admin/AdminLayout";
+import SellerLayout from "./seller/SellerLayout";
 import CartPage from "./pages/Cart/CartPage";
 import ProductList from "./pages/Products/ProductList";
 import ProductDetail from "./pages/Products/ProductDetail";
 import HomePage from "./pages/Home/HomePage";
 import IntroductionPage from "./pages/Introduction/IntroductionPage";
 import AdminRoute from "./route/ProtectedRoute";
-
+    
 function App() {
   const location = useLocation();
   const noHeaderPaths = [
@@ -84,6 +85,15 @@ function App() {
                 <AdminRoute>
                   <AdminLayout />
                 </AdminRoute>
+              }
+            />
+
+            <Route
+              path="/seller/*"
+              element={
+                <ProtectedRoute>
+                  <SellerLayout />
+                </ProtectedRoute>
               }
             />
 

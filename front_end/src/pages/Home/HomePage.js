@@ -3,16 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Star, ShoppingCart, ArrowRight, ChefHat, Sparkles, TrendingUp, Package } from 'lucide-react';
 import ProductService from '../../services/ProductService';
 import CategoryService from '../../services/CategoryService';
-import CartService from '../../services/CartService';
-import { useAuth } from '../Login/context/AuthContext';
-import { useCart } from '../Login/context/CartContext';
-import { toastSuccess, toastError, toastWarning } from '../../utils/toast';
 import logo from '../../assets/Logo.jpg';
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
-  const { setCart } = useCart();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,40 +39,7 @@ const HomePage = () => {
     }
   };
 
-  const handleQuickAddToCart = async (product, defaultVariant) => {
-    if (!currentUser || !currentUser.id) {
-      navigate('/login');
-      return;
-    }
-
-    if (!defaultVariant) {
-      navigate(`/products/${product._id}`);
-      return;
-    }
-
-    try {
-      const resp = await CartService.addItemToCart({
-        userId: currentUser.id,
-        productId: product._id,
-        variantId: defaultVariant._id,
-        productName: product.name,
-        variantName: defaultVariant.name,
-        quantity: 1,
-        price: defaultVariant.discountedPrice || defaultVariant.price,
-        image: defaultVariant.image || (product.images && product.images[0]?.url)
-      });
-
-      if (resp) {
-        try { setCart(resp); } catch (e) {}
-      }
-
-      toastSuccess('Đã thêm vào giỏ hàng!');
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      toastError('Không thể thêm vào giỏ hàng. Chuyển đến trang chi tiết...');
-      navigate(`/products/${product._id}`);
-    }
-  };
+  // removed quick-add to cart (unused)
 
   if (loading) {
     return (
@@ -180,13 +141,12 @@ const HomePage = () => {
           {featuredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {featuredProducts.map((product) => {
-                const displayPrice = product.discountedPrice || product.basePrice;
                 const primaryImage = product.images?.find(img => img.isPrimary)?.url || product.images?.[0]?.url;
 
                 return (
                   <div
                     key={product._id}
-                    className="bg-white rounded-lg shadow hover:shadow-lg transition cursor-pointer overflow-hidden group"
+                    className="bg-white rounded-lg shadow hover:shadow-lg transition cursor-pointer overflow-hidden group flex flex-col h-full"
                   >
                     {/* Product Image */}
                     <div
@@ -218,7 +178,7 @@ const HomePage = () => {
                     </div>
 
                     {/* Product Info */}
-                    <div className="p-4">
+                    <div className="p-4 flex flex-col flex-1">
                       <h3
                         onClick={() => navigate(`/products/${product._id}`)}
                         className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 cursor-pointer"
@@ -257,7 +217,7 @@ const HomePage = () => {
                       {/* Quick Add Button */}
                       <button
                         onClick={() => navigate(`/products/${product._id}`)}
-                        className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+                        className="mt-auto w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium"
                       >
                         <ShoppingCart size={18} />
                         Xem chi tiết
