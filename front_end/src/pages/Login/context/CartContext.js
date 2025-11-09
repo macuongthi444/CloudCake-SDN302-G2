@@ -5,7 +5,26 @@ import { useAuth } from "../../../pages/Login/context/AuthContext";
 
 const CartContext = createContext();
 
-export const useCart = () => useContext(CartContext);
+export const useCart = () => {
+  try {
+    const context = useContext(CartContext);
+    if (!context) {
+      // Return default values if context is not available
+      console.warn('useCart must be used within a CartProvider');
+      return { cart: null, setCart: () => {}, loadCart: async () => {}, loading: false };
+    }
+    // Ensure context is always an object
+    if (typeof context !== 'object' || context === null) {
+      console.warn('CartContext returned invalid value');
+      return { cart: null, setCart: () => {}, loadCart: async () => {}, loading: false };
+    }
+    return context;
+  } catch (error) {
+    console.error('Error in useCart:', error);
+    // Return default values on error
+    return { cart: null, setCart: () => {}, loadCart: async () => {}, loading: false };
+  }
+};
 
 export const CartProvider = ({ children }) => {
   const { currentUser } = useAuth();

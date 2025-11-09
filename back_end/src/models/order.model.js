@@ -105,6 +105,11 @@ const orderSchema = new Schema({
         ref: 'paymentMethods',
         required: true
     },
+    paymentCode: {
+        type: String,
+        trim: true
+        // Store payment code (VNPAY, COD) for easy checking without populate
+    },
     transactionId: {
         type: String,
         trim: true
@@ -155,10 +160,34 @@ const orderSchema = new Schema({
     timestamps: true
 })
 
+// Pre-save hook to auto-generate orderNumber if not provided
+orderSchema.pre('save', async function(next) {
+  // Only generate if orderNumber is not set
+  if (!this.orderNumber) {
+    const date = new Date()
+    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '') // YYYYMMDD
+    
+    // Find the last order number for today to get the sequence
+    const lastOrder = await this.constructor.findOne({
+      orderNumber: { $regex: `^ORD-${dateStr}-` }
+    }).sort({ orderNumber: -1 }).lean()
+    
+    let sequence = 1
+    if (lastOrder && lastOrder.orderNumber) {
+      const lastSeq = parseInt(lastOrder.orderNumber.split('-')[2] || '0', 10)
+      sequence = lastSeq + 1
+    }
+    
+    // Format: ORD-YYYYMMDD-XXXX (4 digits with leading zeros)
+    this.orderNumber = `ORD-${dateStr}-${String(sequence).padStart(4, '0')}`
+  }
+  next()
+})
+
 // Indexes
 orderSchema.index({ userId: 1, createdAt: -1 })
 orderSchema.index({ shopId: 1, status: 1 })
-orderSchema.index({ orderNumber: 1 })
+orderSchema.index({ orderNumber: 1 }, { unique: true, sparse: true })
 orderSchema.index({ status: 1, createdAt: -1 })
 
 

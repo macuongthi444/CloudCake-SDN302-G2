@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Eye, Calendar, CreditCard, Truck, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { Package, Eye, Calendar, CreditCard, Truck, CheckCircle, XCircle, Clock, AlertCircle, Wallet } from 'lucide-react';
 import OrderService from '../../../services/OrderService';
+import PaymentService from '../../../services/PaymentService';
 import { useAuth } from '../../Login/context/AuthContext';
-import { toastError } from '../../../utils/toast';
+import { toastError, toastInfo } from '../../../utils/toast';
 
 const OrderManagement = () => {
   const { currentUser } = useAuth();
@@ -16,6 +17,7 @@ const OrderManagement = () => {
     if (currentUser?.id) {
       loadOrders();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   const loadOrders = async () => {
@@ -73,6 +75,40 @@ const OrderManagement = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handlePayVNPay = async (order) => {
+    try {
+      toastInfo('Đang chuyển hướng đến cổng thanh toán VNPay...');
+      const response = await PaymentService.createVNPayPayment(order._id);
+      if (response && response.paymentUrl) {
+        window.location.href = response.paymentUrl;
+      } else {
+        toastError('Không thể tạo URL thanh toán');
+      }
+    } catch (error) {
+      console.error('Error creating VNPay payment:', error);
+      toastError('Không thể tạo thanh toán VNPay. Vui lòng thử lại.');
+    }
+  };
+
+  const shouldShowPayButton = (order) => {
+    // Show pay button if:
+    // 1. Payment status is PENDING
+    // 2. Payment method is VNPay
+    
+    // Check if payment status is PENDING
+    if (order.paymentStatus !== 'PENDING') {
+      return false;
+    }
+    
+    // Check if payment method is VNPay
+    // Priority: order.paymentCode > paymentMethodId.paymentCode > paymentMethodId (string check)
+    const isVNPay = 
+      order.paymentCode === 'VNPAY' || 
+      (order.paymentMethodId && typeof order.paymentMethodId === 'object' && order.paymentMethodId.paymentCode === 'VNPAY');
+    
+    return isVNPay;
   };
 
   if (loading) {
@@ -169,13 +205,24 @@ const OrderManagement = () => {
                     <p className="text-lg font-bold text-purple-600">
                       {order.totalAmount?.toLocaleString('vi-VN')} ₫
                     </p>
-                    <button
-                      onClick={() => navigate(`/user-profile/orders/${order._id}`)}
-                      className="mt-2 text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1"
-                    >
-                      <Eye className="w-4 h-4" />
-                      Xem chi tiết
-                    </button>
+                    <div className="mt-2 flex gap-2 justify-end">
+                      {shouldShowPayButton(order) && (
+                        <button
+                          onClick={() => handlePayVNPay(order)}
+                          className="text-sm bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition flex items-center gap-1"
+                        >
+                          <Wallet className="w-4 h-4" />
+                          Thanh toán
+                        </button>
+                      )}
+                      <button
+                        onClick={() => navigate(`/user-profile/orders/${order._id}`)}
+                        className="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Xem chi tiết
+                      </button>
+                    </div>
                   </div>
                 </div>
 

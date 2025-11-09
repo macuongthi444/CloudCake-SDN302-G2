@@ -132,6 +132,7 @@ async function createFromCart(req, res, next) {
       discount,
       totalAmount,
       paymentMethodId: pm._id,
+      paymentCode: paymentCode, // Store payment code for easy checking
       status: 'PENDING', // Explicitly set to PENDING
       paymentStatus: 'PENDING', // Explicitly set to PENDING - will be updated after payment
       shippingMethodId: shipping._id,
@@ -178,11 +179,60 @@ async function createFromCart(req, res, next) {
 async function getById(req, res, next) {
   try {
     const { id } = req.params
-    const order = await Order.findById(id)
-      .populate('userId', 'firstName lastName email')
-      .populate('shopId', 'name')
-      .populate('paymentMethodId', 'name paymentCode')
-      .populate('shippingMethodId', 'name')
+    if (!id) throw createHttpError.BadRequest('Order ID is required')
+    
+    // Check if id is a valid ObjectId (24 hex characters)
+    const mongoose = require('mongoose')
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(id)
+    
+    let order
+    if (isValidObjectId) {
+      // Search by _id if it's a valid ObjectId
+      order = await Order.findById(id)
+        .populate('userId', 'firstName lastName email')
+        .populate('shopId', 'name')
+        .populate('paymentMethodId', 'name paymentCode')
+        .populate('shippingMethodId', 'name')
+    } else {
+      // Search by orderNumber if it's not a valid ObjectId
+      // Support both formats: ORD-YYYYMMDD-XXXX and ORDYYYYMMDDXXXX
+      // If id doesn't have dashes, try to convert to format with dashes
+      // Example: ORD202511090001 -> ORD-20251109-0001
+      if (!id.includes('-') && id.startsWith('ORD') && id.length >= 11) {
+        // Try to parse: ORD + YYYYMMDD + XXXX
+        const match = id.match(/^ORD(\d{8})(\d+)$/)
+        if (match) {
+          const [, datePart, seqPart] = match
+          const formattedOrderNumber = `ORD-${datePart}-${seqPart.padStart(4, '0')}`
+          // Try both formats
+          order = await Order.findOne({
+            $or: [
+              { orderNumber: id },
+              { orderNumber: formattedOrderNumber }
+            ]
+          })
+            .populate('userId', 'firstName lastName email')
+            .populate('shopId', 'name')
+            .populate('paymentMethodId', 'name paymentCode')
+            .populate('shippingMethodId', 'name')
+        } else {
+          // Fallback: search as-is
+          order = await Order.findOne({ orderNumber: id })
+            .populate('userId', 'firstName lastName email')
+            .populate('shopId', 'name')
+            .populate('paymentMethodId', 'name paymentCode')
+            .populate('shippingMethodId', 'name')
+        }
+      } else {
+        // Search with dashes format
+        order = await Order.findOne({ orderNumber: id })
+          .populate('userId', 'firstName lastName email')
+          .populate('shopId', 'name')
+          .populate('paymentMethodId', 'name paymentCode')
+          .populate('shippingMethodId', 'name')
+      }
+    }
+    
     if (!order) throw createHttpError.NotFound('Order not found')
     res.status(200).json(order)
   } catch (error) {

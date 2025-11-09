@@ -150,11 +150,24 @@ async function returnCallback(req, res, next) {
       })
     }
     
-    // Redirect to frontend with payment result
+    // Get orderNumber for redirect URL (use orderNumber instead of ObjectId for cleaner URLs)
+    let orderNumber = ''
+    if (orderId) {
+      try {
+        const order = await Order.findById(orderId).select('orderNumber').lean()
+        if (order && order.orderNumber) {
+          orderNumber = order.orderNumber
+        }
+      } catch (err) {
+        console.warn('Could not fetch orderNumber for redirect:', err)
+      }
+    }
+    
+    // Redirect to frontend with payment result (use orderNumber instead of orderId)
     const frontendUrl = vnpayService.frontendUrl || 'http://localhost:3000'
     const redirectUrl = `${frontendUrl}/payment-result?` + new URLSearchParams({
       success: result.isSuccess ? 'true' : 'false',
-      orderId: orderId || '',
+      orderId: orderNumber || orderId || '', // Prefer orderNumber, fallback to orderId
       message: result.isSuccess ? 'Thanh toán thành công' : (result.isValid ? 'Thanh toán thất bại' : 'Chữ ký không hợp lệ')
     }).toString()
     

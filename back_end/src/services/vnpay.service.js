@@ -104,7 +104,7 @@ class VNPayService {
     // For localhost development, HTTP is sufficient
     this.returnUrl =
       process.env.VNPAY_RETURN_URL ||
-      "https://da5e18280afb.ngrok-free.app/api/order/vnpay-callback";
+      "http://localhost:9999/api/order/vnpay-callback";
     this.apiUrl =
       process.env.VNPAY_API_URL ||
       "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";

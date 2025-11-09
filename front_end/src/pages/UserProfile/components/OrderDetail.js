@@ -15,10 +15,12 @@ import {
   Phone,
   Mail,
   Store,
-  FileText
+  FileText,
+  Wallet
 } from 'lucide-react';
 import OrderService from '../../../services/OrderService';
-import { toastError } from '../../../utils/toast';
+import PaymentService from '../../../services/PaymentService';
+import { toastError, toastInfo } from '../../../utils/toast';
 
 const OrderDetail = () => {
   const { orderId } = useParams();
@@ -143,6 +145,37 @@ const OrderDetail = () => {
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN').format(amount || 0);
+  };
+
+  const handlePayVNPay = async () => {
+    if (!order) return;
+    try {
+      toastInfo('Đang chuyển hướng đến cổng thanh toán VNPay...');
+      const response = await PaymentService.createVNPayPayment(order._id);
+      if (response && response.paymentUrl) {
+        window.location.href = response.paymentUrl;
+      } else {
+        toastError('Không thể tạo URL thanh toán');
+      }
+    } catch (error) {
+      console.error('Error creating VNPay payment:', error);
+      toastError('Không thể tạo thanh toán VNPay. Vui lòng thử lại.');
+    }
+  };
+
+  const shouldShowPayButton = () => {
+    if (!order) return false;
+    // Show pay button if:
+    // 1. Payment status is PENDING
+    // 2. Payment method is VNPay
+    // Priority: order.paymentCode > paymentMethodId.paymentCode
+    if (order.paymentStatus !== 'PENDING') {
+      return false;
+    }
+    const isVNPay = 
+      order.paymentCode === 'VNPAY' || 
+      (order.paymentMethodId && typeof order.paymentMethodId === 'object' && order.paymentMethodId.paymentCode === 'VNPAY');
+    return isVNPay;
   };
 
   if (loading) {
@@ -418,6 +451,20 @@ const OrderDetail = () => {
                   </span>
                 </div>
               </div>
+              {shouldShowPayButton() && (
+                <div className="pt-4 border-t border-gray-200 mt-4">
+                  <button
+                    onClick={handlePayVNPay}
+                    className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition font-medium flex items-center justify-center gap-2"
+                  >
+                    <Wallet className="w-5 h-5" />
+                    Thanh toán VNPay
+                  </button>
+                  <p className="text-xs text-gray-500 text-center mt-2">
+                    Bạn sẽ được chuyển hướng đến cổng thanh toán VNPay
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

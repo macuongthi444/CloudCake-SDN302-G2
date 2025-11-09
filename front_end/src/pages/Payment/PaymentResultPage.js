@@ -3,23 +3,62 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { toastSuccess, toastError } from '../../utils/toast';
 import { useCart } from '../Login/context/CartContext';
+import OrderService from '../../services/OrderService';
 
 const PaymentResultPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { loadCart } = useCart();
+  const cartContext = useCart();
+  const loadCart = cartContext?.loadCart || (async () => {});
   const [loading, setLoading] = useState(true);
+  const [orderNumber, setOrderNumber] = useState(null);
 
   useEffect(() => {
     const success = searchParams.get('success') === 'true';
     const orderId = searchParams.get('orderId');
-    const message = decodeURIComponent(searchParams.get('message') || '');
+    let message = searchParams.get('message') || '';
+    
+    // Safely decode message
+    try {
+      if (message) {
+        message = decodeURIComponent(message);
+      }
+    } catch (e) {
+      console.warn('Could not decode message:', message);
+      message = message || '';
+    }
 
     console.log('Payment result page loaded:', {
       success,
       orderId,
       message
     });
+
+    // If orderId is an ObjectId (24 hex chars, not starting with "ORD-"), fetch order to get orderNumber
+    const fetchOrderNumber = async () => {
+      if (orderId && !orderId.startsWith('ORD-') && orderId.length === 24) {
+        try {
+          const order = await OrderService.getById(orderId);
+          if (order && order.orderNumber) {
+            setOrderNumber(order.orderNumber);
+          } else {
+            setOrderNumber(orderId); // Fallback to orderId if orderNumber not found
+          }
+        } catch (err) {
+          console.warn('Could not fetch orderNumber:', err);
+          setOrderNumber(orderId); // Fallback to orderId
+        }
+      } else {
+        // orderId is already orderNumber or empty
+        setOrderNumber(orderId || null);
+      }
+    };
+
+    if (orderId) {
+      fetchOrderNumber();
+    } else {
+      setOrderNumber(null);
+    }
 
     setLoading(false);
 
@@ -28,7 +67,9 @@ const PaymentResultPage = () => {
       if (success) {
         // Reload cart after successful payment (backend clears cart for successful VNPay)
         // Reload in background, don't wait for it
-        loadCart().catch(err => console.error('Error reloading cart:', err));
+        if (loadCart && typeof loadCart === 'function') {
+          loadCart().catch(err => console.error('Error reloading cart:', err));
+        }
         
         const successMessage = message || 'Thanh toán thành công! Đơn hàng của bạn đã được xử lý.';
         toastSuccess(successMessage, {
@@ -36,12 +77,14 @@ const PaymentResultPage = () => {
         });
       } else {
         // Do NOT reload cart on payment failure - user may want to retry
-        let errorMessage = message || 'Có lỗi xảy ra trong quá trình thanh toán';
+        let errorMessage = message || 'Bạn đã hủy thanh toán hoặc có lỗi xảy ra trong quá trình thanh toán.';
         
         if (message.includes('Chữ ký không hợp lệ') || message.includes('không hợp lệ')) {
           errorMessage = 'Chữ ký không hợp lệ. Vui lòng liên hệ hỗ trợ nếu bạn đã thanh toán.';
         } else if (message.includes('thất bại') || message.includes('failed')) {
           errorMessage = message || 'Thanh toán thất bại. Vui lòng thử lại.';
+        } else if (!message) {
+          errorMessage = 'Bạn đã hủy thanh toán. Đơn hàng vẫn được lưu và bạn có thể thanh toán lại sau.';
         }
         
         toastError(errorMessage, {
@@ -56,7 +99,17 @@ const PaymentResultPage = () => {
 
   const success = searchParams.get('success') === 'true';
   const orderId = searchParams.get('orderId');
-  const message = decodeURIComponent(searchParams.get('message') || '');
+  let message = searchParams.get('message') || '';
+  
+  // Safely decode message
+  try {
+    if (message) {
+      message = decodeURIComponent(message);
+    }
+  } catch (e) {
+    console.warn('Could not decode message:', message);
+    message = message || '';
+  }
 
   if (loading) {
     return (
@@ -85,9 +138,9 @@ const PaymentResultPage = () => {
             <p className="text-gray-600 mb-6">
               {message || 'Đơn hàng của bạn đã được thanh toán thành công. Chúng tôi sẽ xử lý và giao hàng sớm nhất có thể.'}
             </p>
-            {orderId && (
+            {orderNumber && (
               <p className="text-sm text-gray-500 mb-6">
-                Mã đơn hàng: <span className="font-mono font-semibold">{orderId}</span>
+                Mã đơn hàng: <span className="font-mono font-semibold">{orderNumber}</span>
               </p>
             )}
             <div className="space-y-3">
@@ -118,17 +171,25 @@ const PaymentResultPage = () => {
             <p className="text-gray-600 mb-6">
               {message || 'Có lỗi xảy ra trong quá trình thanh toán. Vui lòng kiểm tra lại thông tin và thử lại.'}
             </p>
-            {orderId && (
+            {orderNumber && (
               <p className="text-sm text-gray-500 mb-6">
-                Mã đơn hàng: <span className="font-mono font-semibold">{orderId}</span>
+                Mã đơn hàng: <span className="font-mono font-semibold">{orderNumber}</span>
               </p>
             )}
             <div className="space-y-3">
+              {orderNumber && (
+                <button
+                  onClick={() => navigate(`/user-profile/orders/${orderNumber}`)}
+                  className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition font-medium"
+                >
+                  Xem đơn hàng và thanh toán lại
+                </button>
+              )}
               <button
-                onClick={() => navigate('/cart')}
+                onClick={() => navigate('/user-profile/orders')}
                 className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium"
               >
-                Thử lại
+                Xem tất cả đơn hàng
               </button>
               <button
                 onClick={() => navigate('/')}

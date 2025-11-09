@@ -54,10 +54,8 @@ function App() {
   return (
     <div className="App">
       <AuthProvider>
-        {!noHeaderPage && <Header />}
-
-        {/* THÊM CartProvider Ở ĐÂY */}
         <CartProvider>
+          {!noHeaderPage && <Header />}
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/introduction" element={<IntroductionPage />} />
