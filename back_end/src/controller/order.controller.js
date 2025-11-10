@@ -996,265 +996,293 @@ const orderController = {
     markAsRefunded
 };
 
-// module.exports = orderController;
-// const createHttpError = require('http-errors')
-// const db = require('../models')
-// const Order = db.order
-// const Cart = db.cart
-// const PaymentMethod = db.paymentMethod
-// const User = db.user
-// const Address = db.address
 
-// async function createFromCart(req, res, next) {
-//   try {
-//     const { userId, paymentCode = 'COD', shippingAddress = {}, notes } = req.body
-//     if (!userId) throw createHttpError.BadRequest('userId is required')
+// --- Functions imported from older controller (createFromCart, getById, getByUserId) ---
+const createHttpError = require('http-errors');
+const Cart = db.cart;
+const PaymentMethod = db.paymentMethod;
+const User = db.user;
+const Address = db.address;
+const ShippingMethod = db.shipping || db.shippingMethod || db.shippingMethodModel; // fallback names
 
-//     // Load cart with populated products to get shopId
-//     const cart = await Cart.findOne({ userId }).populate('items.productId', 'shopId')
-//     if (!cart || !cart.items || cart.items.length === 0) {
-//       throw createHttpError.BadRequest('Cart is empty')
-//     }
+// Tạo đơn từ giỏ hàng (createFromCart)
+const createFromCart = async (req, res) => {
+    try {
+        const { userId, paymentCode = 'COD', shippingAddress = {}, notes } = req.body;
+        if (!userId) return res.status(400).json({ message: 'userId is required' });
 
-//     // Get shopId from first product
-//     const firstProduct = cart.items[0]?.productId
-//     const shopId = firstProduct?.shopId || cart.items[0]?.productId?.shopId
-//     if (!shopId) {
-//       throw createHttpError.BadRequest('Cannot determine shop from cart items')
-//     }
+        // Load cart with populated products to get shopId
+        const cart = await Cart.findOne({ userId }).populate('items.productId', 'shopId price name');
+        if (!cart || !cart.items || cart.items.length === 0) {
+            return res.status(400).json({ message: 'Cart is empty' });
+        }
 
-//     // Get user's default address or use provided one
-//     let finalShippingAddress = shippingAddress
-//     if (!shippingAddress.recipientName || !shippingAddress.phone || !shippingAddress.city || !shippingAddress.address_line1) {
-//       const user = await User.findById(userId).lean()
-//       const defaultAddr = await Address.findOne({ user_id: userId, status: true }).sort({ createdAt: -1 }).lean()
-//       if (defaultAddr) {
-//         finalShippingAddress = {
-//           recipientName: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email || 'Customer',
-//           phone: defaultAddr.phone || user?.phone || '',
-//           city: defaultAddr.city || 'Ho Chi Minh',
-//           address_line1: defaultAddr.address_line1 || 'Address not provided',
-//           address_line2: defaultAddr.address_line2,
-//           district: defaultAddr.district,
-//           ward: defaultAddr.ward,
-//           postalCode: defaultAddr.postalCode
-//         }
-//       } else if (user) {
-//         finalShippingAddress = {
-//           recipientName: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email || 'Customer',
-//           phone: user.phone || '',
-//           city: 'Ho Chi Minh',
-//           address_line1: 'Address not provided'
-//         }
-//       } else {
-//         finalShippingAddress = {
-//           recipientName: 'Customer',
-//           phone: '',
-//           city: 'Ho Chi Minh',
-//           address_line1: 'Address not provided'
-//         }
-//       }
-//     }
+        // Get shopId from first product
+        const firstProduct = cart.items[0]?.productId;
+        const shopId = firstProduct?.shopId || cart.items[0]?.productId?.shopId;
+        if (!shopId) {
+            return res.status(400).json({ message: 'Cannot determine shop from cart items' });
+        }
 
-//     // Find payment method by code; if missing, upsert a basic one
-//     let pm = await PaymentMethod.findOne({ paymentCode })
-//     if (!pm) {
-//       pm = new PaymentMethod({
-//         name: paymentCode,
-//         paymentCode,
-//         isActive: true,
-//         isOnline: paymentCode !== 'COD',
-//         supportsRefund: paymentCode !== 'COD'
-//       })
-//       await pm.save()
-//     }
+        // Get user's default address or use provided one
+        let finalShippingAddress = shippingAddress;
+        if (!shippingAddress.recipientName || !shippingAddress.phone || !shippingAddress.city || !shippingAddress.address_line1) {
+            const user = await User.findById(userId).lean();
+            const defaultAddr = await Address.findOne({ user_id: userId, status: true }).sort({ createdAt: -1 }).lean();
+            if (defaultAddr) {
+                finalShippingAddress = {
+                    recipientName: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email || 'Customer',
+                    phone: defaultAddr.phone || user?.phone || '',
+                    city: defaultAddr.city || 'Ho Chi Minh',
+                    address_line1: defaultAddr.address_line1 || 'Address not provided',
+                    address_line2: defaultAddr.address_line2,
+                    district: defaultAddr.district,
+                    ward: defaultAddr.ward,
+                    postalCode: defaultAddr.postalCode
+                };
+            } else if (user) {
+                finalShippingAddress = {
+                    recipientName: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email || 'Customer',
+                    phone: user.phone || '',
+                    city: 'Ho Chi Minh',
+                    address_line1: 'Address not provided'
+                };
+            } else {
+                finalShippingAddress = {
+                    recipientName: 'Customer',
+                    phone: '',
+                    city: 'Ho Chi Minh',
+                    address_line1: 'Address not provided'
+                };
+            }
+        }
 
-//     // Calculate amounts
-//     const subtotal = cart.items.reduce((sum, it) => {
-//       const price = Number(it.price || 0)
-//       const quantity = Number(it.quantity || 0)
-//       return sum + (price * quantity)
-//     }, 0)
-//     const shippingFee = 0
-//     const discount = 0
-//     const totalAmount = subtotal + shippingFee - discount
+        // Find payment method by code; if missing, upsert a basic one
+        let pm = await PaymentMethod.findOne({ paymentCode });
+        if (!pm) {
+            pm = new PaymentMethod({
+                name: paymentCode,
+                paymentCode,
+                isActive: true,
+                isOnline: paymentCode !== 'COD',
+                supportsRefund: paymentCode !== 'COD'
+            });
+            await pm.save();
+        }
 
-//     // Validate totalAmount
-//     if (totalAmount <= 0) {
-//       throw createHttpError.BadRequest(`Invalid cart total: ${totalAmount}. Cart must have items with valid prices.`)
-//     }
+        // Calculate amounts
+        const subtotal = cart.items.reduce((sum, it) => {
+            const price = Number(it.price || it.productId?.price || 0);
+            const quantity = Number(it.quantity || 0);
+            return sum + (price * quantity);
+        }, 0);
+        const shippingFee = 0;
+        const discount = 0;
+        const totalAmount = subtotal + shippingFee - discount;
 
-//     console.log('Order creation:', {
-//       userId,
-//       cartItemsCount: cart.items.length,
-//       subtotal,
-//       totalAmount,
-//       items: cart.items.map(it => ({
-//         productName: it.productName,
-//         quantity: it.quantity,
-//         price: it.price,
-//         total: it.quantity * it.price
-//       }))
-//     })
+        // Validate totalAmount
+        if (totalAmount <= 0) {
+            return res.status(400).json({ message: `Invalid cart total: ${totalAmount}. Cart must have items with valid prices.` });
+        }
 
-//     // Map items to order schema - ensure productId is ObjectId
-//     const items = cart.items.map(it => ({
-//       productId: it.productId?._id || it.productId, // Handle both populated and non-populated
-//       variantId: it.variantId,
-//       productName: it.productName,
-//       variantName: it.variantName,
-//       quantity: Number(it.quantity || 0),
-//       unitPrice: Number(it.price || 0),
-//       totalPrice: Number(it.quantity || 0) * Number(it.price || 0),
-//       image: it.image
-//     }))
+        console.log('Order creation (from cart):', {
+            userId,
+            cartItemsCount: cart.items.length,
+            subtotal,
+            totalAmount,
+            items: cart.items.map(it => ({
+                productName: it.productName || it.productId?.name,
+                quantity: it.quantity,
+                price: it.price || it.productId?.price,
+                total: (it.quantity || 0) * (it.price || it.productId?.price || 0)
+            }))
+        });
 
-//     // Pick a shipping method; try default or any active
-//     const ShippingMethod = db.shippingMethod
-//     let shipping = await ShippingMethod.findOne({ isDefault: true, isActive: true })
-//     if (!shipping) shipping = await ShippingMethod.findOne({ isActive: true })
-//     if (!shipping) {
-//       // As a last resort, create a FREE default
-//       shipping = new ShippingMethod({ name: 'Miễn phí', code: 'FREE', feeType: 'FREE', isActive: true, isDefault: true })
-//       await shipping.save()
-//     }
+        // Map items to order schema - ensure productId is ObjectId
+        const items = cart.items.map(it => ({
+            productId: it.productId?._id || it.productId,
+            variantId: it.variantId,
+            productName: it.productName || it.productId?.name,
+            variantName: it.variantName,
+            quantity: Number(it.quantity || 0),
+            unitPrice: Number(it.price || it.productId?.price || 0),
+            totalPrice: Number(it.quantity || 0) * Number(it.price || it.productId?.price || 0),
+            image: it.image
+        }));
 
-//     // Create order with appropriate status
-//     // For VNPay: status = PENDING, paymentStatus = PENDING (waiting for payment)
-//     // For COD: status = PENDING, paymentStatus = PENDING (will be confirmed after COD confirmation)
-//     const order = new Order({
-//       userId,
-//       shopId,
-//       items,
-//       subtotal,
-//       shippingFee,
-//       discount,
-//       totalAmount,
-//       paymentMethodId: pm._id,
-//       paymentCode: paymentCode, // Store payment code for easy checking
-//       status: 'PENDING', // Explicitly set to PENDING
-//       paymentStatus: 'PENDING', // Explicitly set to PENDING - will be updated after payment
-//       shippingMethodId: shipping._id,
-//       shippingAddress: finalShippingAddress,
-//       notes
-//     })
+        // Pick a shipping method; try default or any active
+        let shipping = null;
+        if (ShippingMethod && typeof ShippingMethod.findOne === 'function') {
+            shipping = await ShippingMethod.findOne({ isDefault: true, isActive: true });
+            if (!shipping) shipping = await ShippingMethod.findOne({ isActive: true });
+        }
 
-//     await order.save()
-    
-//     console.log('Order created:', {
-//       orderId: order._id,
-//       orderNumber: order.orderNumber,
-//       status: order.status,
-//       paymentStatus: order.paymentStatus,
-//       paymentCode,
-//       note: paymentCode === 'VNPAY' ? 'Order created, waiting for VNPay payment confirmation' : 'Order created for COD'
-//     })
+        if (!shipping) {
+            // As a last resort, set shipping to null and rely on existing fields
+            console.warn('No shipping method found, continuing with null shipping method.');
+        }
 
-//     // Clear cart after creating order for COD (immediate payment confirmation)
-//     // For VNPay, cart will be cleared after successful payment in vnpay callback
-//     if (paymentCode === 'COD') {
-//       try {
-//         cart.items = []
-//         cart.totalPrice = 0
-//         await cart.save()
-        
-//         // Invalidate cache
-//         const cache = require('../utils/cache')
-//         cache.delete(`cart:${userId}`)
-        
-//         console.log('Cart cleared after COD order creation:', order._id)
-//       } catch (clearError) {
-//         console.error('Error clearing cart after COD order:', clearError)
-//         // Don't fail the order creation if cart clearing fails
-//       }
-//     }
+        // Create order with appropriate status (adapted to Order model used in this file)
+        const orderPayload = {
+            userId,
+            shopId,
+            items,
+            subtotal,
+            shippingFee,
+            discount,
+            total_price: totalAmount,
+            paymentMethodId: pm?._id || null,
+            paymentCode,
+            status: 'PENDING',
+            payment_status: 'PENDING',
+            shippingMethodId: shipping?._id || null,
+            shippingAddress: finalShippingAddress,
+            notes
+        };
 
-//     res.status(201).json(order)
-//   } catch (error) {
-//     next(error)
-//   }
-// }
+        const createdOrder = new Order(orderPayload);
+        const saved = await createdOrder.save();
 
-// async function getById(req, res, next) {
-//   try {
-//     const { id } = req.params
-//     if (!id) throw createHttpError.BadRequest('Order ID is required')
-    
-//     // Check if id is a valid ObjectId (24 hex characters)
-//     const mongoose = require('mongoose')
-//     const isValidObjectId = mongoose.Types.ObjectId.isValid(id)
-    
-//     let order
-//     if (isValidObjectId) {
-//       // Search by _id if it's a valid ObjectId
-//       order = await Order.findById(id)
-//         .populate('userId', 'firstName lastName email')
-//         .populate('shopId', 'name')
-//         .populate('paymentMethodId', 'name paymentCode')
-//         .populate('shippingMethodId', 'name')
-//     } else {
-//       // Search by orderNumber if it's not a valid ObjectId
-//       // Support both formats: ORD-YYYYMMDD-XXXX and ORDYYYYMMDDXXXX
-//       // If id doesn't have dashes, try to convert to format with dashes
-//       // Example: ORD202511090001 -> ORD-20251109-0001
-//       if (!id.includes('-') && id.startsWith('ORD') && id.length >= 11) {
-//         // Try to parse: ORD + YYYYMMDD + XXXX
-//         const match = id.match(/^ORD(\d{8})(\d+)$/)
-//         if (match) {
-//           const [, datePart, seqPart] = match
-//           const formattedOrderNumber = `ORD-${datePart}-${seqPart.padStart(4, '0')}`
-//           // Try both formats
-//           order = await Order.findOne({
-//             $or: [
-//               { orderNumber: id },
-//               { orderNumber: formattedOrderNumber }
-//             ]
-//           })
-//             .populate('userId', 'firstName lastName email')
-//             .populate('shopId', 'name')
-//             .populate('paymentMethodId', 'name paymentCode')
-//             .populate('shippingMethodId', 'name')
-//         } else {
-//           // Fallback: search as-is
-//           order = await Order.findOne({ orderNumber: id })
-//             .populate('userId', 'firstName lastName email')
-//             .populate('shopId', 'name')
-//             .populate('paymentMethodId', 'name paymentCode')
-//             .populate('shippingMethodId', 'name')
-//         }
-//       } else {
-//         // Search with dashes format
-//         order = await Order.findOne({ orderNumber: id })
-//           .populate('userId', 'firstName lastName email')
-//           .populate('shopId', 'name')
-//           .populate('paymentMethodId', 'name paymentCode')
-//           .populate('shippingMethodId', 'name')
-//       }
-//     }
-    
-//     if (!order) throw createHttpError.NotFound('Order not found')
-//     res.status(200).json(order)
-//   } catch (error) {
-//     next(error)
-//   }
-// }
+        console.log('Order created from cart:', {
+            orderId: saved._id,
+            status: saved.status,
+            paymentStatus: saved.payment_status,
+            paymentCode
+        });
 
-// async function getByUserId(req, res, next) {
-//   try {
-//     const { userId } = req.params
-//     if (!userId) throw createHttpError.BadRequest('userId is required')
-    
-//     const orders = await Order.find({ userId })
-//       .populate('shopId', 'name')
-//       .populate('paymentMethodId', 'name paymentCode')
-//       .populate('shippingMethodId', 'name')
-//       .sort({ createdAt: -1 })
-//       .lean()
-    
-//     res.status(200).json(orders)
-//   } catch (error) {
-//     next(error)
-//   }
-// }
+        // Clear cart after creating order for COD (immediate payment confirmation)
+        if (paymentCode === 'COD') {
+            try {
+                cart.items = [];
+                cart.totalPrice = 0;
+                await cart.save();
 
-// module.exports = { createFromCart, getById, getByUserId }
+                // Invalidate cache if exists
+                try {
+                    const cache = require('../utils/cache');
+                    if (cache && typeof cache.delete === 'function') cache.delete(`cart:${userId}`);
+                } catch (cacheErr) {
+                    // ignore cache errors
+                }
+
+                console.log('Cart cleared after COD order creation:', saved._id);
+            } catch (clearError) {
+                console.error('Error clearing cart after COD order:', clearError);
+            }
+        }
+
+        res.status(201).json(saved);
+    } catch (error) {
+        console.error('createFromCart error:', error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Lấy order by id (hỗ trợ _id hoặc orderNumber) - tên hàm giữ nguyên: getById
+const getById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) return res.status(400).json({ message: 'Order ID is required' });
+
+        const mongoose = require('mongoose');
+        const isValidObjectId = mongoose.Types.ObjectId.isValid(id);
+
+        let order = null;
+        if (isValidObjectId) {
+            order = await Order.findById(id)
+                .populate('userId', 'firstName lastName email')
+                .populate('shopId', 'name')
+                .populate('paymentMethodId', 'name paymentCode')
+                .populate('shippingMethodId', 'name');
+        } else {
+            if (!id.includes('-') && id.startsWith('ORD') && id.length >= 11) {
+                const match = id.match(/^ORD(\d{8})(\d+)$/);
+                if (match) {
+                    const [, datePart, seqPart] = match;
+                    const formattedOrderNumber = `ORD-${datePart}-${seqPart.padStart(4, '0')}`;
+                    order = await Order.findOne({
+                        $or: [
+                            { orderNumber: id },
+                            { orderNumber: formattedOrderNumber }
+                        ]
+                    })
+                        .populate('userId', 'firstName lastName email')
+                        .populate('shopId', 'name')
+                        .populate('paymentMethodId', 'name paymentCode')
+                        .populate('shippingMethodId', 'name');
+                } else {
+                    order = await Order.findOne({ orderNumber: id })
+                        .populate('userId', 'firstName lastName email')
+                        .populate('shopId', 'name')
+                        .populate('paymentMethodId', 'name paymentCode')
+                        .populate('shippingMethodId', 'name');
+                }
+            } else {
+                order = await Order.findOne({ orderNumber: id })
+                    .populate('userId', 'firstName lastName email')
+                    .populate('shopId', 'name')
+                    .populate('paymentMethodId', 'name paymentCode')
+                    .populate('shippingMethodId', 'name');
+            }
+        }
+
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+        res.status(200).json(order);
+    } catch (error) {
+        console.error('getById error:', error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Lấy đơn hàng theo userId (tên hàm giữ nguyên: getByUserId)
+const getByUserId = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        if (!userId) return res.status(400).json({ message: 'userId is required' });
+
+        const orders = await Order.find({ userId })
+            .populate('shopId', 'name')
+            .populate('paymentMethodId', 'name paymentCode')
+            .populate('shippingMethodId', 'name')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        res.status(200).json(orders);
+    } catch (error) {
+        console.error('getByUserId error:', error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Add the new functions to the exported controller object if not already present
+// (we will reconstruct the orderController export below)
+
+
+// --- Extend export object to include new functions ---
+if (!orderController) {
+    // fallback: create and export
+    const orderController = {
+        getAllOrders,
+        getOrderById,
+        getOrdersByUserId,
+        createOrder,
+        createFromCart,
+        getById,
+        getByUserId,
+        updateOrderStatus,
+        cancelOrder,
+        deleteOrder,
+        getOrderStatistics,
+        getOrdersByShopId,
+        rejectOrderBySeller,
+        getOrdersNeedingRefund,
+        markAsRefunded
+    };
+    module.exports = orderController;
+} else {
+    // Insert the new functions into existing object (best-effort)
+    orderController.createFromCart = createFromCart;
+    orderController.getById = getById;
+    orderController.getByUserId = getByUserId;
+    module.exports = orderController;
+}
