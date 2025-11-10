@@ -1,8 +1,8 @@
-import ApiService from './ApiService';
+import ApiService from "./ApiService";
 
 class OrderService {
   async createFromCart(payload) {
-    return await ApiService.post('/order/create-from-cart', payload, true);
+    return await ApiService.post("/order/create-from-cart", payload, true);
   }
 
   async getById(id) {
@@ -12,12 +12,11 @@ class OrderService {
   async getByUserId(userId) {
     return await ApiService.get(`/order/user/${userId}`, true);
   }
+
+  async cancelOrder(orderId, reason) {
+    return await ApiService.post(`/order/${orderId}/cancel`, { reason, cancelledBy: 'USER' }, true);
+  }
 }
+const OrderServices = new OrderService();
 
-export default new OrderService();
-
-
-
-
-
-
+export default OrderServices;

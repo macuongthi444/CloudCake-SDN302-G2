@@ -1,19 +1,76 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+
+// Require directly from file to avoid cache issues
+let orderController;
+try {
+    // Clear cache if exists
+    delete require.cache[require.resolve('../controller/order.controller')];
+    orderController = require('../controller/order.controller');
+    
+    // Debug: Check if functions are defined
+    console.log('OrderController loaded. Available methods:', Object.keys(orderController));
+    console.log('updateOrderStatus type:', typeof orderController.updateOrderStatus);
+    console.log('cancelOrder type:', typeof orderController.cancelOrder);
+    console.log('rejectOrderBySeller type:', typeof orderController.rejectOrderBySeller);
+    
+    if (!orderController.updateOrderStatus) {
+        console.error('ERROR: orderController.updateOrderStatus is undefined!');
+    }
+    if (!orderController.cancelOrder) {
+        console.error('ERROR: orderController.cancelOrder is undefined!');
+    }
+    if (!orderController.rejectOrderBySeller) {
+        console.error('ERROR: orderController.rejectOrderBySeller is undefined!');
+    }
+    if (!orderController.createFromCart) {
+        console.error('ERROR: orderController.createFromCart is undefined!');
+    }
+} catch (error) {
+    console.error('ERROR loading orderController:', error);
+    throw error;
+}
+
+const VerifyJwt = require('../middlewares/jwtAuth')
 const authJwt = require('../middlewares/jwtAuth')
-const orderController = require('../controller/order.controller')
 const vnpayController = require('../controller/vnpay.controller')
 
-const OrderRouter = express.Router()
-OrderRouter.use(bodyParser.json())
+const orderRouter = express.Router()
+orderRouter.use(bodyParser.json())
 
-OrderRouter.post('/create-from-cart', authJwt.verifyToken, orderController.createFromCart)
-OrderRouter.get('/find/:id', authJwt.verifyToken, orderController.getById)
-OrderRouter.get('/user/:userId', authJwt.verifyToken, orderController.getByUserId)
+// Use the controller directly
+const controller = orderController
+
+orderRouter.post('/create-from-cart', authJwt.verifyToken, controller.createFromCart)
+orderRouter.get('/find/:id', authJwt.verifyToken, controller.getById)
+orderRouter.get('/user/:userId', authJwt.verifyToken, controller.getByUserId)
+orderRouter.post('/:orderId/cancel', authJwt.verifyToken, controller.cancelOrder)
+// Lấy tất cả đơn đặt hàng (chỉ admin có quyền)
+orderRouter.get("/list", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], controller.getAllOrders)
+// Lấy đơn đặt hàng theo ID
+orderRouter.get("/find/:id", [VerifyJwt.verifyToken], controller.getOrderById)
+// Lấy đơn đặt hàng theo ID người dùng
+orderRouter.get("/user/:userId", [VerifyJwt.verifyToken], controller.getOrdersByUserId)
+// Tạo đơn đặt hàng mới
+orderRouter.post("/create", [VerifyJwt.verifyToken], controller.createOrder)
+// Cập nhật trạng thái đơn hàng (chỉ admin và seller có quyền)
+orderRouter.put("/status/:id", [VerifyJwt.verifyToken, VerifyJwt.isSellerOrAdmin], controller.updateOrderStatus)
+// Hủy đơn hàng
+orderRouter.put("/cancel/:id", [VerifyJwt.verifyToken], controller.cancelOrder)
+//  Từ chối đơn hàng (dành cho seller)
+orderRouter.put("/reject/:id", [VerifyJwt.verifyToken, VerifyJwt.isSeller], controller.rejectOrderBySeller)
+// Xóa đơn hàng (xóa mềm) (chỉ admin có quyền)
+orderRouter.delete("/delete/:id", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], controller.deleteOrder)
+// Lấy thống kê đơn hàng (chỉ admin có quyền)
+orderRouter.get("/statistics", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], controller.getOrderStatistics)
+orderRouter.get("/shop/:shopId", [VerifyJwt.verifyToken, VerifyJwt.isSeller], controller.getOrdersByShopId)
+orderRouter.get("/refunds", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], controller.getOrdersNeedingRefund)
+// Đánh dấu đã hoàn tiền cho đơn hàng
+orderRouter.put("/refund/:id", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], controller.markAsRefunded)
 
 // VNPay callback route (public, no auth required)
 // Handle both correct format (?params) and incorrect format (&params)
-OrderRouter.get('/vnpay-callback*', (req, res, next) => {
+orderRouter.get('/vnpay-callback*', (req, res, next) => {
   console.log('\n========== VNPay: CALLBACK ROUTE HIT ==========')
   console.log('Original req.url:', req.url)
   console.log('Original req.path:', req.path)
@@ -53,7 +110,7 @@ OrderRouter.get('/vnpay-callback*', (req, res, next) => {
   return vnpayController.returnCallback(req, res, next)
 })
 
-module.exports = OrderRouter
+module.exports = orderRouter
 
 
 

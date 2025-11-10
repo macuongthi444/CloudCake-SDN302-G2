@@ -4,6 +4,47 @@ const Order = db.order
 const Cart = db.cart
 const vnpayService = require('../services/vnpay.service')
 const cache = require('../utils/cache')
+const mongoose = require('mongoose')
+
+/**
+ * Helper function to find order by either ObjectId or orderNumber
+ * Supports both formats: ORD-YYYYMMDD-XXXX and ORDYYYYMMDDXXXX
+ */
+async function findOrderByIdOrNumber(id) {
+  if (!id) return null
+  
+  // Check if id is a valid ObjectId
+  const isValidObjectId = mongoose.Types.ObjectId.isValid(id)
+  
+  if (isValidObjectId) {
+    // Search by _id if it's a valid ObjectId
+    return await Order.findById(id)
+  } else {
+    // Search by orderNumber if it's not a valid ObjectId
+    // Support both formats: ORD-YYYYMMDD-XXXX and ORDYYYYMMDDXXXX
+    if (!id.includes('-') && id.startsWith('ORD') && id.length >= 11) {
+      // Try to parse: ORD + YYYYMMDD + XXXX
+      const match = id.match(/^ORD(\d{8})(\d+)$/)
+      if (match) {
+        const [, datePart, seqPart] = match
+        const formattedOrderNumber = `ORD-${datePart}-${seqPart.padStart(4, '0')}`
+        // Try both formats
+        return await Order.findOne({
+          $or: [
+            { orderNumber: id },
+            { orderNumber: formattedOrderNumber }
+          ]
+        })
+      } else {
+        // Fallback: search as-is
+        return await Order.findOne({ orderNumber: id })
+      }
+    } else {
+      // Search with dashes format
+      return await Order.findOne({ orderNumber: id })
+    }
+  }
+}
 
 async function createPaymentUrl(req, res, next) {
   try {
@@ -72,7 +113,7 @@ async function returnCallback(req, res, next) {
     // Update order status if payment is successful
     if (result.isValid && result.isSuccess && orderId) {
       try {
-        const order = await Order.findById(orderId)
+        const order = await findOrderByIdOrNumber(orderId)
         if (order) {
           // Only update if order is still PENDING (not already processed)
           if (order.paymentStatus === 'PENDING' && order.status === 'PENDING') {
@@ -123,7 +164,7 @@ async function returnCallback(req, res, next) {
       // DO NOT clear cart - user may want to retry payment
       // Update order paymentStatus to FAILED but keep status as PENDING (user can retry)
       try {
-        const order = await Order.findById(orderId)
+        const order = await findOrderByIdOrNumber(orderId)
         if (order) {
           // Only update if order is still PENDING
           if (order.paymentStatus === 'PENDING' && order.status === 'PENDING') {
@@ -154,12 +195,22 @@ async function returnCallback(req, res, next) {
     let orderNumber = ''
     if (orderId) {
       try {
-        const order = await Order.findById(orderId).select('orderNumber').lean()
+        const order = await findOrderByIdOrNumber(orderId)
         if (order && order.orderNumber) {
           orderNumber = order.orderNumber
+        } else if (mongoose.Types.ObjectId.isValid(orderId)) {
+          // If orderId is already an ObjectId and we couldn't find order, use it as fallback
+          orderNumber = orderId
+        } else {
+          // If orderId is already an orderNumber, use it directly
+          orderNumber = orderId
         }
       } catch (err) {
         console.warn('Could not fetch orderNumber for redirect:', err)
+        // Fallback: if orderId is not an ObjectId, assume it's already an orderNumber
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+          orderNumber = orderId
+        }
       }
     }
     

@@ -10,6 +10,14 @@ ProductVariantRouter.use(bodyParser.json())
 ProductVariantRouter.get("/product/:productId", productVariantController.getByProductId)
 ProductVariantRouter.get("/find/:id", productVariantController.getById)
 
+// Admin only - Get all variants with filters
+ProductVariantRouter.get(
+    "/list",
+    authJwt.verifyToken,
+    authJwt.isAdmin,
+    productVariantController.getAll
+)
+
 // Protected routes - require Seller or Admin
 ProductVariantRouter.post(
     "/create",

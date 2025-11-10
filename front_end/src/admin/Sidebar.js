@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { BarChart2, Package, Grid, ShoppingBag, Users, Truck, HelpCircle, Settings, ChevronDown, ArrowRight, Tag, LogOut, DollarSign, User } from 'lucide-react';
+import { BarChart2, Package, Grid, ShoppingBag, Users, Truck, ChevronDown, ArrowRight, Tag, LogOut, DollarSign, User } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AuthService from '../services/AuthService';
 
 // Sidebar Component
-const Sidebar = () => {
+const Sidebar = ({ onClose }) => {
   const [expandedMenus, setExpandedMenus] = useState(['products']);
   const location = useLocation();
   const navigate = useNavigate();
@@ -20,7 +20,8 @@ const Sidebar = () => {
   const menuItems = [
     { id: 'dashboard', icon: <BarChart2 size={20} />, label: 'Bảng điều khiển', hasSubmenu: false, path: '/admin/dashboard' },
     { id: 'products', icon: <Package size={20} />, label: 'Sản phẩm', hasSubmenu: true, submenus: [
-      { id: 'productManagement', label: 'Quản lý sản phẩm', path: '/admin/products' }
+      { id: 'productManagement', label: 'Quản lý sản phẩm', path: '/admin/products' },
+      { id: 'variantManagement', label: 'Quản lý biến thể', path: '/admin/product-variants' }
     ]},
     { id: 'categories', icon: <Grid size={20} />, label: 'Danh mục', hasSubmenu: true, submenus: [
       { id: 'allCategories', label: 'Tất cả danh mục', path: '/admin/categories' }
@@ -78,7 +79,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="h-screen bg-white border-r border-gray-200 overflow-y-auto px-6 flex flex-col">
+    <div className="h-screen bg-white border-r border-gray-200 overflow-y-auto px-3 sm:px-6 flex flex-col">
       
       <div className="px-4 py-2 flex-grow">
         {menuItems.map((item) => (
@@ -95,7 +96,7 @@ const Sidebar = () => {
                 <ChevronDown size={18} className={`text-gray-400 transform transition-transform ${expandedMenus.includes(item.id) ? 'rotate-180' : ''}`} />
               </div>
             ) : (
-              <Link to={item.path}>
+              <Link to={item.path} onClick={() => onClose && onClose()}>
                 <div 
                   className={`flex items-center p-3 my-1 rounded-lg cursor-pointer ${isActiveMenu(item.path) ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
                 >
@@ -113,7 +114,7 @@ const Sidebar = () => {
             {item.hasSubmenu && item.submenus && expandedMenus.includes(item.id) && (
               <div className="ml-7 my-1">
                 {item.submenus.map(submenu => (
-                  <Link key={submenu.id} to={submenu.path}>
+                  <Link key={submenu.id} to={submenu.path} onClick={() => onClose && onClose()}>
                     <div
                       className={`flex items-center p-2 pl-4 my-1 rounded-lg cursor-pointer ${isActiveMenu(submenu.path) ? 'bg-gray-100 text-blue-600' : 'hover:bg-gray-50'}`}
                     >
