@@ -1,0 +1,335 @@
+import React, { useEffect } from 'react';
+import { ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
+import CartService from '../../services/CartService';
+import { useAuth } from '../Login/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { toastSuccess, toastError } from '../../utils/toast';
+import { useCart } from '../Login/context/CartContext';
+
+const CartPage = () => {
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  // Use global cart from context to avoid duplicate GETs
+  const { cart, setCart, loadCart, loading } = useCart();
+
+  
+  // Force reload cart when component mounts to ensure fresh data
+  useEffect(() => {
+    if (currentUser?.id) {
+      // Reload cart to get latest data (bypass cache)
+      CartService.getCartByUserId(currentUser.id, true)
+        .then(data => {
+          setCart(data);
+        })
+        .catch(err => {
+          console.error('Error reloading cart:', err);
+        });
+    }
+  }, [currentUser?.id, setCart]);
+
+  if (!cart) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  const handleUpdateQuantity = async (item, newQuantity) => {
+    if (newQuantity <= 0) return;
+
+    // Check stock limit before updating
+    if (item.stock && item.stock.trackInventory) {
+      const maxQuantity = item.stock.quantity || 0;
+      if (newQuantity > maxQuantity) {
+        toastError(`Số lượng không được vượt quá ${maxQuantity} sản phẩm trong kho`);
+        return;
+      }
+    }
+
+    // Optimistic update: Update UI immediately
+    const prevCart = { ...cart };
+    const itemIndex = cart.items.findIndex(
+      i => (i.variantId || i._id || i.productId) === (item.variantId || item._id || item.productId)
+    );
+    if (itemIndex !== -1) {
+      const updatedItems = [...cart.items];
+      updatedItems[itemIndex] = { ...updatedItems[itemIndex], quantity: newQuantity };
+      const newTotalPrice = updatedItems.reduce((sum, it) => sum + (it.quantity || 0) * (it.price || 0), 0);
+      setCart({ ...cart, items: updatedItems, totalPrice: newTotalPrice });
+    }
+
+    try {
+      const itemId = item.variantId || item._id || item.productId;
+      // Use response from update API to sync with backend
+      const updatedCart = await CartService.updateItemQuantity({
+        userId: currentUser.id,
+        productId: item.productId,
+        variantId: itemId,
+        quantity: newQuantity
+      });
+      if (updatedCart) {
+        setCart(updatedCart);
+      } else {
+        // Fallback to refresh if API didn't return updated cart
+        await loadCart();
+      }
+      toastSuccess('Cập nhật số lượng thành công!');
+    } catch (err) {
+      console.error('Error updating quantity:', err);
+      // Rollback on error
+      setCart(prevCart);
+      const errorMessage = err?.response?.data?.error?.message || err?.message || 'Không thể cập nhật số lượng';
+      toastError(errorMessage);
+    }
+  };
+
+  const handleRemoveItem = async (item) => {
+    if (!window.confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) return;
+  
+    const itemId = item.variantId || item._id || item.productId;
+    const prevCart = { ...cart }; // rollback nếu lỗi
+  
+    // 1. Optimistic UI: XÓA NGAY
+    setCart(prev => ({
+      ...prev,
+      items: prev.items.filter(i => 
+        (i.variantId || i._id || i.productId) !== itemId
+      ),
+      totalPrice: prev.totalPrice - (item.price * item.quantity)
+    }));
+  
+    toastSuccess('Đã xóa sản phẩm!');
+  
+    try {
+      // 2. Gọi API xóa (không chặn UI)
+      const resp = await CartService.removeItemFromCart(itemId, currentUser.id);
+
+      // If backend returns updated cart, use it to sync instantly.
+      if (resp && resp.cart) {
+        setCart(resp.cart);
+      }
+    } catch (err) {
+      toastError('Lỗi xóa. Đang khôi phục...');
+      setCart(prevCart); // rollback
+    }
+  };
+
+  const handleClearCart = async () => {
+    if (!window.confirm('Bạn có chắc muốn xóa tất cả sản phẩm khỏi giỏ hàng?')) {
+      return;
+    }
+
+    // Optimistic update: Clear cart immediately in UI
+    const prevCart = { ...cart };
+    const emptyCart = { ...cart, items: [], totalPrice: 0 };
+    setCart(emptyCart);
+    toastSuccess('Đã xóa tất cả sản phẩm khỏi giỏ hàng!');
+
+    try {
+      const resp = await CartService.clearCart(currentUser.id);
+
+      // Use returned cart if available to sync with backend
+      if (resp && resp.cart) {
+        setCart(resp.cart);
+      } else {
+        // Reload in background, don't block UI
+        loadCart().catch(err => console.error('Error reloading cart:', err));
+      }
+    } catch (err) {
+      console.error('Error clearing cart:', err);
+      // Rollback on error
+      setCart(prevCart);
+      toastError('Không thể xóa giỏ hàng: ' + (err.message || err));
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  
+
+  const items = cart?.items || [];
+  const totalPrice = cart?.totalPrice || 0;
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <ShoppingCart size={32} />
+            Giỏ hàng của bạn
+          </h1>
+          <p className="text-gray-600 mt-2">
+            {items.length > 0 ? `${items.length} sản phẩm trong giỏ hàng` : 'Giỏ hàng của bạn đang trống'}
+          </p>
+        </div>
+
+        {items.length === 0 ? (
+          // Empty Cart
+          <div className="bg-white rounded-lg shadow p-12 text-center">
+            <ShoppingCart size={64} className="mx-auto text-gray-400 mb-4" />
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">Giỏ hàng trống</h2>
+            <p className="text-gray-600 mb-6">Chưa có sản phẩm nào trong giỏ hàng của bạn</p>
+            <button onClick={() => navigate('/')} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+              Tiếp tục mua sắm
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Cart Items */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-lg shadow">
+                <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                  <h2 className="text-lg font-semibold text-gray-900">Sản phẩm trong giỏ hàng</h2>
+                  <button
+                    onClick={handleClearCart}
+                    className="text-sm text-red-600 hover:text-red-700"
+                  >
+                    Xóa tất cả
+                  </button>
+                </div>
+
+                <div className="divide-y divide-gray-200">
+                  {items.map((item) => (
+                    <div key={item.productId} className="p-4 hover:bg-gray-50 transition">
+                      <div className="flex gap-4">
+                        {/* Product Image */}
+                        {(item.image || item.image?.url) ? (
+                          <img
+                            src={typeof item.image === 'string' ? item.image : item.image?.url}
+                            alt={item.productName}
+                            className="w-24 h-24 object-cover rounded-lg"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
+                            <ShoppingCart size={32} className="text-gray-400" />
+                          </div>
+                        )}
+
+                        {/* Product Details */}
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900 mb-1">{item.productName}</h3>
+                          <p className="text-lg font-semibold text-blue-600">
+                            {item.price.toLocaleString('vi-VN')} ₫
+                          </p>
+
+                          {/* Quantity Controls */}
+                          <div className="flex items-center gap-3 mt-3">
+                            <span className="text-sm text-gray-600">Số lượng:</span>
+                            <div className="flex items-center gap-2 border border-gray-300 rounded-lg">
+                              <button
+                                onClick={() => handleUpdateQuantity(item, item.quantity - 1)}
+                                className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={item.quantity <= 1}
+                              >
+                                <Minus size={16} />
+                              </button>
+                              <span className="px-3 py-1 min-w-[3rem] text-center">{item.quantity}</span>
+                              <button
+                                onClick={() => handleUpdateQuantity(item, item.quantity + 1)}
+                                className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={
+                                  item.stock && 
+                                  item.stock.trackInventory && 
+                                  item.quantity >= (item.stock.quantity || 0)
+                                }
+                                title={
+                                  item.stock && 
+                                  item.stock.trackInventory && 
+                                  item.quantity >= (item.stock.quantity || 0)
+                                    ? `Chỉ còn ${item.stock.quantity} sản phẩm trong kho`
+                                    : 'Tăng số lượng'
+                                }
+                              >
+                                <Plus size={16} />
+                              </button>
+                            </div>
+                            {item.stock && item.stock.trackInventory && (
+                              <span className={`text-xs ${
+                                item.stock.quantity <= item.stock.lowStockThreshold
+                                  ? 'text-orange-600'
+                                  : 'text-gray-500'
+                              }`}>
+                                Còn {item.stock.quantity} sản phẩm
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Price and Remove */}
+                        <div className="flex flex-col items-end gap-2">
+                          <p className="text-lg font-bold text-gray-900">
+                            {(item.price * item.quantity).toLocaleString('vi-VN')} ₫
+                          </p>
+                          <button
+                            onClick={() => handleRemoveItem(item)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                            title="Xóa sản phẩm"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Order Summary */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow p-6 sticky top-4">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Tóm tắt đơn hàng</h2>
+
+                <div className="space-y-3 mb-4">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Tạm tính:</span>
+                    <span className="text-gray-900">{totalPrice.toLocaleString('vi-VN')} ₫</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Phí vận chuyển:</span>
+                    <span className="text-gray-900">Miễn phí</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-200 pt-4 mb-6">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-semibold text-gray-900">Tổng cộng:</span>
+                    <span className="text-2xl font-bold text-blue-600">
+                      {totalPrice.toLocaleString('vi-VN')} ₫
+                    </span>
+                  </div>
+                </div>
+
+                <button onClick={() => navigate('/checkout')} className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition mb-3">
+                  Tiến hành thanh toán
+                </button>
+
+                <button onClick={() => navigate('/products')} className="w-full py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                  Tiếp tục mua sắm
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default CartPage;
+
+
+
+
+
+
+

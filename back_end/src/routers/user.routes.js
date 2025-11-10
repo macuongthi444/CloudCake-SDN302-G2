@@ -1,6 +1,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const { userController } = require('../controller')
+const authJwt = require('../middlewares/jwtAuth')
 
 
 const userRouter = express.Router()
@@ -12,6 +13,10 @@ userRouter.put("/edit/:id", userController.update)
 userRouter.delete("/delete/:id", userController.deleteUser)
 userRouter.get("/find/:email",userController.existedUser)
 userRouter.get("/all", userController.accessAll)
+userRouter.get("/member", [authJwt.verifyToken] ,userController.accessByMember)
+userRouter.get("/admin", [authJwt.verifyToken], [authJwt.isAdmin] ,userController.accessByAdmin)
+userRouter.get("/seller", [authJwt.verifyToken], [authJwt.isSeller] ,userController.accessBySeller)
+
 
 userRouter.get('/:id', userController.getUserById);
 

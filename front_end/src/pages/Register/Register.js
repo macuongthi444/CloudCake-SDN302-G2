@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthService from '../../services/AuthService';
-
+import { toastSuccess, toastError } from '../../utils/toast';
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     firstName: "",
@@ -187,7 +187,7 @@ const RegisterPage = () => {
       );
 
       // Đăng ký thành công
-      alert("Đăng ký thành công! Vui lòng đăng nhập.");
+      toastSuccess("Đăng ký thành công! Vui lòng đăng nhập.");
       navigate("/login");
     } catch (error) {
       console.error("Registration error:", error.message || error);

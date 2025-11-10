@@ -1,0 +1,601 @@
+{
+  "categories": [
+    {
+      "name": "Bánh Sinh Nhật",
+      "description": "Các loại bánh sinh nhật với nhiều hình dạng và hương vị khác nhau",
+      "image": "https://example.com/images/category/birthday-cake.jpg",
+      "icon": "birthday-cake",
+      "isActive": true,
+      "sortOrder": 1
+    },
+    {
+      "name": "Bánh Kem",
+      "description": "Bánh kem tươi, bánh kem chocolate, bánh kem dâu",
+      "image": "https://example.com/images/category/cream-cake.jpg",
+      "icon": "cream-cake",
+      "isActive": true,
+      "sortOrder": 2
+    },
+    {
+      "name": "Bánh Mì Ngọt",
+      "description": "Bánh mì ngọt, bánh croissant, bánh pastry",
+      "image": "https://example.com/images/category/sweet-bread.jpg",
+      "icon": "sweet-bread",
+      "isActive": true,
+      "sortOrder": 3
+    },
+    {
+      "name": "Bánh Cupcake",
+      "description": "Cupcake các loại với nhiều topping đẹp mắt",
+      "image": "https://example.com/images/category/cupcake.jpg",
+      "icon": "cupcake",
+      "isActive": true,
+      "sortOrder": 4
+    },
+    {
+      "name": "Bánh Tart & Pie",
+      "description": "Bánh tart trái cây, bánh pie táo, bánh tart socola",
+      "image": "https://example.com/images/category/tart-pie.jpg",
+      "icon": "tart-pie",
+      "isActive": true,
+      "sortOrder": 5
+    }
+  ],
+  "shops": [
+    {
+      "name": "Cloud Cake Premium",
+      "description": "Chuyên bán các loại bánh cao cấp, bánh sinh nhật custom",
+      "logo": "https://example.com/images/shops/cloud-cake-logo.jpg",
+      "coverImage": "https://example.com/images/shops/cloud-cake-cover.jpg",
+      "address": {
+        "street": "123 Nguyễn Văn Linh",
+        "city": "Hồ Chí Minh",
+        "district": "Quận 7",
+        "ward": "Phường Tân Phú",
+        "postalCode": "700000"
+      },
+      "phone": "84912345678",
+      "email": "cloudcake@example.com",
+      "status": "ACTIVE",
+      "isActive": true,
+      "rating": {
+        "average": 4.8,
+        "count": 125
+      },
+      "openingHours": {
+        "monday": { "open": "08:00", "close": "20:00" },
+        "tuesday": { "open": "08:00", "close": "20:00" },
+        "wednesday": { "open": "08:00", "close": "20:00" },
+        "thursday": { "open": "08:00", "close": "20:00" },
+        "friday": { "open": "08:00", "close": "21:00" },
+        "saturday": { "open": "08:00", "close": "21:00" },
+        "sunday": { "open": "09:00", "close": "20:00" }
+      },
+      "bankAccount": {
+        "bankName": "Vietcombank",
+        "accountNumber": "1234567890",
+        "accountHolder": "Cloud Cake Premium"
+      }
+    },
+    {
+      "name": "Sweet Dreams Bakery",
+      "description": "Bánh kem tươi, bánh mì ngọt, bánh tart",
+      "logo": "https://example.com/images/shops/sweet-dreams-logo.jpg",
+      "coverImage": "https://example.com/images/shops/sweet-dreams-cover.jpg",
+      "address": {
+        "street": "456 Lê Lợi",
+        "city": "Hà Nội",
+        "district": "Hoàn Kiếm",
+        "ward": "Phường Hàng Bông",
+        "postalCode": "100000"
+      },
+      "phone": "84987654321",
+      "email": "sweetdreams@example.com",
+      "status": "ACTIVE",
+      "isActive": true,
+      "rating": {
+        "average": 4.6,
+        "count": 89
+      },
+      "openingHours": {
+        "monday": { "open": "07:00", "close": "21:00" },
+        "tuesday": { "open": "07:00", "close": "21:00" },
+        "wednesday": { "open": "07:00", "close": "21:00" },
+        "thursday": { "open": "07:00", "close": "21:00" },
+        "friday": { "open": "07:00", "close": "22:00" },
+        "saturday": { "open": "07:00", "close": "22:00" },
+        "sunday": { "open": "08:00", "close": "21:00" }
+      },
+      "bankAccount": {
+        "bankName": "BIDV",
+        "accountNumber": "9876543210",
+        "accountHolder": "Sweet Dreams Bakery"
+      }
+    }
+  ],
+  "products": [
+    {
+      "name": "Bánh Sinh Nhật Chocolate Premium",
+      "description": "Bánh sinh nhật chocolate cao cấp với lớp kem chocolate ngọt ngào, trang trí hoa quả tươi. Phù hợp cho các dịp sinh nhật đặc biệt.",
+      "shortDescription": "Bánh sinh nhật chocolate cao cấp",
+      "basePrice": 450000,
+      "discountedPrice": 380000,
+      "sku": "BSN-CHOCO-001",
+      "tags": ["sinh nhật", "chocolate", "cao cấp", "kem tươi"],
+      "images": [
+        {
+          "url": "https://example.com/images/products/birthday-chocolate-1.jpg",
+          "isPrimary": true,
+          "alt": "Bánh sinh nhật chocolate - góc nhìn chính"
+        },
+        {
+          "url": "https://example.com/images/products/birthday-chocolate-2.jpg",
+          "isPrimary": false,
+          "alt": "Bánh sinh nhật chocolate - góc nhìn phụ"
+        },
+        {
+          "url": "https://example.com/images/products/birthday-chocolate-3.jpg",
+          "isPrimary": false,
+          "alt": "Bánh sinh nhật chocolate - chi tiết"
+        }
+      ],
+      "ingredients": [
+        "Bột mì",
+        "Đường",
+        "Trứng",
+        "Bơ",
+        "Chocolate đen",
+        "Kem tươi",
+        "Dâu tây",
+        "Quả cherry"
+      ],
+      "allergens": ["Gluten", "Dairy", "Eggs"],
+      "nutritionalInfo": {
+        "calories": 320,
+        "protein": 6,
+        "carbs": 45,
+        "fat": 12,
+        "fiber": 2,
+        "sugar": 28
+      },
+      "weight": {
+        "value": 1200,
+        "unit": "g"
+      },
+      "shelfLife": {
+        "value": 2,
+        "unit": "days"
+      },
+      "status": "ACTIVE",
+      "isActive": true,
+      "isFeatured": true,
+      "rating": {
+        "average": 4.8,
+        "count": 45
+      },
+      "viewCount": 1250,
+      "salesCount": 320
+    },
+    {
+      "name": "Bánh Kem Dâu Tây Tươi",
+      "description": "Bánh kem tươi với lớp kem whipping mát lạnh, kết hợp dâu tây tươi ngọt ngào. Hương vị thanh mát, phù hợp mọi lứa tuổi.",
+      "shortDescription": "Bánh kem dâu tây tươi ngọt ngào",
+      "basePrice": 280000,
+      "discountedPrice": null,
+      "sku": "BKD-DAU-001",
+      "tags": ["kem tươi", "dâu tây", "bánh kem", "tươi"],
+      "images": [
+        {
+          "url": "https://example.com/images/products/strawberry-cake-1.jpg",
+          "isPrimary": true,
+          "alt": "Bánh kem dâu tây - góc nhìn chính"
+        },
+        {
+          "url": "https://example.com/images/products/strawberry-cake-2.jpg",
+          "isPrimary": false,
+          "alt": "Bánh kem dâu tây - chi tiết"
+        }
+      ],
+      "ingredients": [
+        "Bột mì",
+        "Đường",
+        "Trứng",
+        "Kem whipping",
+        "Dâu tây tươi",
+        "Vanilla extract"
+      ],
+      "allergens": ["Gluten", "Dairy", "Eggs"],
+      "nutritionalInfo": {
+        "calories": 280,
+        "protein": 5,
+        "carbs": 38,
+        "fat": 10,
+        "fiber": 1.5,
+        "sugar": 22
+      },
+      "weight": {
+        "value": 800,
+        "unit": "g"
+      },
+      "shelfLife": {
+        "value": 1,
+        "unit": "days"
+      },
+      "status": "ACTIVE",
+      "isActive": true,
+      "isFeatured": false,
+      "rating": {
+        "average": 4.7,
+        "count": 89
+      },
+      "viewCount": 890,
+      "salesCount": 245
+    },
+    {
+      "name": "Bánh Tiramisu Ý",
+      "description": "Bánh tiramisu truyền thống với mascarpone cheese, cà phê espresso, rượu rum. Hương vị đậm đà, sang trọng.",
+      "shortDescription": "Tiramisu truyền thống đậm đà",
+      "basePrice": 350000,
+      "discountedPrice": 299000,
+      "sku": "BTI-001",
+      "tags": ["tiramisu", "cao cấp", "cà phê", "Ý"],
+      "images": [
+        {
+          "url": "https://example.com/images/products/tiramisu-1.jpg",
+          "isPrimary": true,
+          "alt": "Bánh tiramisu - góc nhìn chính"
+        }
+      ],
+      "ingredients": [
+        "Mascarpone cheese",
+        "Cà phê espresso",
+        "Rượu rum",
+        "Ladyfingers",
+        "Cocoa powder",
+        "Đường",
+        "Trứng"
+      ],
+      "allergens": ["Gluten", "Dairy", "Eggs", "Alcohol"],
+      "nutritionalInfo": {
+        "calories": 380,
+        "protein": 8,
+        "carbs": 32,
+        "fat": 18,
+        "fiber": 1,
+        "sugar": 20
+      },
+      "weight": {
+        "value": 600,
+        "unit": "g"
+      },
+      "shelfLife": {
+        "value": 3,
+        "unit": "days"
+      },
+      "status": "ACTIVE",
+      "isActive": true,
+      "isFeatured": true,
+      "rating": {
+        "average": 4.9,
+        "count": 67
+      },
+      "viewCount": 1120,
+      "salesCount": 198
+    },
+    {
+      "name": "Bánh Cupcake Vanilla",
+      "description": "Set 6 bánh cupcake vanilla với kem frosting đẹp mắt. Phù hợp cho tiệc nhỏ, quà tặng.",
+      "shortDescription": "Set 6 cupcake vanilla",
+      "basePrice": 180000,
+      "discountedPrice": null,
+      "sku": "BCU-VAN-001",
+      "tags": ["cupcake", "vanilla", "set", "quà tặng"],
+      "images": [
+        {
+          "url": "https://example.com/images/products/cupcake-vanilla-1.jpg",
+          "isPrimary": true,
+          "alt": "Set cupcake vanilla"
+        }
+      ],
+      "ingredients": [
+        "Bột mì",
+        "Đường",
+        "Trứng",
+        "Bơ",
+        "Vanilla",
+        "Kem frosting",
+        "Sprinkles"
+      ],
+      "allergens": ["Gluten", "Dairy", "Eggs"],
+      "nutritionalInfo": {
+        "calories": 250,
+        "protein": 4,
+        "carbs": 35,
+        "fat": 10,
+        "fiber": 0.5,
+        "sugar": 25
+      },
+      "weight": {
+        "value": 360,
+        "unit": "g"
+      },
+      "shelfLife": {
+        "value": 2,
+        "unit": "days"
+      },
+      "status": "ACTIVE",
+      "isActive": true,
+      "isFeatured": false,
+      "rating": {
+        "average": 4.5,
+        "count": 123
+      },
+      "viewCount": 750,
+      "salesCount": 456
+    },
+    {
+      "name": "Bánh Tart Dâu Tây",
+      "description": "Bánh tart với lớp vỏ giòn tan, nhân kem tươi và dâu tây tươi trên cùng. Vị chua ngọt hài hòa.",
+      "shortDescription": "Tart dâu tây với lớp vỏ giòn",
+      "basePrice": 220000,
+      "discountedPrice": 180000,
+      "sku": "BTD-DAU-001",
+      "tags": ["tart", "dâu tây", "kem tươi", "giòn"],
+      "images": [
+        {
+          "url": "https://example.com/images/products/tart-strawberry-1.jpg",
+          "isPrimary": true,
+          "alt": "Bánh tart dâu tây"
+        }
+      ],
+      "ingredients": [
+        "Bột mì",
+        "Bơ",
+        "Kem tươi",
+        "Dâu tây tươi",
+        "Đường",
+        "Vanilla"
+      ],
+      "allergens": ["Gluten", "Dairy"],
+      "nutritionalInfo": {
+        "calories": 290,
+        "protein": 5,
+        "carbs": 40,
+        "fat": 12,
+        "fiber": 2,
+        "sugar": 20
+      },
+      "weight": {
+        "value": 400,
+        "unit": "g"
+      },
+      "shelfLife": {
+        "value": 2,
+        "unit": "days"
+      },
+      "status": "ACTIVE",
+      "isActive": true,
+      "isFeatured": false,
+      "rating": {
+        "average": 4.6,
+        "count": 78
+      },
+      "viewCount": 650,
+      "salesCount": 189
+    }
+  ],
+  "productVariants": [
+    {
+      "name": "Nhỏ - Hình Tròn",
+      "attributes": {
+        "size": "SMALL",
+        "flavor": "Chocolate",
+        "shape": "Tròn"
+      },
+      "price": 380000,
+      "discountedPrice": 320000,
+      "sku": "BSN-CHOCO-001-S-R",
+      "weight": {
+        "value": 800,
+        "unit": "g"
+      },
+      "image": "https://example.com/images/variants/birthday-chocolate-small-round.jpg",
+      "isActive": true,
+      "inventory": {
+        "quantity": 15,
+        "lowStockThreshold": 5,
+        "trackInventory": true
+      }
+    },
+    {
+      "name": "Vừa - Hình Tròn",
+      "attributes": {
+        "size": "MEDIUM",
+        "flavor": "Chocolate",
+        "shape": "Tròn"
+      },
+      "price": 450000,
+      "discountedPrice": 380000,
+      "sku": "BSN-CHOCO-001-M-R",
+      "weight": {
+        "value": 1200,
+        "unit": "g"
+      },
+      "image": "https://example.com/images/variants/birthday-chocolate-medium-round.jpg",
+      "isActive": true,
+      "inventory": {
+        "quantity": 8,
+        "lowStockThreshold": 5,
+        "trackInventory": true
+      }
+    },
+    {
+      "name": "Lớn - Hình Tròn",
+      "attributes": {
+        "size": "LARGE",
+        "flavor": "Chocolate",
+        "shape": "Tròn"
+      },
+      "price": 580000,
+      "discountedPrice": 480000,
+      "sku": "BSN-CHOCO-001-L-R",
+      "weight": {
+        "value": 1800,
+        "unit": "g"
+      },
+      "image": "https://example.com/images/variants/birthday-chocolate-large-round.jpg",
+      "isActive": true,
+      "inventory": {
+        "quantity": 5,
+        "lowStockThreshold": 3,
+        "trackInventory": true
+      }
+    },
+    {
+      "name": "Nhỏ - Hình Trái Tim",
+      "attributes": {
+        "size": "SMALL",
+        "flavor": "Chocolate",
+        "shape": "Trái tim"
+      },
+      "price": 400000,
+      "discountedPrice": 340000,
+      "sku": "BSN-CHOCO-001-S-H",
+      "weight": {
+        "value": 850,
+        "unit": "g"
+      },
+      "image": "https://example.com/images/variants/birthday-chocolate-small-heart.jpg",
+      "isActive": true,
+      "inventory": {
+        "quantity": 12,
+        "lowStockThreshold": 5,
+        "trackInventory": true
+      }
+    },
+    {
+      "name": "Vừa - Vị Dâu",
+      "attributes": {
+        "size": "MEDIUM",
+        "flavor": "Dâu Tây",
+        "shape": "Tròn"
+      },
+      "price": 280000,
+      "discountedPrice": null,
+      "sku": "BKD-DAU-001-M",
+      "weight": {
+        "value": 800,
+        "unit": "g"
+      },
+      "image": "https://example.com/images/variants/strawberry-cake-medium.jpg",
+      "isActive": true,
+      "inventory": {
+        "quantity": 20,
+        "lowStockThreshold": 10,
+        "trackInventory": true
+      }
+    },
+    {
+      "name": "Lớn - Vị Dâu",
+      "attributes": {
+        "size": "LARGE",
+        "flavor": "Dâu Tây",
+        "shape": "Tròn"
+      },
+      "price": 380000,
+      "discountedPrice": null,
+      "sku": "BKD-DAU-001-L",
+      "weight": {
+        "value": 1200,
+        "unit": "g"
+      },
+      "image": "https://example.com/images/variants/strawberry-cake-large.jpg",
+      "isActive": true,
+      "inventory": {
+        "quantity": 10,
+        "lowStockThreshold": 5,
+        "trackInventory": true
+      }
+    },
+    {
+      "name": "Tiramisu Tiêu Chuẩn",
+      "attributes": {
+        "size": "MEDIUM",
+        "flavor": "Tiramisu",
+        "shape": "Tròn"
+      },
+      "price": 350000,
+      "discountedPrice": 299000,
+      "sku": "BTI-001-M",
+      "weight": {
+        "value": 600,
+        "unit": "g"
+      },
+      "image": "https://example.com/images/variants/tiramisu-medium.jpg",
+      "isActive": true,
+      "inventory": {
+        "quantity": 15,
+        "lowStockThreshold": 5,
+        "trackInventory": true
+      }
+    },
+    {
+      "name": "Set 6 Cupcake Vanilla",
+      "attributes": {
+        "size": "CUSTOM",
+        "flavor": "Vanilla",
+        "shape": "Tròn"
+      },
+      "price": 180000,
+      "discountedPrice": null,
+      "sku": "BCU-VAN-001-SET6",
+      "weight": {
+        "value": 360,
+        "unit": "g"
+      },
+      "image": "https://example.com/images/variants/cupcake-vanilla-set6.jpg",
+      "isActive": true,
+      "inventory": {
+        "quantity": 30,
+        "lowStockThreshold": 10,
+        "trackInventory": true
+      }
+    },
+    {
+      "name": "Tart Dâu Tiêu Chuẩn",
+      "attributes": {
+        "size": "MEDIUM",
+        "flavor": "Dâu Tây",
+        "shape": "Tròn"
+      },
+      "price": 220000,
+      "discountedPrice": 180000,
+      "sku": "BTD-DAU-001-M",
+      "weight": {
+        "value": 400,
+        "unit": "g"
+      },
+      "image": "https://example.com/images/variants/tart-strawberry-medium.jpg",
+      "isActive": true,
+      "inventory": {
+        "quantity": 25,
+        "lowStockThreshold": 10,
+        "trackInventory": true
+      }
+    }
+  ]
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

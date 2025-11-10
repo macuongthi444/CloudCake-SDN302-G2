@@ -1,9 +1,14 @@
 import React from 'react';
 import { Search, ChevronDown, User } from 'lucide-react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-// import ProductManagement from './product/ProductManagement';
-// import CategoryManagement from './category/CategoryManagement';
-
+import ProductManagement from './product/ProductManagement';
+import CategoryManagement from './category/CategoryManagement';
+import StoreList from './store/StoreList';
+import StoreDetail from './store/StoreDetail';
+import StoreRequestsPage from './store/StoreRequestsPage';
+import PaymentManagement from './payment/PaymentManagement';
+import AdminProfile from './profile/ProfileContent';
+import AdminPasswordChange from './profile/AdminPasswordChange';
 import logo from '../assets/Logo.jpg'
 
 
@@ -44,10 +49,15 @@ const MainContent = () => {
         <Routes>
           {/* <Route path="/dashboard" element={<Dashboard />} /> */}
 
-          {/* <Route path="/products" element={<ProductManagement />} />
+          <Route path="/products" element={<ProductManagement />} />
+          <Route path="/categories" element={<CategoryManagement />} />
+          <Route path="/stores" element={<StoreList />} />
+          <Route path="/store/:id" element={<StoreDetail onBack={() => navigate('/admin/stores')} />} />
+          <Route path="/store-requests" element={<StoreRequestsPage />} />
 
-          <Route path="/categories" element={<CategoryManagement />} /> */}
-        
+          <Route path="/payments" element={<PaymentManagement />} />
+           <Route path="/profile" element={<AdminProfile />} />
+          <Route path="/password" element={<AdminPasswordChange />} />
           <Route path="/support" element={<div className="p-6">Nội dung Hỗ trợ</div>} />
           <Route path="/settings" element={<div className="p-6">Nội dung Cài đặt</div>} />
 
@@ -59,3 +69,4 @@ const MainContent = () => {
 };
 
 export default MainContent;
+

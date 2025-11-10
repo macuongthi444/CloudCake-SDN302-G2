@@ -1,14 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
-    Menu,
+   
     Search,
     User,
-    Heart,
+   
     ShoppingCart,
-    Globe,
-    PiggyBank,
-    ChevronRight,
+    
     LogOut,
     MessageSquare,
     Package,
@@ -21,6 +19,7 @@ import {
 import logo from '../assets/Logo.jpg';
 import AuthService from '../services/AuthService';
 import ApiService from '../services/ApiService';
+import { useCart } from '../pages/Login/context/CartContext';
 
 import headerBg from '../assets/Header.jpg';
 
@@ -154,7 +153,11 @@ const flashingAnimation = `
 
 const Header = () => {
     const navigate = useNavigate();
+    const cartContext = useCart();
+    // Ensure cartContext is always an object (fallback from useCart should handle this, but double-check)
+    const cart = (cartContext && typeof cartContext === 'object' && cartContext.cart) ? cartContext.cart : null;
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [isCartDropdownOpen, setIsCartDropdownOpen] = useState(false);
     const [language, setLanguage] = useState('Vietnamese');
     const [searchQuery, setSearchQuery] = useState('');
     const [isCategoriesSidebarOpen, setIsCategoriesSidebarOpen] = useState(false);
@@ -166,6 +169,8 @@ const Header = () => {
     const categoriesButtonRef = useRef(null);
     const userDropdownRef = useRef(null);
     const userButtonRef = useRef(null);
+    const cartDropdownRef = useRef(null);
+    const cartButtonRef = useRef(null);
 
     
     const userId = currentUser?.id || currentUser?._id || "";
@@ -199,12 +204,70 @@ const Header = () => {
         return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
+    // Close cart dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                cartDropdownRef.current &&
+                !cartDropdownRef.current.contains(event.target) &&
+                cartButtonRef.current &&
+                !cartButtonRef.current.contains(event.target)
+            ) {
+                setIsCartDropdownOpen(false);
+            }
+        };
+
+        if (isCartDropdownOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isCartDropdownOpen]);
+
+    const getUserRoleStrings = () => {
+        if (!currentUser) return [];
+        const candidates = [];
+        // Common shapes
+        if (Array.isArray(currentUser.roles)) candidates.push(...currentUser.roles);
+        if (Array.isArray(currentUser.authorities)) candidates.push(...currentUser.authorities);
+        if (currentUser.role) candidates.push(currentUser.role);
+        if (currentUser.roleName) candidates.push(currentUser.roleName);
+        if (currentUser.roleNames) candidates.push(...(Array.isArray(currentUser.roleNames) ? currentUser.roleNames : [currentUser.roleNames]));
+        // Normalize to strings
+        const strings = candidates.map(r => {
+            if (!r) return '';
+            if (typeof r === 'string') return r;
+            if (typeof r === 'object' && r.name) return r.name;
+            if (typeof r === 'object' && r.role) return r.role;
+            return String(r);
+        });
+        return strings.filter(Boolean);
+    };
+
+    const hasPermissionString = (perm) => {
+        const p = currentUser?.permissions;
+        if (!p) return false;
+        if (typeof p === 'string') return p.toLowerCase().includes(perm);
+        if (Array.isArray(p)) return p.some(x => String(x).toLowerCase().includes(perm));
+        return false;
+    };
+
     const isSeller = () => {
-        if (!isLoggedIn || !currentUser?.roles) return false;
-        return currentUser.roles.some(role =>
-            (typeof role === 'object' && role?.name && (role.name === 'SELLER' || role.name === 'ROLE_SELLER')) ||
-            (typeof role === 'string' && (role === 'SELLER' || role === 'ROLE_SELLER'))
-        );
+        if (!isLoggedIn || !currentUser) return false;
+        const roleStrings = getUserRoleStrings().map(r => r.toUpperCase());
+        const hasSellerRole = roleStrings.some(up => up === 'SELLER' || up === 'ROLE_SELLER' || up.includes('SELLER'));
+        const hasSellerPermission = hasPermissionString('sell');
+        return hasSellerRole || hasSellerPermission;
+    };
+
+    const isAdmin = () => {
+        if (!isLoggedIn || !currentUser) return false;
+        const roleStrings = getUserRoleStrings().map(r => r.toUpperCase());
+        const hasAdminRole = roleStrings.some(up => up === 'ADMIN' || up === 'ROLE_ADMIN' || up.includes('ADMIN'));
+        const hasAdminPermission = hasPermissionString('delete');
+        return hasAdminRole || hasAdminPermission;
     };
 
     const formatPrice = (price) => {
@@ -280,7 +343,7 @@ const Header = () => {
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            navigate(`/categories?search=${encodeURIComponent(searchQuery.trim())}`);
+            navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
         }
     };
 
@@ -322,17 +385,16 @@ const Header = () => {
                     style={{ zIndex: 1800 }}
                 >
                     <div className="flex items-center justify-between">
-                        <a href="/" className="navbar-logo relative">
-                            <img src={logo} alt="GreenGarden" className="w-28 h-16 object-contain scale-125" />
-                        </a>
+                        <Link to="/" className="navbar-logo relative">
+                            <img src={logo} alt="CloudCake" className="w-28 h-16 object-contain scale-125" />
+                        </Link>
                         <div className="flex items-center justify-between mt-2 space-x-6 text-sm px-8">
-                            <a href="/introduction" className="hover:text-purple-600 font-semibold">Giới Thiệu</a>
-                           
-                            <a href="/categories" className="hover:text-purple-600 font-semibold">Sản phẩm</a>
+                            <Link to="/introduction" className="hover:text-purple-600 font-semibold">Giới Thiệu</Link>
+                            <Link to="/products" className="hover:text-purple-600 font-semibold">Sản phẩm</Link>
                             {!isSeller() && (
-                                <a href="/shop-registration" className="text-red-500 font-semibold hover:text-red-600">
+                                <Link to="/shop-registration" className="text-red-500 font-semibold hover:text-red-600">
                                     Đăng ký bán hàng
-                                </a>
+                                </Link>
                             )}
                         </div>
                         <div className="flex-grow flex items-center space-x-4 px-4">
@@ -391,26 +453,26 @@ const Header = () => {
                                         <div className="px-4 py-2 border-b">
                                             <div className="font-medium text-gray-900">{currentUser?.email}</div>
                                         </div>
-                                        <a
-                                            href="/user-profile"
+                                        <Link
+                                            to="/user-profile"
                                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                             role="menuitem"
                                             onClick={() => setIsUserDropdownOpen(false)}
                                         >
                                             <UserCircle size={16} className="mr-2" />
                                             Tài khoản của tôi
-                                        </a>
-                                        <a
-                                            href="/user-profile/orders"
+                                        </Link>
+                                        <Link
+                                            to="/user-profile/orders"
                                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                             role="menuitem"
                                             onClick={() => setIsUserDropdownOpen(false)}
                                         >
                                             <Package size={16} className="mr-2" />
                                             Đơn mua
-                                        </a>
-                                        <a
-                                            href="/user-profile/messages"
+                                        </Link>
+                                        <Link
+                                            to="/user-profile/messages"
                                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center relative"
                                             role="menuitem"
                                             onClick={() => setIsUserDropdownOpen(false)}
@@ -422,44 +484,55 @@ const Header = () => {
                                                     {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
                                                 </div>
                                             )}
-                                        </a>
-                                        <a
-                                            href="/user-profile/addresses"
+                                        </Link>
+                                        <Link
+                                            to="/user-profile/addresses"
                                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                             role="menuitem"
                                             onClick={() => setIsUserDropdownOpen(false)}
                                         >
                                             <MapPin size={16} className="mr-2" />
                                             Địa chỉ nhận hàng
-                                        </a>
-                                        <a
-                                            href="/user-profile/followed-shops"
+                                        </Link>
+                                        <Link
+                                            to="/user-profile/followed-shops"
                                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                             role="menuitem"
                                             onClick={() => setIsUserDropdownOpen(false)}
                                         >
                                             <Store size={16} className="mr-2" />
                                             Cửa hàng đã theo dõi
-                                        </a>
-                                        <a
-                                            href="/user-profile/password"
+                                        </Link>
+                                        <Link
+                                            to="/user-profile/password"
                                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                             role="menuitem"
                                             onClick={() => setIsUserDropdownOpen(false)}
                                         >
                                             <Lock size={16} className="mr-2" />
                                             Đổi mật khẩu
-                                        </a>
+                                        </Link>
                                         {isSeller() && (
-                                            <a
-                                                href="/seller-dashboard"
+                                            <Link
+                                                to="/seller"
                                                 className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center"
                                                 role="menuitem"
                                                 onClick={() => setIsUserDropdownOpen(false)}
                                             >
                                                 <Store size={16} className="mr-2" />
-                                                Quản lý cửa hàng
-                                            </a>
+                                                Seller Dashboard
+                                            </Link>
+                                        )}
+                                        {isAdmin() && (
+                                            <Link
+                                                to="/admin"
+                                                className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center"
+                                                role="menuitem"
+                                                onClick={() => setIsUserDropdownOpen(false)}
+                                            >
+                                                <Store size={16} className="mr-2" />
+                                                Admin Dashboard
+                                            </Link>
                                         )}
                                         <div className="border-t mt-1">
                                             <button
@@ -477,19 +550,96 @@ const Header = () => {
                                     </div>
                                 )}
                             </div>
-                            <div className="flex gap-2">
+                            <div className="relative">
                                 <button
+                                    ref={cartButtonRef}
                                     id="cartbutton"
-                                    className="cartbutton flex flex-col items-center text-gray-600 hover:text-purple-600 text-xs"
-                                    onClick={() => setIsCartOpen(true)}
+                                    className="cartbutton flex flex-col items-center text-gray-600 hover:text-purple-600 text-xs relative"
+                                    onMouseEnter={() => setIsCartDropdownOpen(true)}
+                                    onMouseLeave={() => setIsCartDropdownOpen(false)}
+                                    onClick={() => navigate('/cart')}
                                     aria-label="Mở giỏ hàng"
                                 >
-                                    <ShoppingCart size={24} />
+                                    <div className="relative">
+                                        <ShoppingCart size={24} />
+                                        {cart && cart.items && cart.items.length > 0 && (
+                                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                                                {cart.items.length}
+                                            </span>
+                                        )}
+                                    </div>
                                     <span>Giỏ hàng</span>
                                 </button>
-                                <div className="flex flex-col items-center text-gray-600 text-xs">
-                                    <span>{formatPrice(cartTotal)}</span>
-                                </div>
+                                
+                                {/* Cart Dropdown Popup */}
+                                {isCartDropdownOpen && cart && cart.items && cart.items.length > 0 && (
+                                    <div
+                                        ref={cartDropdownRef}
+                                        className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+                                        onMouseEnter={() => setIsCartDropdownOpen(true)}
+                                        onMouseLeave={() => setIsCartDropdownOpen(false)}
+                                    >
+                                        <div className="p-4 border-b border-gray-200">
+                                            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                                <ShoppingCart className="w-5 h-5" />
+                                                Giỏ hàng của bạn
+                                            </h3>
+                                            <p className="text-sm text-gray-600 mt-1">
+                                                {cart.items.length} {cart.items.length === 1 ? 'sản phẩm' : 'sản phẩm'}
+                                            </p>
+                                        </div>
+                                        <div className="max-h-96 overflow-y-auto">
+                                            {cart.items.slice(0, 5).map((item, index) => (
+                                                <div key={index} className="p-4 border-b border-gray-100 hover:bg-gray-50">
+                                                    <div className="flex gap-3">
+                                                        <div className="w-16 h-16 flex-shrink-0">
+                                                            {item.image ? (
+                                                                <img
+                                                                    src={typeof item.image === 'string' ? item.image : item.image?.url}
+                                                                    alt={item.productName || 'Sản phẩm'}
+                                                                    className="w-full h-full object-cover rounded"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-full h-full bg-gray-200 rounded flex items-center justify-center">
+                                                                    <Package className="w-8 h-8 text-gray-400" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-medium text-sm text-gray-900 truncate">
+                                                                {item.productName || 'Sản phẩm'}
+                                                            </p>
+                                                            {item.variantName && (
+                                                                <p className="text-xs text-gray-600 truncate">
+                                                                    {item.variantName}
+                                                                </p>
+                                                            )}
+                                                            <p className="text-sm text-gray-600 mt-1">
+                                                                Số lượng: {item.quantity}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {cart.items.length > 5 && (
+                                                <div className="p-4 text-center text-sm text-gray-600">
+                                                    và {cart.items.length - 5} sản phẩm khác...
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="p-4 border-t border-gray-200">
+                                            <button
+                                                onClick={() => {
+                                                    navigate('/cart');
+                                                    setIsCartDropdownOpen(false);
+                                                }}
+                                                className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition font-medium"
+                                            >
+                                                Xem giỏ hàng
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -500,3 +650,4 @@ const Header = () => {
 };
 
 export default Header;
+                                              
