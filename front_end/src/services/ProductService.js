@@ -76,7 +76,7 @@ class ProductService {
       }
 
       const data = await ApiService.uploadFile('/product/create', formData, true);
-      return data;
+      return data?.product || data;
     } catch (error) {
       console.error('Error creating product:', error);
       throw error;
@@ -114,7 +114,7 @@ class ProductService {
       }
 
       const data = await ApiService.putFormData(`/product/edit/${id}`, formData, true);
-      return data;
+      return data?.product || data;
     } catch (error) {
       console.error('Error updating product:', error);
       throw error;

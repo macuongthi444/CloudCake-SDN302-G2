@@ -135,6 +135,10 @@ productSchema.index({ shopId: 1, status: 1 })
 productSchema.index({ categoryId: 1, isActive: 1 })
 productSchema.index({ isFeatured: 1, isActive: 1 })
 productSchema.index({ name: 'text', description: 'text', tags: 'text' }) // Text search
+productSchema.index({ createdAt: -1 })
+productSchema.index({ isActive: 1, createdAt: -1 })
+productSchema.index({ shopId: 1, createdAt: -1 })
+productSchema.index({ categoryId: 1, createdAt: -1 })
 
 // Virtual for discount percentage
 productSchema.virtual('discountPercentage').get(function() {
