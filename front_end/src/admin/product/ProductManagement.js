@@ -264,7 +264,7 @@ const ProductManagement = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-3 sm:p-4 lg:p-6">
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
@@ -273,20 +273,21 @@ const ProductManagement = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-3 sm:p-4 lg:p-6">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Quản lý Sản phẩm</h1>
-            <p className="text-gray-600">Quản lý các sản phẩm bánh của cửa hàng</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Quản lý Sản phẩm</h1>
+            <p className="text-sm sm:text-base text-gray-600">Quản lý các sản phẩm bánh của cửa hàng</p>
           </div>
           <button
             onClick={handleCreateClick}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
           >
             <Plus size={20} />
-            Thêm sản phẩm
+            <span className="hidden sm:inline">Thêm sản phẩm</span>
+            <span className="sm:hidden">Thêm</span>
           </button>
         </div>
 
@@ -305,22 +306,115 @@ const ProductManagement = () => {
 
       {/* Products Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sản phẩm</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Danh mục</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Giá</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Hành động</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+        {/* Desktop Table View */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sản phẩm</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Danh mục</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Giá</th>
+                <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
+                <th className="px-4 lg:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Hành động</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredProducts.map((product) => (
+                <tr key={product._id} className="hover:bg-gray-50">
+                  <td className="px-4 lg:px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      {product.images && product.images.length > 0 ? (
+                        <img
+                          src={product.images.find(img => img.isPrimary)?.url || product.images[0]?.url}
+                          alt={product.name}
+                          className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <Package size={24} className="text-gray-400" />
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-medium text-gray-900 text-sm sm:text-base">{product.name}</div>
+                        <div className="text-xs sm:text-sm text-gray-500 line-clamp-1">{product.shortDescription || product.description}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 lg:px-6 py-4 text-gray-700 text-sm">{product.sku || '-'}</td>
+                  <td className="px-4 lg:px-6 py-4 text-gray-700 text-sm">
+                    {product.categoryId?.name || '-'}
+                  </td>
+                  <td className="px-4 lg:px-6 py-4">
+                    <div className="flex flex-col">
+                      {product.discountedPrice ? (
+                        <>
+                          <span className="text-base sm:text-lg font-semibold text-blue-600">
+                            {product.discountedPrice.toLocaleString('vi-VN')} ₫
+                          </span>
+                          <span className="text-xs sm:text-sm text-gray-400 line-through">
+                            {product.basePrice.toLocaleString('vi-VN')} ₫
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-base sm:text-lg font-semibold text-gray-900">
+                          {product.basePrice.toLocaleString('vi-VN')} ₫
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 lg:px-6 py-4">
+                    <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${
+                      product.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                      product.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {product.status === 'ACTIVE' ? 'Đang bán' :
+                       product.status === 'DRAFT' ? 'Nháp' :
+                       product.status === 'OUT_OF_STOCK' ? 'Hết hàng' : 'Ngừng bán'}
+                    </span>
+                  </td>
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => handleEditClick(product)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                        title="Chỉnh sửa"
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedProduct(product);
+                          setShowVariantModal(true);
+                        }}
+                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition"
+                        title="Quản lý biến thể"
+                      >
+                        <Layers size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(product)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                        title="Xóa"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile/Tablet Card View */}
+        <div className="lg:hidden">
+          <div className="divide-y divide-gray-200">
             {filteredProducts.map((product) => (
-              <tr key={product._id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
+              <div key={product._id} className="p-4 hover:bg-gray-50">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3 flex-1">
                     {product.images && product.images.length > 0 ? (
                       <img
                         src={product.images.find(img => img.isPrimary)?.url || product.images[0]?.url}
@@ -332,47 +426,13 @@ const ProductManagement = () => {
                         <Package size={24} className="text-gray-400" />
                       </div>
                     )}
-                    <div>
-                      <div className="font-medium text-gray-900">{product.name}</div>
-                      <div className="text-sm text-gray-500 line-clamp-1">{product.shortDescription || product.description}</div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 mb-1 truncate">{product.name}</h3>
+                      <p className="text-xs text-gray-500 mb-1 line-clamp-1">{product.shortDescription || product.description}</p>
+                      <p className="text-xs text-gray-500">SKU: {product.sku || '-'}</p>
                     </div>
                   </div>
-                </td>
-                <td className="px-6 py-4 text-gray-700">{product.sku || '-'}</td>
-                <td className="px-6 py-4 text-gray-700">
-                  {product.categoryId?.name || '-'}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-col">
-                    {product.discountedPrice ? (
-                      <>
-                        <span className="text-lg font-semibold text-blue-600">
-                          {product.discountedPrice.toLocaleString('vi-VN')} ₫
-                        </span>
-                        <span className="text-sm text-gray-400 line-through">
-                          {product.basePrice.toLocaleString('vi-VN')} ₫
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-lg font-semibold text-gray-900">
-                        {product.basePrice.toLocaleString('vi-VN')} ₫
-                      </span>
-                    )}
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    product.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                    product.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {product.status === 'ACTIVE' ? 'Đang bán' :
-                     product.status === 'DRAFT' ? 'Nháp' :
-                     product.status === 'OUT_OF_STOCK' ? 'Hết hàng' : 'Ngừng bán'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center gap-2 ml-2">
                     <button
                       onClick={() => handleEditClick(product)}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
@@ -398,11 +458,47 @@ const ProductManagement = () => {
                       <Trash2 size={18} />
                     </button>
                   </div>
-                </td>
-              </tr>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Danh mục</p>
+                    <p className="text-sm text-gray-700">{product.categoryId?.name || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Giá</p>
+                    <div>
+                      {product.discountedPrice ? (
+                        <>
+                          <div className="text-base font-semibold text-blue-600">
+                            {product.discountedPrice.toLocaleString('vi-VN')} ₫
+                          </div>
+                          <div className="text-xs text-gray-400 line-through">
+                            {product.basePrice.toLocaleString('vi-VN')} ₫
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-base font-semibold text-gray-900">
+                          {product.basePrice.toLocaleString('vi-VN')} ₫
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    product.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                    product.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {product.status === 'ACTIVE' ? 'Đang bán' :
+                     product.status === 'DRAFT' ? 'Nháp' :
+                     product.status === 'OUT_OF_STOCK' ? 'Hết hàng' : 'Ngừng bán'}
+                  </span>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </div>
 
         {filteredProducts.length === 0 && (
           <div className="text-center py-12">
@@ -414,21 +510,21 @@ const ProductManagement = () => {
 
       {/* Pagination */}
       {pagination.pages > 1 && (
-        <div className="mt-4 flex justify-center gap-2">
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
           <button
             onClick={() => setPagination({...pagination, page: pagination.page - 1})}
             disabled={pagination.page === 1}
-            className="px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
           >
             Trước
           </button>
-          <span className="px-4 py-2">
+          <span className="px-2 sm:px-4 py-2 text-sm sm:text-base">
             Trang {pagination.page} / {pagination.pages}
           </span>
           <button
             onClick={() => setPagination({...pagination, page: pagination.page + 1})}
             disabled={pagination.page >= pagination.pages}
-            className="px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
           >
             Sau
           </button>
@@ -437,8 +533,8 @@ const ProductManagement = () => {
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-3xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-gray-800">
                 {isEditing ? 'Chỉnh sửa Sản phẩm' : 'Thêm Sản phẩm Mới'}
@@ -452,7 +548,7 @@ const ProductManagement = () => {
             </div>
 
             <form onSubmit={handleSave} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Tên sản phẩm *
@@ -503,7 +599,7 @@ const ProductManagement = () => {
                 />
               </div>
 
-              <div className={`grid gap-4 ${isAdmin ? 'grid-cols-2' : 'grid-cols-3'}`}>
+              <div className={`grid gap-4 grid-cols-1 ${isAdmin ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Danh mục *
@@ -642,22 +738,22 @@ const ProductManagement = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Xác nhận xóa</h2>
-            <p className="text-gray-700 mb-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-md">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Xác nhận xóa</h2>
+            <p className="text-sm sm:text-base text-gray-700 mb-6">
               Bạn có chắc chắn muốn xóa sản phẩm "{selectedProduct?.name}"? Hành động này không thể hoàn tác.
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                className="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
               >
                 Hủy
               </button>
               <button
                 onClick={handleDelete}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                className="w-full sm:flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
               >
                 Xóa
               </button>

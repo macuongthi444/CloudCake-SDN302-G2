@@ -13,25 +13,29 @@ import {
   AlertCircle,
   User,
   Phone,
-  Mail,
   Store,
   FileText,
-  Wallet
+  Wallet,
+  X
 } from 'lucide-react';
 import OrderService from '../../../services/OrderService';
 import PaymentService from '../../../services/PaymentService';
-import { toastError, toastInfo } from '../../../utils/toast';
+import { toastError, toastInfo, toastSuccess } from '../../../utils/toast';
 
 const OrderDetail = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   useEffect(() => {
     if (orderId) {
       loadOrderDetail();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
   const loadOrderDetail = async () => {
@@ -178,6 +182,42 @@ const OrderDetail = () => {
     return isVNPay;
   };
 
+  const shouldShowCancelButton = () => {
+    if (!order) return false;
+    // Show cancel button if:
+    // 1. Order status is PENDING or CONFIRMED
+    // 2. Order is not already cancelled
+    const cancellableStatuses = ['PENDING', 'CONFIRMED'];
+    return cancellableStatuses.includes(order.status) && order.status !== 'CANCELLED';
+  };
+
+  const handleCancelClick = () => {
+    setShowCancelModal(true);
+    setCancelReason('');
+  };
+
+  const handleCancelOrder = async () => {
+    if (!order) return;
+
+    try {
+      setCancelling(true);
+      const id = order.orderNumber || order._id;
+      await OrderService.cancelOrder(id, cancelReason || 'Khách hàng yêu cầu hủy');
+      
+      toastSuccess('Đơn hàng đã được hủy thành công');
+      setShowCancelModal(false);
+      setCancelReason('');
+      
+      // Reload order detail
+      await loadOrderDetail();
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      toastError(error.response?.data?.error?.message || 'Không thể hủy đơn hàng. Vui lòng thử lại.');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-6 flex justify-center items-center h-64">
@@ -287,6 +327,35 @@ const OrderDetail = () => {
               </div>
             </div>
           </div>
+
+          {/* Cancellation Info */}
+          {order.status === 'CANCELLED' && (
+            <div className="bg-red-50 border-2 border-red-200 rounded-lg shadow">
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <XCircle className="w-6 h-6 text-red-600" />
+                  <h3 className="text-lg font-semibold text-red-900">Đơn hàng đã bị hủy</h3>
+                </div>
+                <div className="space-y-2 text-sm">
+                  {order.cancelledAt && (
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <Calendar className="w-4 h-4 text-red-600" />
+                      <span className="font-medium">Thời gian hủy: </span>
+                      <span>{formatDate(order.cancelledAt)}</span>
+                    </div>
+                  )}
+                  {order.cancellationReason && (
+                    <div className="mt-3">
+                      <span className="font-medium text-gray-700">Lý do hủy: </span>
+                      <p className="text-red-700 mt-1 bg-white p-3 rounded border border-red-200">
+                        {order.cancellationReason}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Shipping Address */}
           {order.shippingAddress && (
@@ -465,10 +534,87 @@ const OrderDetail = () => {
                   </p>
                 </div>
               )}
+              {shouldShowCancelButton() && (
+                <div className="pt-4 border-t border-gray-200 mt-4">
+                  <button
+                    onClick={handleCancelClick}
+                    disabled={cancelling}
+                    className="w-full bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <XCircle className="w-5 h-5" />
+                    {cancelling ? 'Đang hủy...' : 'Hủy đơn hàng'}
+                  </button>
+                  <p className="text-xs text-gray-500 text-center mt-2">
+                    Chỉ có thể hủy đơn hàng ở trạng thái "Chờ xử lý" hoặc "Đã xác nhận"
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Cancel Order Modal */}
+      {showCancelModal && order && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Hủy đơn hàng</h3>
+                <button
+                  onClick={() => {
+                    setShowCancelModal(false);
+                    setCancelReason('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  Bạn có chắc chắn muốn hủy đơn hàng <span className="font-semibold">{order.orderNumber || order._id}</span>?
+                </p>
+                <p className="text-xs text-gray-500 mb-4">
+                  Chỉ có thể hủy đơn hàng ở trạng thái "Chờ xử lý" hoặc "Đã xác nhận". 
+                  Nếu đơn hàng đã được thanh toán, tiền sẽ được hoàn lại sau khi hủy.
+                </p>
+                
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Lý do hủy (tùy chọn)
+                </label>
+                <textarea
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="Nhập lý do hủy đơn hàng..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                  rows={3}
+                />
+              </div>
+              
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setShowCancelModal(false);
+                    setCancelReason('');
+                  }}
+                  className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleCancelOrder}
+                  disabled={cancelling}
+                  className="px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {cancelling ? 'Đang hủy...' : 'Xác nhận hủy'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

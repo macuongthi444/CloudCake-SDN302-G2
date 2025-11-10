@@ -134,33 +134,33 @@ const ProductDetail = () => {
   const primaryImage = images.find(img => img.isPrimary)?.url || images[0]?.url;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-6 lg:py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-6 lg:p-8">
             {/* Image Gallery */}
             <div>
               {primaryImage ? (
                 <img
                   src={primaryImage}
                   alt={product.name}
-                  className="w-full h-96 object-cover rounded-lg"
+                  className="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-lg"
                 />
               ) : (
-                <div className="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <Package size={64} className="text-gray-400" />
+                <div className="w-full h-64 sm:h-80 lg:h-96 bg-gray-200 rounded-lg flex items-center justify-center">
+                  <Package size={48} className="sm:w-16 sm:h-16 lg:w-16 lg:h-16 text-gray-400" />
                 </div>
               )}
               
               {/* Additional Images */}
               {images.length > 1 && (
-                <div className="grid grid-cols-4 gap-2 mt-4">
+                <div className="grid grid-cols-4 gap-2 mt-3 sm:mt-4">
                   {images.slice(1, 5).map((img, index) => (
                     <img
                       key={index}
                       src={img.url}
                       alt={`${product.name} - ${index + 2}`}
-                      className="w-full h-20 object-cover rounded-lg cursor-pointer hover:opacity-75"
+                      className="w-full h-16 sm:h-20 object-cover rounded-lg cursor-pointer hover:opacity-75"
                     />
                   ))}
                 </div>
@@ -169,47 +169,47 @@ const ProductDetail = () => {
 
             {/* Product Info */}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.name}</h1>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">{product.name}</h1>
               
               {/* Rating */}
               {product.rating && product.rating.average > 0 && (
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-3 sm:mb-4">
                   <div className="flex items-center">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        size={20}
-                        className={i < Math.floor(product.rating.average) ? 'text-yellow-400 fill-current' : 'text-gray-300'}
+                        size={16}
+                        className={`sm:w-5 sm:h-5 ${i < Math.floor(product.rating.average) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
                       />
                     ))}
                   </div>
-                  <span className="text-sm font-medium">{product.rating.average.toFixed(1)}</span>
-                  <span className="text-sm text-gray-500">({product.rating.count} đánh giá)</span>
+                  <span className="text-xs sm:text-sm font-medium">{product.rating.average.toFixed(1)}</span>
+                  <span className="text-xs sm:text-sm text-gray-500">({product.rating.count} đánh giá)</span>
                 </div>
               )}
 
               {/* Price */}
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 {selectedVariant && selectedVariant.discountedPrice ? (
                   <>
-                    <div className="text-4xl font-bold text-blue-600 mb-2">
+                    <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-600 mb-1 sm:mb-2">
                       {(selectedVariant.discountedPrice * quantity).toLocaleString('vi-VN')} ₫
                     </div>
-                    <div className="text-xl text-gray-400 line-through">
+                    <div className="text-base sm:text-lg lg:text-xl text-gray-400 line-through">
                       {(selectedVariant.price * quantity).toLocaleString('vi-VN')} ₫
                     </div>
                   </>
                 ) : displayPrice !== basePrice ? (
                   <>
-                    <div className="text-4xl font-bold text-blue-600 mb-2">
+                    <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-600 mb-1 sm:mb-2">
                       {(displayPrice * quantity).toLocaleString('vi-VN')} ₫
                     </div>
-                    <div className="text-xl text-gray-400 line-through">
+                    <div className="text-base sm:text-lg lg:text-xl text-gray-400 line-through">
                       {(basePrice * quantity).toLocaleString('vi-VN')} ₫
                     </div>
                   </>
                 ) : (
-                  <div className="text-4xl font-bold text-gray-900">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
                     {(displayPrice * quantity).toLocaleString('vi-VN')} ₫
                   </div>
                 )}
@@ -217,17 +217,17 @@ const ProductDetail = () => {
 
               {/* Description */}
               {product.description && (
-                <div className="mb-6">
-                  <h2 className="text-lg font-semibold mb-2">Mô tả sản phẩm</h2>
-                  <p className="text-gray-700 whitespace-pre-line">{product.description}</p>
+                <div className="mb-4 sm:mb-6">
+                  <h2 className="text-base sm:text-lg font-semibold mb-2">Mô tả sản phẩm</h2>
+                  <p className="text-sm sm:text-base text-gray-700 whitespace-pre-line">{product.description}</p>
                 </div>
               )}
 
               {/* Variants Selection */}
               {variants.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3">Chọn biến thể</h3>
-                  <div className="grid grid-cols-2 gap-3">
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">Chọn biến thể</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                     {variants.map((variant) => (
                       <button
                         key={variant._id}
@@ -235,14 +235,14 @@ const ProductDetail = () => {
                           setSelectedVariant(variant);
                           setQuantity(1);
                         }}
-                        className={`p-3 border-2 rounded-lg text-left transition ${
+                        className={`p-2 sm:p-3 border-2 rounded-lg text-left transition ${
                           selectedVariant?._id === variant._id
                             ? 'border-blue-600 bg-blue-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <div className="font-medium">{variant.name}</div>
-                        <div className="text-sm text-gray-600">
+                        <div className="font-medium text-sm sm:text-base">{variant.name}</div>
+                        <div className="text-xs sm:text-sm text-gray-600">
                           {variant.price.toLocaleString('vi-VN')} ₫
                         </div>
                         {variant.inventory.quantity <= variant.inventory.lowStockThreshold && (
@@ -257,15 +257,15 @@ const ProductDetail = () => {
               )}
 
               {/* Quantity */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-3">Số lượng</h3>
-                <div className="flex items-center gap-4">
+              <div className="mb-4 sm:mb-6">
+                <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">Số lượng</h3>
+                <div className="flex items-center gap-3 sm:gap-4">
                   <div className="flex items-center border border-gray-300 rounded-lg">
                     <button
                       onClick={decreaseQuantity}
-                      className="p-2 hover:bg-gray-100"
+                      className="p-1.5 sm:p-2 hover:bg-gray-100"
                     >
-                      <Minus size={20} />
+                      <Minus size={18} className="sm:w-5 sm:h-5" />
                     </button>
                     <input
                       type="number"
@@ -280,18 +280,18 @@ const ProductDetail = () => {
                       }}
                       min="1"
                       max={selectedVariant?.inventory?.quantity || undefined}
-                      className="w-16 text-center border-0 focus:outline-none"
+                      className="w-12 sm:w-16 text-center text-sm sm:text-base border-0 focus:outline-none"
                     />
                     <button
                       onClick={increaseQuantity}
-                      className="p-2 hover:bg-gray-100"
+                      className="p-1.5 sm:p-2 hover:bg-gray-100"
                       disabled={selectedVariant && selectedVariant.inventory && quantity >= selectedVariant.inventory.quantity}
                     >
-                      <Plus size={20} />
+                      <Plus size={18} className="sm:w-5 sm:h-5" />
                     </button>
                   </div>
                   {selectedVariant?.inventory && (
-                    <span className={`text-sm ${
+                    <span className={`text-xs sm:text-sm ${
                       selectedVariant.inventory.quantity === 0 ? 'text-red-600 font-semibold' :
                       selectedVariant.inventory.quantity <= selectedVariant.inventory.lowStockThreshold ? 'text-orange-600' :
                       'text-gray-600'
@@ -308,18 +308,18 @@ const ProductDetail = () => {
               <button
                 onClick={handleAddToCart}
                 disabled={addingToCart || (selectedVariant && selectedVariant.inventory && selectedVariant.inventory.quantity === 0)}
-                className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 sm:py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm sm:text-base"
               >
-                <ShoppingCart size={20} />
+                <ShoppingCart size={18} className="sm:w-5 sm:h-5" />
                 {addingToCart ? 'Đang thêm...' : 
                  (selectedVariant && selectedVariant.inventory && selectedVariant.inventory.quantity === 0) 
                    ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
               </button>
 
               {/* Product Details */}
-              <div className="mt-8 pt-8 border-t">
-                <h3 className="text-lg font-semibold mb-4">Thông tin sản phẩm</h3>
-                <div className="space-y-2 text-sm">
+              <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t">
+                <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Thông tin sản phẩm</h3>
+                <div className="space-y-2 text-xs sm:text-sm">
                   {product.weight && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Trọng lượng:</span>
@@ -335,13 +335,13 @@ const ProductDetail = () => {
                   {product.ingredients && product.ingredients.length > 0 && (
                     <div>
                       <span className="text-gray-600">Thành phần:</span>
-                      <p className="font-medium">{product.ingredients.join(', ')}</p>
+                      <p className="font-medium break-words">{product.ingredients.join(', ')}</p>
                     </div>
                   )}
                   {product.allergens && product.allergens.length > 0 && (
                     <div>
                       <span className="text-gray-600">Chất gây dị ứng:</span>
-                      <p className="font-medium text-orange-600">{product.allergens.join(', ')}</p>
+                      <p className="font-medium text-orange-600 break-words">{product.allergens.join(', ')}</p>
                     </div>
                   )}
                 </div>

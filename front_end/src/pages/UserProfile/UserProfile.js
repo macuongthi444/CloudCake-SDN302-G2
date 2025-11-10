@@ -137,8 +137,8 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-7xl">
-      <div className="flex gap-10 rounded-lg overflow-hidden">
+    <div className="container mx-auto p-3 sm:p-4 max-w-7xl">
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-10 rounded-lg overflow-hidden">
          <Sidebar profile={profile} />
         <div className="flex-1 bg-white border">
           <Routes>

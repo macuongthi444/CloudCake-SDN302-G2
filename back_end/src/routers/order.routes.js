@@ -7,6 +7,12 @@ const vnpayController = require('../controller/vnpay.controller')
 const orderRouter = express.Router()
 orderRouter.use(bodyParser.json())
 
+<<<<<<< HEAD
+OrderRouter.post('/create-from-cart', authJwt.verifyToken, orderController.createFromCart)
+OrderRouter.get('/find/:id', authJwt.verifyToken, orderController.getById)
+OrderRouter.get('/user/:userId', authJwt.verifyToken, orderController.getByUserId)
+OrderRouter.post('/:orderId/cancel', authJwt.verifyToken, orderController.cancelOrder)
+=======
 // Lấy tất cả đơn đặt hàng (chỉ admin có quyền)
 orderRouter.get("/list", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], orderController.getAllOrders)
 // Lấy đơn đặt hàng theo ID
@@ -32,6 +38,7 @@ orderRouter.put("/refund/:id", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], order
 orderRouter.post('/create-from-cart', authJwt.verifyToken, orderController.createFromCart)
 orderRouter.get('/find/:id', authJwt.verifyToken, orderController.getById)
 orderRouter.get('/user/:userId', authJwt.verifyToken, orderController.getByUserId)
+>>>>>>> dec8a84a75c4e1e6e559d6a6ec177a17481a6960
 
 // VNPay callback route (public, no auth required)
 // Handle both correct format (?params) and incorrect format (&params)

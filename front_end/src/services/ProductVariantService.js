@@ -1,6 +1,24 @@
 import ApiService from './ApiService';
 
 class ProductVariantService {
+  // Get all variants with filters (Admin only)
+  async getAll(filters = {}) {
+    try {
+      const queryParams = new URLSearchParams();
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && filters[key] !== null && filters[key] !== '') {
+          queryParams.append(key, filters[key]);
+        }
+      });
+      const endpoint = `/product-variant/list${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const data = await ApiService.get(endpoint, true);
+      return data;
+    } catch (error) {
+      console.error('Error fetching variants:', error);
+      throw error;
+    }
+  }
+
   // Get variants by product ID (public)
   async getVariantsByProductId(productId, isActive = true) {
     try {
@@ -58,7 +76,8 @@ class ProductVariantService {
   }
 }
 
-export default new ProductVariantService();
+const productVariantService = new ProductVariantService();
+export default productVariantService;
 
 
 
