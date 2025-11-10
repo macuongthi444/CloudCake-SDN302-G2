@@ -5,7 +5,6 @@ import ProductService from '../../services/ProductService';
 import CategoryService from '../../services/CategoryService';
 import useDebounce from '../../hooks/useDebounce';
 
-// --- COMPONENT LỌC (ĐÃ XÓA KHOẢNG GIÁ) ---
 const FilterSidebar = ({
   categories,
   filters,
@@ -110,7 +109,6 @@ const FilterSidebar = ({
     </div>
   );
 };
-// --- KẾT THÚC COMPONENT LỌC ---
 
 
 // --- COMPONENT CHÍNH (ĐÃ CẬP NHẬT) ---
