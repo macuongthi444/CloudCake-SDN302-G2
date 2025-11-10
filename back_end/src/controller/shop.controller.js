@@ -8,7 +8,7 @@ async function getAll(req, res, next) {
     try {
         const { status, isActive } = req.query
         const query = {}
-        
+
         if (status) query.status = status
         if (isActive !== undefined) query.isActive = isActive === 'true'
 
@@ -16,7 +16,7 @@ async function getAll(req, res, next) {
             .populate('ownerId', 'firstName lastName email')
             .sort({ createdAt: -1 })
             .lean() // Tối ưu performance
-        
+
         res.status(200).json(shops)
     } catch (error) {
         next(error)
@@ -44,7 +44,7 @@ async function getById(req, res, next) {
 async function getMyShop(req, res, next) {
     try {
         const userId = req.userId
-        
+
         const shop = await Shop.findOne({ ownerId: userId })
             .populate('ownerId', 'firstName lastName email')
 
@@ -62,7 +62,7 @@ async function getMyShop(req, res, next) {
 async function create(req, res, next) {
     try {
         const userId = req.userId
-        
+
         // Check if user already has a shop
         const existingShop = await Shop.findOne({ ownerId: userId })
         if (existingShop) {
@@ -101,7 +101,7 @@ async function create(req, res, next) {
         })
 
         await newShop.save()
-        
+
         const populatedShop = await Shop.findById(newShop._id)
             .populate('ownerId', 'firstName lastName email')
 
@@ -145,7 +145,7 @@ async function update(req, res, next) {
         })
 
         await shop.save()
-        
+
         const populatedShop = await Shop.findById(shop._id)
             .populate('ownerId', 'firstName lastName email')
 
@@ -174,7 +174,7 @@ async function updateStatus(req, res, next) {
         shop.isActive = status === 'ACTIVE'
 
         await shop.save()
-        
+
         const populatedShop = await Shop.findById(shop._id)
             .populate('ownerId', 'firstName lastName email')
 
@@ -186,14 +186,253 @@ async function updateStatus(req, res, next) {
         next(error)
     }
 }
+const uploadShopImage = async (req, res, next) => {
+    try {
+        if (!req.file) {
+            throw createHttpError.BadRequest("Không có file được upload");
+        }
 
+        const shopId = req.params.id;
+        const field = req.body.field;
+
+        const validFields = ['logo', 'coverImage', 'identity_card_image_front', 'identity_card_image_back', 'business_license'];
+        if (!validFields.includes(field)) {
+            throw createHttpError.BadRequest("Trường không hợp lệ");
+        }
+
+        const shop = await Shop.findById(shopId);
+        if (!shop) throw createHttpError.NotFound("Shop không tồn tại");
+
+        // Xóa ảnh cũ nếu có
+        if (shop[field]) {
+            const publicId = shop[field].split('/').pop().split('.')[0];
+            await cloudinary.uploader.destroy(publicId);
+        }
+
+        // LẤY URL ĐẦY ĐỦ HTTPS TỪ CLOUIDNARY
+        const imageUrl = req.file.path; // Đây là secure_url[](https://...)
+
+        shop[field] = imageUrl;
+
+        await shop.save();
+
+        res.json({
+            message: "Upload thành công",
+            [field]: imageUrl,
+            preview: imageUrl
+        });
+
+    } catch (error) {
+        if (req.file && req.file.path) {
+            // Xóa file nếu lỗi
+            const publicId = req.file.path.split('/').pop().split('.')[0];
+            await cloudinary.uploader.destroy(publicId).catch(() => { });
+        }
+        next(error);
+    }
+};
+const deleteShop = async (req, res, next) => {
+    try {
+        const shop = await Shop.findById(req.params.id);
+        if (!shop || shop.isActive === 0) {
+            throw createHttpError.NotFound("Shop not found");
+        }
+
+        // Xóa logo và image_cover từ Cloudinary nếu có
+        if (shop.logo && shop.logo.includes('cloudinary')) {
+            await removeFile(shop.logo);
+        }
+
+        if (shop.image_cover && shop.image_cover.includes('cloudinary')) {
+            await removeFile(shop.image_cover);
+        }
+
+        shop.isActive = 0; // Thay đổi trạng thái thành không hoạt động
+        await shop.save();
+        res.status(200).json({ message: "Shop deleted successfully" });
+    } catch (error) {
+        if (error.name === 'CastError') {
+            return next(createHttpError.BadRequest("Invalid shop ID"));
+        }
+        next(error);
+    }
+};
+const approveShop = async (req, res, next) => {
+    try {
+        const shop = await Shop.findById(req.params.id);
+        if (!shop || shop.isActive === 0) {
+            throw createHttpError.NotFound("Không tìm thấy cửa hàng");
+        }
+
+        shop.status = "ACTIVE";
+
+        await shop.save();
+
+        // Gửi email thông báo chấp nhận
+        try {
+            // Tạo transporter
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.SERVICE_EMAIL,
+                    pass: process.env.SERVICE_PASSWORD
+                }
+            });
+
+            // Tạo nội dung email
+            const mailOptions = {
+                from: process.env.SERVICE_EMAIL,
+                to: shop.email,
+                subject: 'Đăng ký cửa hàng của bạn đã được phê duyệt',
+                html: `
+                    <h1>Chúc mừng! Cửa hàng của bạn đã được phê duyệt</h1>
+                    <p>Kính gửi ${shop.name},</p>
+                    <p>Chúng tôi rất vui mừng thông báo rằng đăng ký cửa hàng của bạn đã được phê duyệt. Bạn có thể bắt đầu bán hàng trên nền tảng của chúng tôi ngay bây giờ.</p>
+                    <p>Thông tin cửa hàng:</p>
+                    <ul>
+                        <li><strong>Tên cửa hàng:</strong> ${shop.name}</li>
+                        <li><strong>Tên đăng nhập:</strong> ${shop.username}</li>
+                        <li><strong>Email:</strong> ${shop.email}</li>
+                    </ul>
+                    <p>Cảm ơn bạn đã lựa chọn nền tảng của chúng tôi.</p>
+                    <p>Trân trọng,<br>Đội ngũ Quản trị</p>
+                `
+            };
+
+            // Gửi email
+            await transporter.sendMail(mailOptions);
+            console.log(`Email thông báo phê duyệt đã gửi đến ${shop.email}`);
+
+        } catch (emailError) {
+            // Ghi log lỗi nhưng không làm fail request
+            console.error("Không thể gửi email thông báo phê duyệt:", emailError);
+        }
+
+        res.status(200).json({ message: "Phê duyệt cửa hàng thành công", shop });
+    } catch (error) {
+        if (error.name === 'CastError') {
+            return next(createHttpError.BadRequest("ID cửa hàng không hợp lệ"));
+        }
+        next(error);
+    }
+};
+const rejectShop = async (req, res, next) => {
+    try {
+        const { reason } = req.body;
+        const rejectionReason = reason || "Không đáp ứng yêu cầu của chúng tôi";
+
+        const shop = await Shop.findById(req.params.id);
+        if (!shop || shop.isActive === 0) {
+            throw createHttpError.NotFound("Không tìm thấy cửa hàng");
+        }
+
+        shop.status = "REJECTED";
+        shop.reject_reason = rejectionReason;
+
+        await shop.save();
+        const Role = require('../models/Role'); // Đảm bảo có model Role
+        const sellerRole = await Role.findOne({ name: 'SELLER' });
+        if (!sellerRole) {
+            console.error("Role SELLER không tồn tại trong DB!");
+            throw createHttpError.InternalServerError("Role SELLER missing");
+        }
+
+        const user = shop.ownerId;
+        if (user && !user.roles.includes(sellerRole._id)) {
+            user.roles.push(sellerRole._id);
+            await user.save();
+            console.log(`User ${user.email} đã được thêm role SELLER`);
+        }
+
+        res.json({
+            message: "Duyệt thành công! User đã trở thành Seller",
+            shop
+        });
+        // Gửi email thông báo từ chối
+        try {
+            // Tạo transporter
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.SERVICE_EMAIL,
+                    pass: process.env.SERVICE_PASSWORD
+                }
+            });
+
+            // Tạo nội dung email
+            const mailOptions = {
+                from: process.env.SERVICE_EMAIL,
+                to: shop.email,
+                subject: 'Cập nhật trạng thái đăng ký cửa hàng của bạn',
+                html: `
+                    <h1>Cập nhật trạng thái đăng ký cửa hàng</h1>
+                    <p>Kính gửi ${shop.name},</p>
+                    <p>Cảm ơn bạn đã quan tâm đến việc bán hàng trên nền tảng của chúng tôi. Rất tiếc, chúng tôi không thể phê duyệt đăng ký cửa hàng của bạn tại thời điểm này.</p>
+                    <p><strong>Lý do từ chối:</strong> ${rejectionReason}</p>
+                    <p>Thông tin cửa hàng:</p>
+                    <ul>
+                        <li><strong>Tên cửa hàng:</strong> ${shop.name}</li>
+                        <li><strong>Tên đăng nhập:</strong> ${shop.username}</li>
+                        <li><strong>Email:</strong> ${shop.email}</li>
+                    </ul>
+                    <p>Bạn có thể khắc phục các vấn đề đã nêu và gửi đơn đăng ký mới trong tương lai.</p>
+                    <p>Nếu bạn có bất kỳ câu hỏi hoặc cần làm rõ thêm, vui lòng trả lời email này.</p>
+                    <p>Trân trọng,<br>Đội ngũ Quản trị</p>
+                `
+            };
+
+            // Gửi email
+            await transporter.sendMail(mailOptions);
+            console.log(`Email thông báo từ chối đã gửi đến ${shop.email}`);
+
+        } catch (emailError) {
+            // Ghi log lỗi nhưng không làm fail request
+            console.error("Không thể gửi email thông báo từ chối:", emailError);
+        }
+
+        res.status(200).json({ message: "Từ chối cửa hàng", shop });
+    } catch (error) {
+        if (error.name === 'CastError') {
+            return next(createHttpError.BadRequest("ID cửa hàng không hợp lệ"));
+        }
+        next(error);
+    }
+};
+const unlockShop = async (req, res, next) => {
+    try {
+        // Use findById without checking is_active status
+        const shop = await Shop.findById(req.params.id);
+        if (!shop) {
+            throw createHttpError.NotFound("Shop not found");
+        }
+
+        // Set is_active to 1 (unlocked)
+        shop.isActive = 1;
+        await shop.save();
+
+        res.status(200).json({
+            message: "Shop unlocked successfully",
+            shop
+        });
+    } catch (error) {
+        if (error.name === 'CastError') {
+            return next(createHttpError.BadRequest("Invalid shop ID"));
+        }
+        next(error);
+    }
+};
 const shopController = {
     getAll,
     getById,
     getMyShop,
     create,
     update,
-    updateStatus
+    updateStatus,
+    uploadShopImage,
+    deleteShop,
+    approveShop,
+    rejectShop,
+    unlockShop
 }
 
 module.exports = shopController
