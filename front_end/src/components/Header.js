@@ -1,19 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
-   
     Search,
     User,
-   
     ShoppingCart,
-    
     LogOut,
     MessageSquare,
     Package,
     MapPin,
     Lock,
     UserCircle,
-    Store
+    Store,
+    Menu
 } from 'lucide-react';
 
 import logo from '../assets/Logo.jpg';

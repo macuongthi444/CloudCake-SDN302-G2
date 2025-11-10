@@ -1,18 +1,13 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const { orderController } = require('../controller')
-const VerifyJwt = require('../middlewares/verifyJwt')
+const VerifyJwt = require('../middlewares/jwtAuth')
 const vnpayController = require('../controller/vnpay.controller')
 
 const orderRouter = express.Router()
 orderRouter.use(bodyParser.json())
 
-<<<<<<< HEAD
-OrderRouter.post('/create-from-cart', authJwt.verifyToken, orderController.createFromCart)
-OrderRouter.get('/find/:id', authJwt.verifyToken, orderController.getById)
-OrderRouter.get('/user/:userId', authJwt.verifyToken, orderController.getByUserId)
-OrderRouter.post('/:orderId/cancel', authJwt.verifyToken, orderController.cancelOrder)
-=======
+
 // Lấy tất cả đơn đặt hàng (chỉ admin có quyền)
 orderRouter.get("/list", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], orderController.getAllOrders)
 // Lấy đơn đặt hàng theo ID
@@ -22,7 +17,7 @@ orderRouter.get("/user/:userId", [VerifyJwt.verifyToken], orderController.getOrd
 // Tạo đơn đặt hàng mới
 orderRouter.post("/create", [VerifyJwt.verifyToken], orderController.createOrder)
 // Cập nhật trạng thái đơn hàng (chỉ admin và seller có quyền)
-orderRouter.put("/status/:id", [VerifyJwt.verifyToken, VerifyJwt.isAdminOrSeller], orderController.updateOrderStatus)
+orderRouter.put("/status/:id", [VerifyJwt.verifyToken, VerifyJwt.isSellerOrAdmin], orderController.updateOrderStatus)
 // Hủy đơn hàng
 orderRouter.put("/cancel/:id", [VerifyJwt.verifyToken], orderController.cancelOrder)
 //  Từ chối đơn hàng (dành cho seller)
@@ -35,10 +30,9 @@ orderRouter.get("/shop/:shopId", [VerifyJwt.verifyToken, VerifyJwt.isSeller], or
 orderRouter.get("/refunds", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], orderController.getOrdersNeedingRefund)
 // Đánh dấu đã hoàn tiền cho đơn hàng
 orderRouter.put("/refund/:id", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], orderController.markAsRefunded)
-orderRouter.post('/create-from-cart', authJwt.verifyToken, orderController.createFromCart)
-orderRouter.get('/find/:id', authJwt.verifyToken, orderController.getById)
-orderRouter.get('/user/:userId', authJwt.verifyToken, orderController.getByUserId)
->>>>>>> dec8a84a75c4e1e6e559d6a6ec177a17481a6960
+orderRouter.post('/create-from-cart', VerifyJwt.verifyToken, orderController.createFromCart)
+orderRouter.get('/find/:id', VerifyJwt.verifyToken, orderController.getById)
+orderRouter.get('/user/:userId', VerifyJwt.verifyToken, orderController.getByUserId)
 
 // VNPay callback route (public, no auth required)
 // Handle both correct format (?params) and incorrect format (&params)
