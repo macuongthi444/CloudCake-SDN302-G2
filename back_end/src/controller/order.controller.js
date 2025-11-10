@@ -258,4 +258,140 @@ async function getByUserId(req, res, next) {
   }
 }
 
-module.exports = { createFromCart, getById, getByUserId }
+/**
+ * Cancel an order
+ * Only allows cancellation for PENDING and CONFIRMED orders
+ */
+async function cancelOrder(req, res, next) {
+  try {
+    const { orderId } = req.params
+    const { reason, cancelledBy = 'USER' } = req.body
+    
+    if (!orderId) throw createHttpError.BadRequest('Order ID is required')
+    
+    // Find order by ObjectId or orderNumber
+    const mongoose = require('mongoose')
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(orderId)
+    let order
+    
+    if (isValidObjectId) {
+      order = await Order.findById(orderId)
+    } else {
+      // Search by orderNumber
+      if (!orderId.includes('-') && orderId.startsWith('ORD') && orderId.length >= 11) {
+        const match = orderId.match(/^ORD(\d{8})(\d+)$/)
+        if (match) {
+          const [, datePart, seqPart] = match
+          const formattedOrderNumber = `ORD-${datePart}-${seqPart.padStart(4, '0')}`
+          order = await Order.findOne({
+            $or: [
+              { orderNumber: orderId },
+              { orderNumber: formattedOrderNumber }
+            ]
+          })
+        } else {
+          order = await Order.findOne({ orderNumber: orderId })
+        }
+      } else {
+        order = await Order.findOne({ orderNumber: orderId })
+      }
+    }
+    
+    if (!order) throw createHttpError.NotFound('Order not found')
+    
+    // Check if order can be cancelled
+    const cancellableStatuses = ['PENDING', 'CONFIRMED']
+    if (!cancellableStatuses.includes(order.status)) {
+      throw createHttpError.BadRequest(
+        `Không thể hủy đơn hàng ở trạng thái "${order.status}". ` +
+        `Chỉ có thể hủy đơn hàng ở trạng thái: ${cancellableStatuses.join(', ')}`
+      )
+    }
+    
+    // Check if order is already cancelled
+    if (order.status === 'CANCELLED') {
+      throw createHttpError.BadRequest('Đơn hàng đã được hủy trước đó')
+    }
+    
+    // Check user permission (only allow user to cancel their own orders)
+    const userId = req.userId || req.user?.id || req.user?._id
+    if (userId && order.userId.toString() !== userId.toString()) {
+      // Check if user is admin or shop owner
+      const user = await User.findById(userId).lean()
+      const isAdmin = user?.roles?.some(r => r === 'ROLE_ADMIN' || r === 'ADMIN')
+      const isShopOwner = order.shopId && user?.shopId?.toString() === order.shopId.toString()
+      
+      if (!isAdmin && !isShopOwner) {
+        throw createHttpError.Forbidden('Bạn không có quyền hủy đơn hàng này')
+      }
+    }
+    
+    // Restore inventory if order was CONFIRMED (might have deducted inventory)
+    if (order.status === 'CONFIRMED' && order.items && order.items.length > 0) {
+      try {
+        const ProductVariant = db.productVariant
+        for (const item of order.items) {
+          if (item.variantId) {
+            const variant = await ProductVariant.findById(item.variantId)
+            if (variant && variant.inventory) {
+              variant.inventory.quantity = (variant.inventory.quantity || 0) + (item.quantity || 0)
+              await variant.save()
+              console.log(`Restored ${item.quantity} units of variant ${item.variantId}`)
+            }
+          }
+        }
+      } catch (inventoryError) {
+        console.error('Error restoring inventory:', inventoryError)
+        // Continue with cancellation even if inventory restore fails
+      }
+    }
+    
+    // Update order status
+    order.status = 'CANCELLED'
+    order.cancelledAt = new Date()
+    if (reason) {
+      order.cancellationReason = reason
+    }
+    
+    // Handle payment status
+    // If order was paid, mark payment as pending refund (actual refund should be handled separately)
+    if (order.paymentStatus === 'PAID') {
+      // For VNPay: payment status can be changed to REFUNDED after actual refund
+      // For COD: no refund needed
+      if (order.paymentCode === 'VNPAY') {
+        // Keep as PAID until actual refund is processed
+        // Or change to REFUNDED if refund is automatic
+        // For now, we'll keep it as PAID and require manual refund processing
+        console.log('Order was paid via VNPay, refund should be processed separately')
+      }
+      // For COD, no action needed
+    }
+    
+    await order.save()
+    
+    console.log('Order cancelled:', {
+      orderId: order._id,
+      orderNumber: order.orderNumber,
+      status: order.status,
+      cancelledAt: order.cancelledAt,
+      cancellationReason: order.cancellationReason,
+      cancelledBy
+    })
+    
+    res.status(200).json({
+      success: true,
+      message: 'Đơn hàng đã được hủy thành công',
+      order: {
+        _id: order._id,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        cancelledAt: order.cancelledAt,
+        cancellationReason: order.cancellationReason
+      }
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+module.exports = { createFromCart, getById, getByUserId, cancelOrder }

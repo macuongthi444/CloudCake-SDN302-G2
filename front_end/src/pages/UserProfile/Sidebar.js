@@ -18,13 +18,13 @@ const Sidebar = ({ profile }) => {
   ];
 
   return (
-    <div className="w-64 bg-white border p-4">
-      <div className="flex items-center space-x-4 mb-8">
-        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+    <div className="w-full lg:w-64 bg-white border p-3 sm:p-4">
+      <div className="flex items-center space-x-3 sm:space-x-4 mb-6 sm:mb-8">
+        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
           <img src={avatar} className='w-full h-full' alt="Profile" />
         </div>
-        <div>
-          <p className="font-semibold">
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-sm sm:text-base truncate">
             {profile && (profile.lastName || profile.firstName) ?
               `${profile.lastName || ''} ${profile.firstName || ''}`.trim() :
               'Người dùng'}

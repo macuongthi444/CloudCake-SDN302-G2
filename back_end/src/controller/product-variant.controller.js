@@ -4,6 +4,78 @@ const Product = db.product
 const Shop = db.shop
 const createHttpError = require('http-errors')
 
+// Get all variants with filters (Admin only)
+async function getAll(req, res, next) {
+    try {
+        const { 
+            productId, 
+            shopId, 
+            isActive, 
+            search,
+            page = 1, 
+            limit = 20,
+            sortBy = 'createdAt',
+            sortOrder = -1
+        } = req.query
+
+        const query = {}
+        
+        if (productId) {
+            query.productId = productId
+        }
+        
+        if (isActive !== undefined) {
+            query.isActive = isActive === 'true'
+        }
+
+        // If shopId is provided, filter by products from that shop
+        if (shopId) {
+            const products = await Product.find({ shopId }).select('_id').lean()
+            const productIds = products.map(p => p._id)
+            query.productId = { $in: productIds }
+        }
+
+        // Search by name or SKU
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { sku: { $regex: search, $options: 'i' } }
+            ]
+        }
+
+        const skip = (parseInt(page) - 1) * parseInt(limit)
+        const sort = { [sortBy]: parseInt(sortOrder) }
+
+        const variants = await ProductVariant.find(query)
+            .populate('productId', 'name shopId')
+            .populate({
+                path: 'productId',
+                populate: {
+                    path: 'shopId',
+                    select: 'name'
+                }
+            })
+            .sort(sort)
+            .skip(skip)
+            .limit(parseInt(limit))
+            .lean()
+
+        const total = await ProductVariant.countDocuments(query)
+
+        res.status(200).json({
+            variants,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
 // Get variants by product ID (public)
 async function getByProductId(req, res, next) {
     try {
@@ -172,6 +244,7 @@ async function deleteById(req, res, next) {
 }
 
 const productVariantController = {
+    getAll,
     getByProductId,
     getById,
     create,

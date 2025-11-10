@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, ChevronDown, User } from 'lucide-react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import ProductManagement from './product/ProductManagement';
+import ProductVariantManagement from './product/ProductVariantManagement';
 import CategoryManagement from './category/CategoryManagement';
 import PaymentManagement from './payment/PaymentManagement';
 
@@ -46,6 +47,7 @@ const MainContent = () => {
           {/* <Route path="/dashboard" element={<Dashboard />} /> */}
 
           <Route path="/products" element={<ProductManagement />} />
+          <Route path="/product-variants" element={<ProductVariantManagement />} />
           <Route path="/categories" element={<CategoryManagement />} />
           
           <Route path="/payments" element={<PaymentManagement />} />

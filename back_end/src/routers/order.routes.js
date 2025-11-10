@@ -10,6 +10,7 @@ OrderRouter.use(bodyParser.json())
 OrderRouter.post('/create-from-cart', authJwt.verifyToken, orderController.createFromCart)
 OrderRouter.get('/find/:id', authJwt.verifyToken, orderController.getById)
 OrderRouter.get('/user/:userId', authJwt.verifyToken, orderController.getByUserId)
+OrderRouter.post('/:orderId/cancel', authJwt.verifyToken, orderController.cancelOrder)
 
 // VNPay callback route (public, no auth required)
 // Handle both correct format (?params) and incorrect format (&params)

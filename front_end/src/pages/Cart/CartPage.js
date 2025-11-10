@@ -158,39 +158,39 @@ const CartPage = () => {
   const totalPrice = cart?.totalPrice || 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-6 lg:py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <ShoppingCart size={32} />
-            Giỏ hàng của bạn
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+            <ShoppingCart size={24} className="sm:w-8 sm:h-8" />
+            <span>Giỏ hàng của bạn</span>
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-sm sm:text-base text-gray-600 mt-2">
             {items.length > 0 ? `${items.length} sản phẩm trong giỏ hàng` : 'Giỏ hàng của bạn đang trống'}
           </p>
         </div>
 
         {items.length === 0 ? (
           // Empty Cart
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <ShoppingCart size={64} className="mx-auto text-gray-400 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">Giỏ hàng trống</h2>
-            <p className="text-gray-600 mb-6">Chưa có sản phẩm nào trong giỏ hàng của bạn</p>
-            <button onClick={() => navigate('/')} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+          <div className="bg-white rounded-lg shadow p-6 sm:p-12 text-center">
+            <ShoppingCart size={48} className="sm:w-16 sm:h-16 mx-auto text-gray-400 mb-4" />
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Giỏ hàng trống</h2>
+            <p className="text-sm sm:text-base text-gray-600 mb-6">Chưa có sản phẩm nào trong giỏ hàng của bạn</p>
+            <button onClick={() => navigate('/')} className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
               Tiếp tục mua sắm
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Cart Items */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-lg shadow">
-                <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-                  <h2 className="text-lg font-semibold text-gray-900">Sản phẩm trong giỏ hàng</h2>
+                <div className="p-3 sm:p-4 border-b border-gray-200 flex justify-between items-center">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900">Sản phẩm trong giỏ hàng</h2>
                   <button
                     onClick={handleClearCart}
-                    className="text-sm text-red-600 hover:text-red-700"
+                    className="text-xs sm:text-sm text-red-600 hover:text-red-700"
                   >
                     Xóa tất cả
                   </button>
@@ -198,26 +198,31 @@ const CartPage = () => {
 
                 <div className="divide-y divide-gray-200">
                   {items.map((item) => (
-                    <div key={item.productId} className="p-4 hover:bg-gray-50 transition">
-                      <div className="flex gap-4">
+                    <div key={item.productId} className="p-3 sm:p-4 hover:bg-gray-50 transition">
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                         {/* Product Image */}
-                        {(item.image || item.image?.url) ? (
-                          <img
-                            src={typeof item.image === 'string' ? item.image : item.image?.url}
-                            alt={item.productName}
-                            className="w-24 h-24 object-cover rounded-lg"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
-                            <ShoppingCart size={32} className="text-gray-400" />
-                          </div>
-                        )}
+                        <div className="flex-shrink-0">
+                          {(item.image || item.image?.url) ? (
+                            <img
+                              src={typeof item.image === 'string' ? item.image : item.image?.url}
+                              alt={item.productName}
+                              className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-200 rounded-lg flex items-center justify-center">
+                              <ShoppingCart size={24} className="sm:w-8 sm:h-8 text-gray-400" />
+                            </div>
+                          )}
+                        </div>
 
                         {/* Product Details */}
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-900 mb-1">{item.productName}</h3>
-                          <p className="text-lg font-semibold text-blue-600">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-sm sm:text-base text-gray-900 mb-1 truncate">{item.productName}</h3>
+                          {item.variantName && (
+                            <p className="text-xs sm:text-sm text-gray-500 mb-1">Biến thể: {item.variantName}</p>
+                          )}
+                          <p className="text-base sm:text-lg font-semibold text-blue-600">
                             {item.price.toLocaleString('vi-VN')} ₫
                           </p>
 
@@ -286,15 +291,15 @@ const CartPage = () => {
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow p-6 sticky top-4">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Tóm tắt đơn hàng</h2>
+              <div className="bg-white rounded-lg shadow p-4 sm:p-6 sticky top-4">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Tóm tắt đơn hàng</h2>
 
                 <div className="space-y-3 mb-4">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm sm:text-base">
                     <span className="text-gray-600">Tạm tính:</span>
                     <span className="text-gray-900">{totalPrice.toLocaleString('vi-VN')} ₫</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm sm:text-base">
                     <span className="text-gray-600">Phí vận chuyển:</span>
                     <span className="text-gray-900">Miễn phí</span>
                   </div>
@@ -302,18 +307,18 @@ const CartPage = () => {
 
                 <div className="border-t border-gray-200 pt-4 mb-6">
                   <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold text-gray-900">Tổng cộng:</span>
-                    <span className="text-2xl font-bold text-blue-600">
+                    <span className="text-base sm:text-lg font-semibold text-gray-900">Tổng cộng:</span>
+                    <span className="text-xl sm:text-2xl font-bold text-blue-600">
                       {totalPrice.toLocaleString('vi-VN')} ₫
                     </span>
                   </div>
                 </div>
 
-                <button onClick={() => navigate('/checkout')} className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition mb-3">
+                <button onClick={() => navigate('/checkout')} className="w-full py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition mb-3 text-sm sm:text-base">
                   Tiến hành thanh toán
                 </button>
 
-                <button onClick={() => navigate('/products')} className="w-full py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                <button onClick={() => navigate('/products')} className="w-full py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm sm:text-base">
                   Tiếp tục mua sắm
                 </button>
               </div>
