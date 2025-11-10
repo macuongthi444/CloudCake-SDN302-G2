@@ -111,12 +111,8 @@ async function getAll(req, res, next) {
             }
         }
 
-        // Cache tạm thời comment
-        // if (parseInt(page) === 1) {
-        //     cache.set(cacheKey, response, 300000);
-        // }
-
-        res.set('Cache-Control', 'public, max-age=300');
+        // Tránh cache danh sách sản phẩm để đảm bảo luôn thấy dữ liệu mới nhất
+        res.set('Cache-Control', 'no-store');
         res.status(200).json(response)
     } catch (error) {
         next(error)

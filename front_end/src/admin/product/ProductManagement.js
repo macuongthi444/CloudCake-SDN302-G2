@@ -68,11 +68,15 @@ const ProductManagement = () => {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const data = await ProductService.getProducts({
+      const params = {
         page: pagination.page,
         limit: pagination.limit,
-        isActive: "true",
-      });
+      };
+      // Chỉ lọc isActive=true cho seller; Admin xem tất cả
+      if (!isAdmin) {
+        params.isActive = "true";
+      }
+      const data = await ProductService.getProducts(params);
       setProducts(data.products || []);
       if (data.pagination) {
         setPagination(data.pagination);
@@ -319,13 +323,42 @@ const ProductManagement = () => {
   };
 
   const handleDelete = async () => {
+    // Optimistic UI: xóa ngay lập tức trên UI, gọi API ở nền, rollback nếu lỗi
+    const id = selectedProduct?._id;
+    if (!id) return;
+
+    // Snapshot để rollback nếu cần
+    const snapshotProducts = products;
+    const snapshotPagination = pagination;
+
+    // Cập nhật UI ngay lập tức
+    setProducts((prev) => prev.filter((p) => p._id !== id));
+    setPagination((prev) => {
+      const newTotal = Math.max((prev.total || 0) - 1, 0);
+      const newPages = Math.max(Math.ceil(newTotal / (prev.limit || 20)), 1);
+      const newPage = Math.min(prev.page || 1, newPages);
+      return { ...prev, total: newTotal, pages: newPages, page: newPage };
+    });
+    setShowDeleteModal(false);
+    setSelectedProduct(null);
+
+    // Gọi API ở nền
     try {
-      await ProductService.deleteProduct(selectedProduct._id);
-      await loadProducts();
-      setShowDeleteModal(false);
-      setSelectedProduct(null);
+      await ProductService.deleteProduct(id);
       toastSuccess("Xóa thành công!");
+      // Re-fetch nền để đồng bộ tuyệt đối với server
+      const params = {
+        page: pagination.page,
+        limit: pagination.limit,
+      };
+      if (!isAdmin) params.isActive = "true";
+      const data = await ProductService.getProducts(params);
+      setProducts(data.products || []);
+      if (data.pagination) setPagination(data.pagination);
     } catch (error) {
+      // Rollback nếu lỗi
+      setProducts(snapshotProducts);
+      setPagination(snapshotPagination);
       console.error("Error deleting product:", error);
       toastError(
         "Không thể xóa sản phẩm: " + (error.message || "Lỗi không xác định")
