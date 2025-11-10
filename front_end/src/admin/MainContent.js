@@ -11,6 +11,8 @@ import PaymentManagement from './payment/PaymentManagement';
 import AdminProfile from './profile/ProfileContent';
 import AdminPasswordChange from './profile/AdminPasswordChange';
 import logo from '../assets/Logo.jpg'
+import OrderManagement from './order/OrderManagement';
+import CustomerManagement from './customer/CustomerManagement';
 
 
 // Main Content Component
@@ -56,14 +58,16 @@ const MainContent = () => {
           <Route path="/stores" element={<StoreList />} />
           <Route path="/store/:id" element={<StoreDetail onBack={() => navigate('/admin/stores')} />} />
           <Route path="/store-requests" element={<StoreRequestsPage />} />
+          <Route path="/orders" element={<OrderManagement />} />
+          <Route path="/customers" element={<CustomerManagement />} />
 
           <Route path="/payments" element={<PaymentManagement />} />
-           <Route path="/profile" element={<AdminProfile />} />
+          <Route path="/profile" element={<AdminProfile />} />
           <Route path="/password" element={<AdminPasswordChange />} />
           <Route path="/support" element={<div className="p-6">Nội dung Hỗ trợ</div>} />
           <Route path="/settings" element={<div className="p-6">Nội dung Cài đặt</div>} />
 
-        
+
         </Routes>
       </div>
     </div>
