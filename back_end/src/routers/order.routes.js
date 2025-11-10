@@ -1,6 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const { orderController } = require('../controller')
+// const { orderController } = require('../controller')
 const VerifyJwt = require('../middlewares/jwtAuth')
 const authJwt = require('../middlewares/jwtAuth')
 const vnpayController = require('../controller/vnpay.controller')
