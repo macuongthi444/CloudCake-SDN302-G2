@@ -11,8 +11,7 @@ import {
     MapPin,
     Lock,
     UserCircle,
-    Store,
-    Menu
+    Store
 } from 'lucide-react';
 
 import logo from '../assets/Logo.jpg';
