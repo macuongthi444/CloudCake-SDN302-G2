@@ -1,0 +1,153 @@
+[{
+  "_id": {
+    "$oid": "69071c14a042382075132346"
+  },
+  "userId": {
+    "$oid": "69070bf7e33436622f3326a6"
+  },
+  "items": [
+    {
+      "productId": {
+        "$oid": "690708b8f9abdf8b5f90df93"
+      },
+      "variantId": {
+        "$oid": "69071b8df9abdf8b5f90dfce"
+      },
+      "productName": "Bánh Sinh Nhật Chocolate Premium",
+      "variantName": "Lớn - Hình Tròn",
+      "quantity": 1,
+      "price": 480000,
+      "image": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762144618/cloudcake/products/h0mtzbdnyb6bukn3e8nx.jpg",
+      "_id": {
+        "$oid": "691138036d24ad202c6aec67"
+      }
+    }
+  ],
+  "totalPrice": 480000,
+  "createdAt": {
+    "$date": "2025-11-02T08:53:40.764Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T00:55:31.559Z"
+  },
+  "__v": 64
+},
+{
+  "_id": {
+    "$oid": "69072bcf15385210182cf4ea"
+  },
+  "userId": {
+    "$oid": "68ffa9a40fa1ce4e84c19c6f"
+  },
+  "items": [],
+  "totalPrice": 0,
+  "createdAt": {
+    "$date": "2025-11-02T10:00:47.202Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-02T10:00:53.256Z"
+  },
+  "__v": 1
+},
+{
+  "_id": {
+    "$oid": "690807cf1d86711a8723095b"
+  },
+  "userId": {
+    "$oid": "68ff95f1af38c1009a75b1c2"
+  },
+  "items": [
+    {
+      "productId": {
+        "$oid": "690708b8f9abdf8b5f90df93"
+      },
+      "variantId": {
+        "$oid": "69071b8df9abdf8b5f90dfce"
+      },
+      "productName": "Bánh Sinh Nhật Chocolate Premium",
+      "variantName": "Lớn - Hình Tròn",
+      "quantity": 1,
+      "price": 480000,
+      "image": "https://example.com/images/variants/birthday-chocolate-large-round.jpg",
+      "_id": {
+        "$oid": "690807cf1d86711a8723095c"
+      }
+    }
+  ],
+  "totalPrice": 480000,
+  "createdAt": {
+    "$date": "2025-11-03T01:39:27.159Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-03T01:39:27.159Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691166f21183b3db4886b700"
+  },
+  "userId": {
+    "$oid": "691166eb1183b3db4886b6e0"
+  },
+  "items": [],
+  "totalPrice": 0,
+  "createdAt": {
+    "$date": "2025-11-10T04:15:46.381Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T09:00:30.983Z"
+  },
+  "__v": 19
+},
+{
+  "_id": {
+    "$oid": "691184d8ec82d62401028dd9"
+  },
+  "userId": {
+    "$oid": "691184c2ec82d62401028db7"
+  },
+  "items": [
+    {
+      "productId": {
+        "$oid": "690708b8f9abdf8b5f90df95"
+      },
+      "variantId": {
+        "$oid": "69071b8df9abdf8b5f90dfd2"
+      },
+      "productName": "Bánh Tiramisu Ý",
+      "variantName": "Tiramisu Tiêu Chuẩn",
+      "quantity": 1,
+      "price": 299000,
+      "image": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762077897/cloudcake/products/qg4lsfq1stcrbjw5qxyr.webp",
+      "_id": {
+        "$oid": "691184d8ec82d62401028dda"
+      }
+    }
+  ],
+  "totalPrice": 299000,
+  "createdAt": {
+    "$date": "2025-11-10T06:23:20.973Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T06:23:20.973Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6911a3edc83fac2c7ddd0405"
+  },
+  "userId": {
+    "$oid": "68f39ad29a7f35264d913b57"
+  },
+  "items": [],
+  "totalPrice": 0,
+  "createdAt": {
+    "$date": "2025-11-10T08:35:57.826Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T08:39:38.950Z"
+  },
+  "__v": 1
+}]

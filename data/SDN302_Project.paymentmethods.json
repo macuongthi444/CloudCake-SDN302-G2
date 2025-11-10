@@ -1,0 +1,36 @@
+[{
+  "_id": {
+    "$oid": "690cc0e9bececeac18ca9fcf"
+  },
+  "name": "VNPAY",
+  "isActive": true,
+  "paymentCode": "VNPAY",
+  "isOnline": true,
+  "supportsRefund": true,
+  "sortOrder": 0,
+  "createdAt": {
+    "$date": "2025-11-06T15:38:17.364Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-06T15:38:17.364Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "690f504dfdb4aa1edf3ffb8b"
+  },
+  "name": "COD",
+  "isActive": true,
+  "paymentCode": "COD",
+  "isOnline": false,
+  "supportsRefund": false,
+  "sortOrder": 0,
+  "createdAt": {
+    "$date": "2025-11-08T14:14:37.159Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-08T14:14:37.159Z"
+  },
+  "__v": 0
+}]

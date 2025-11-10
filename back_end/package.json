@@ -15,6 +15,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "mongoose-to-swagger": "^1.5.0",
     "@google/generative-ai": "^0.24.0",
     "@payos/node": "^1.0.10",
     "axios": "^1.13.2",

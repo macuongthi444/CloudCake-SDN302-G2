@@ -1,0 +1,255 @@
+[{
+  "_id": {
+    "$oid": "69071b8df9abdf8b5f90dfce"
+  },
+  "name": "Lớn - Hình Tròn",
+  "attributes": {
+    "size": "LARGE",
+    "flavor": "Chocolate",
+    "shape": "Tròn"
+  },
+  "price": 580000,
+  "discountedPrice": 480000,
+  "sku": "BSN-CHOCO-001-L-R",
+  "weight": {
+    "value": 1800,
+    "unit": "g"
+  },
+  "image": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762144618/cloudcake/products/h0mtzbdnyb6bukn3e8nx.jpg",
+  "isActive": true,
+  "inventory": {
+    "quantity": 6,
+    "lowStockThreshold": 3,
+    "trackInventory": true
+  },
+  "productId": {
+    "$oid": "690708b8f9abdf8b5f90df93"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T06:55:04.011Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69071b8df9abdf8b5f90dfd3"
+  },
+  "name": "Set 6 Cupcake Vanilla",
+  "attributes": {
+    "size": "CUSTOM",
+    "flavor": "Vanilla",
+    "shape": "Tròn"
+  },
+  "price": 180000,
+  "discountedPrice": null,
+  "sku": "BCU-VAN-001-SET6",
+  "weight": {
+    "value": 360,
+    "unit": "g"
+  },
+  "image": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762077977/cloudcake/products/s8nei5bmvyxydspylmcx.webp",
+  "isActive": true,
+  "inventory": {
+    "quantity": 30,
+    "lowStockThreshold": 10,
+    "trackInventory": true
+  },
+  "productId": {
+    "$oid": "690708b8f9abdf8b5f90df96"
+  }
+},
+{
+  "_id": {
+    "$oid": "69071b8df9abdf8b5f90dfcf"
+  },
+  "name": "Nhỏ - Hình Tròn",
+  "attributes": {
+    "size": "SMALL",
+    "flavor": "Chocolate",
+    "shape": "Trái tim"
+  },
+  "price": 400000,
+  "discountedPrice": 340000,
+  "sku": "BSN-CHOCO-001-S-H",
+  "weight": {
+    "value": 850,
+    "unit": "g"
+  },
+  "image": "https://i.pinimg.com/originals/e9/1c/b9/e91cb9b0e38be83872bed7661e474981.jpg",
+  "isActive": true,
+  "inventory": {
+    "quantity": 12,
+    "lowStockThreshold": 5,
+    "trackInventory": true
+  },
+  "productId": {
+    "$oid": "690708b8f9abdf8b5f90df94"
+  }
+},
+{
+  "_id": {
+    "$oid": "69071b8df9abdf8b5f90dfd0"
+  },
+  "name": "Vừa - Vị Dâu",
+  "attributes": {
+    "size": "MEDIUM",
+    "flavor": "Dâu Tây",
+    "shape": "Tròn"
+  },
+  "price": 280000,
+  "discountedPrice": null,
+  "sku": "BKD-DAU-001-M",
+  "weight": {
+    "value": 800,
+    "unit": "g"
+  },
+  "image": "data:image/webp;base64,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",
+  "isActive": true,
+  "inventory": {
+    "quantity": 20,
+    "lowStockThreshold": 10,
+    "trackInventory": true
+  },
+  "productId": {
+    "$oid": "690708b8f9abdf8b5f90df94"
+  }
+},
+{
+  "_id": {
+    "$oid": "69071b8df9abdf8b5f90dfcc"
+  },
+  "name": "Nhỏ - Hình Tròn",
+  "attributes": {
+    "size": "SMALL",
+    "flavor": "Chocolate",
+    "shape": "Tròn"
+  },
+  "price": 380000,
+  "discountedPrice": 320000,
+  "sku": "BSN-CHOCO-001-S-R",
+  "weight": {
+    "value": 800,
+    "unit": "g"
+  },
+  "image": "https://i.pinimg.com/originals/e9/1c/b9/e91cb9b0e38be83872bed7661e474981.jpg",
+  "isActive": true,
+  "inventory": {
+    "quantity": 15,
+    "lowStockThreshold": 5,
+    "trackInventory": true
+  },
+  "productId": {
+    "$oid": "690708b8f9abdf8b5f90df93"
+  }
+},
+{
+  "_id": {
+    "$oid": "69071b8df9abdf8b5f90dfd1"
+  },
+  "name": "Lớn - Vị Dâu",
+  "attributes": {
+    "size": "LARGE",
+    "flavor": "Dâu Tây",
+    "shape": "Tròn"
+  },
+  "price": 380000,
+  "discountedPrice": null,
+  "sku": "BKD-DAU-001-L",
+  "weight": {
+    "value": 1200,
+    "unit": "g"
+  },
+  "image": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762077801/cloudcake/products/gl4jjamkdkocv7d6pqq6.jpg",
+  "isActive": true,
+  "inventory": {
+    "quantity": 10,
+    "lowStockThreshold": 5,
+    "trackInventory": true
+  },
+  "productId": {
+    "$oid": "690708b8f9abdf8b5f90df94"
+  }
+},
+{
+  "_id": {
+    "$oid": "69071b8df9abdf8b5f90dfd2"
+  },
+  "name": "Tiramisu Tiêu Chuẩn",
+  "attributes": {
+    "size": "MEDIUM",
+    "flavor": "Tiramisu",
+    "shape": "Tròn"
+  },
+  "price": 350000,
+  "discountedPrice": 299000,
+  "sku": "BTI-001-M",
+  "weight": {
+    "value": 600,
+    "unit": "g"
+  },
+  "image": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762077897/cloudcake/products/qg4lsfq1stcrbjw5qxyr.webp",
+  "isActive": true,
+  "inventory": {
+    "quantity": 15,
+    "lowStockThreshold": 5,
+    "trackInventory": true
+  },
+  "productId": {
+    "$oid": "690708b8f9abdf8b5f90df95"
+  }
+},
+{
+  "_id": {
+    "$oid": "69071b8df9abdf8b5f90dfcd"
+  },
+  "name": "Vừa - Hình Tròn",
+  "attributes": {
+    "size": "MEDIUM",
+    "flavor": "Chocolate",
+    "shape": "Tròn"
+  },
+  "price": 450000,
+  "discountedPrice": 380000,
+  "sku": "BSN-CHOCO-001-M-R",
+  "weight": {
+    "value": 1200,
+    "unit": "g"
+  },
+  "image": "https://th.bing.com/th/id/R.7e85274823bde048f745c97dbdadc2f2?rik=U09Qr7aAWC4TEQ&pid=ImgRaw&r=0",
+  "isActive": true,
+  "inventory": {
+    "quantity": 8,
+    "lowStockThreshold": 5,
+    "trackInventory": true
+  },
+  "productId": {
+    "$oid": "690708b8f9abdf8b5f90df93"
+  }
+},
+{
+  "_id": {
+    "$oid": "69071b8df9abdf8b5f90dfd4"
+  },
+  "name": "Tart Dâu Tiêu Chuẩn",
+  "attributes": {
+    "size": "MEDIUM",
+    "flavor": "Dâu Tây",
+    "shape": "Tròn"
+  },
+  "price": 220000,
+  "discountedPrice": 180000,
+  "sku": "BTD-DAU-001-M",
+  "weight": {
+    "value": 400,
+    "unit": "g"
+  },
+  "image": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762078072/cloudcake/products/pboi43pxlkpty639ol20.jpg",
+  "isActive": true,
+  "inventory": {
+    "quantity": 25,
+    "lowStockThreshold": 10,
+    "trackInventory": true
+  },
+  "productId": {
+    "$oid": "690708b8f9abdf8b5f90df97"
+  }
+}]

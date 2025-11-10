@@ -1,0 +1,33 @@
+[{
+  "_id": {
+    "$oid": "68ee2988f813eea3932472c9"
+  },
+  "name": "MEMBER",
+  "permissions": "read,write",
+  "description": "Regular user role",
+  "created_at": "Tue Oct 14 2025 17:44:24 GMT+0700 (Giờ Đông Dương)",
+  "updated_at": "Tue Oct 14 2025 17:44:24 GMT+0700 (Giờ Đông Dương)",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68ee29bbf813eea3932472cb"
+  },
+  "name": "ADMIN",
+  "permissions": "read,write,delete",
+  "description": "Administrator role",
+  "created_at": "Tue Oct 14 2025 17:45:15 GMT+0700 (Giờ Đông Dương)",
+  "updated_at": "Tue Oct 14 2025 17:45:15 GMT+0700 (Giờ Đông Dương)",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68ee29c4f813eea3932472cd"
+  },
+  "name": "SELLER",
+  "permissions": "read,write,sell",
+  "description": "Seller role",
+  "created_at": "Tue Oct 14 2025 17:45:24 GMT+0700 (Giờ Đông Dương)",
+  "updated_at": "Tue Oct 14 2025 17:45:24 GMT+0700 (Giờ Đông Dương)",
+  "__v": 0
+}]

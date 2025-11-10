@@ -41,35 +41,283 @@ orderRouter.use(bodyParser.json())
 // Use the controller directly
 const controller = orderController
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Order
+ *     description: Quản lý đơn hàng
+ */
+
+/**
+ * @swagger
+ * /api/order/create-from-cart:
+ *   post:
+ *     summary: Tạo đơn hàng từ giỏ hàng
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       201:
+ *         description: Tạo đơn thành công
+ */
 orderRouter.post('/create-from-cart', authJwt.verifyToken, controller.createFromCart)
+
+/**
+ * @swagger
+ * /api/order/find/{id}:
+ *   get:
+ *     summary: Lấy đơn hàng theo ID
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 orderRouter.get('/find/:id', authJwt.verifyToken, controller.getById)
+
+/**
+ * @swagger
+ * /api/order/user/{userId}:
+ *   get:
+ *     summary: Lấy đơn hàng theo User
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 orderRouter.get('/user/:userId', authJwt.verifyToken, controller.getByUserId)
+
+/**
+ * @swagger
+ * /api/order/{orderId}/cancel:
+ *   post:
+ *     summary: Người dùng hủy đơn hàng
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Đã hủy
+ */
 orderRouter.post('/:orderId/cancel', authJwt.verifyToken, controller.cancelOrder)
 // Lấy tất cả đơn đặt hàng (chỉ admin có quyền)
+/**
+ * @swagger
+ * /api/order/list:
+ *   get:
+ *     summary: Danh sách đơn hàng (Admin)
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 orderRouter.get("/list", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], controller.getAllOrders)
 // Lấy đơn đặt hàng theo ID
+/**
+ * @swagger
+ * /api/order/find/{id}:
+ *   get:
+ *     summary: Xem đơn hàng theo ID
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 orderRouter.get("/find/:id", [VerifyJwt.verifyToken], controller.getOrderById)
 // Lấy đơn đặt hàng theo ID người dùng
+/**
+ * @swagger
+ * /api/order/user/{userId}:
+ *   get:
+ *     summary: Danh sách đơn hàng theo người dùng
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 orderRouter.get("/user/:userId", [VerifyJwt.verifyToken], controller.getOrdersByUserId)
 // Tạo đơn đặt hàng mới
+/**
+ * @swagger
+ * /api/order/create:
+ *   post:
+ *     summary: Tạo đơn hàng
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       201:
+ *         description: Tạo thành công
+ */
 orderRouter.post("/create", [VerifyJwt.verifyToken], controller.createOrder)
 // Cập nhật trạng thái đơn hàng (chỉ admin và seller có quyền)
+/**
+ * @swagger
+ * /api/order/status/{id}:
+ *   put:
+ *     summary: Cập nhật trạng thái đơn hàng
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Cập nhật thành công
+ */
 orderRouter.put("/status/:id", [VerifyJwt.verifyToken, VerifyJwt.isSellerOrAdmin], controller.updateOrderStatus)
 // Hủy đơn hàng
+/**
+ * @swagger
+ * /api/order/cancel/{id}:
+ *   put:
+ *     summary: Hủy đơn hàng
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Đã hủy
+ */
 orderRouter.put("/cancel/:id", [VerifyJwt.verifyToken], controller.cancelOrder)
 //  Từ chối đơn hàng (dành cho seller)
+/**
+ * @swagger
+ * /api/order/reject/{id}:
+ *   put:
+ *     summary: Từ chối đơn hàng (Seller)
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Đã từ chối
+ */
 orderRouter.put("/reject/:id", [VerifyJwt.verifyToken, VerifyJwt.isSeller], controller.rejectOrderBySeller)
 // Xóa đơn hàng (xóa mềm) (chỉ admin có quyền)
+/**
+ * @swagger
+ * /api/order/delete/{id}:
+ *   delete:
+ *     summary: Xóa đơn hàng (Admin)
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Đã xóa
+ */
 orderRouter.delete("/delete/:id", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], controller.deleteOrder)
 // Lấy thống kê đơn hàng (chỉ admin có quyền)
+/**
+ * @swagger
+ * /api/order/statistics:
+ *   get:
+ *     summary: Thống kê đơn hàng (Admin)
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 orderRouter.get("/statistics", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], controller.getOrderStatistics)
 orderRouter.get("/shop/:shopId", [VerifyJwt.verifyToken, VerifyJwt.isSeller], controller.getOrdersByShopId)
 orderRouter.get("/refunds", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], controller.getOrdersNeedingRefund)
 // Đánh dấu đã hoàn tiền cho đơn hàng
+/**
+ * @swagger
+ * /api/order/refund/{id}:
+ *   put:
+ *     summary: Đánh dấu hoàn tiền (Admin)
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 orderRouter.put("/refund/:id", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], controller.markAsRefunded)
 
 // VNPay callback route (public, no auth required)
 // Handle both correct format (?params) and incorrect format (&params)
+/**
+ * @swagger
+ * /api/order/vnpay-callback:
+ *   get:
+ *     summary: Callback VNPay
+ *     tags: [Order]
+ *     responses:
+ *       200:
+ *         description: OK
+ */
 orderRouter.get('/vnpay-callback*', (req, res, next) => {
   console.log('\n========== VNPay: CALLBACK ROUTE HIT ==========')
   console.log('Original req.url:', req.url)

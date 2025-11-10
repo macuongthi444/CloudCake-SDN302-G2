@@ -1,0 +1,280 @@
+[{
+  "_id": {
+    "$oid": "68ee2da634ae8a5bc680bfff"
+  },
+  "firstName": "Hoang",
+  "lastName": "Tran Van",
+  "phone": "84987654321",
+  "email": "abc@gmail.com",
+  "password": "$2b$10$ZG3x3SOFEMIWFxZCyiD4dubPbA88n.wRtD3E8qB4aQuZkhC.aNQwe",
+  "status": true,
+  "roles": [
+    {
+      "$oid": "68ee2988f813eea3932472c9"
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-10-14T11:01:58.350Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-21T15:47:22.102Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68ee4b79aad25f76ccba1dba"
+  },
+  "firstName": "Test",
+  "lastName": "User",
+  "phone": "84123456789",
+  "email": "testuser@gmail.com",
+  "password": "$2b$10$733qUVyq72DWW4F369GHH.IfaAm32jeIhk0bWC4/oEMcl4D.jvnhy",
+  "status": true,
+  "roles": [
+    {
+      "$oid": "68ee29bbf813eea3932472cb"
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-10-14T13:09:13.370Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-14T13:09:13.370Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68ee4ccbaad25f76ccba1dc4"
+  },
+  "firstName": "Hoang",
+  "lastName": "Tran1",
+  "phone": "84123456789",
+  "email": "ankhanhvn987@gmail.com",
+  "password": "$2b$10$lqCiWkZyW5XkxGwCqUCmWuUnNxRxcg69ztRq8SEqO6gwgwdtNJeEO",
+  "status": true,
+  "roles": [
+    {
+      "$oid": "68ee2988f813eea3932472c9"
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-10-14T13:14:51.959Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-21T16:15:44.089Z"
+  },
+  "__v": 0,
+  "resetPasswordExpire": {
+    "$date": "2025-10-21T16:25:44.084Z"
+  },
+  "resetPasswordToken": "908408"
+},
+{
+  "_id": {
+    "$oid": "68f395d377e7534d490c4deb"
+  },
+  "firstName": "tran",
+  "lastName": "hoang",
+  "phone": "84932876123",
+  "email": "h@gmail.com",
+  "password": "$2b$10$cxkbMbvmq/HvyK4qcHRu0uaWsCNEo.TF3l2C7fNVbznjWEPd0/pFS",
+  "status": true,
+  "roles": [
+    {
+      "$oid": "68ee2988f813eea3932472c9"
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-10-18T13:27:47.130Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T13:27:47.130Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68ff95f1af38c1009a75b1c2"
+  },
+  "firstName": "Nguyễn Xuân",
+  "lastName": "Khánh",
+  "phone": "84912345678",
+  "email": "xuankhanh036@gmail.com",
+  "password": "$2b$10$oO7P3PiGQ7ikAks40dN8J.ZZbyEJgSP.EBjN7KOUlk9lJHpAvFubW",
+  "status": true,
+  "roles": [
+    {
+      "$oid": "68ee29bbf813eea3932472cb"
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-10-27T15:55:29.218Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-27T15:55:29.218Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68ffa9a40fa1ce4e84c19c6f"
+  },
+  "firstName": "Xuân",
+  "lastName": "Khánh",
+  "phone": "84912345678",
+  "email": "xuankhanh1888@gmail.com",
+  "password": "$2b$10$LMyaUcjyCmm3X6bKgUdVaeiVFu3l5P25N8Hv0D8UAsurgDR1DOxKm",
+  "status": true,
+  "roles": [
+    {
+      "$oid": "68ee29c4f813eea3932472cd"
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-10-27T17:19:32.945Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-27T17:19:32.945Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6907072a640de1f14a93a005"
+  },
+  "firstName": "Nguyễn",
+  "lastName": "Seller",
+  "phone": "84356129119",
+  "email": "admin@gmail.com",
+  "password": "$2b$10$GWMJNcDOfB/eUpL4Pge.re/AZWq20c4bV2A4A7rJXKtDjjUq32Iui",
+  "status": true,
+  "roles": [
+    {
+      "$oid": "68ee2988f813eea3932472cd"
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-11-02T07:24:26.562Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-02T07:24:26.562Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69070bf7e33436622f3326a6"
+  },
+  "firstName": "Nguyễn Xuân Khánh",
+  "lastName": "User",
+  "phone": "84912345678",
+  "email": "khanhnxhe172843@fpt.edu.vn",
+  "password": "$2b$10$.05ifHxrNSvxUI/xc4HifuuZjbrJulqcqIPt.LHThpcG.rM5NIvOO",
+  "status": true,
+  "roles": [
+    {
+      "$oid": "68ee2988f813eea3932472c9"
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-11-02T07:44:55.110Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-02T07:44:55.110Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69106045fd5a0f7710f467c1"
+  },
+  "firstName": "Tran",
+  "lastName": "Hoang",
+  "phone": "84923412453",
+  "email": "lanhki456@gmail.com",
+  "password": "$2b$10$QGPu/snEOE5NR0VCATUii.z4hN4TDQt1wkBC8ytE/jS1WTMSJem4q",
+  "status": true,
+  "roles": [
+    {
+      "$oid": "68ee29c4f813eea3932472cd"
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-11-09T09:35:01.345Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-09T09:35:01.345Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691166eb1183b3db4886b6e0"
+  },
+  "firstName": "Michael",
+  "lastName": "Bay",
+  "phone": "84912345678",
+  "email": "michaelbay1888@gmail.com",
+  "password": "$2b$10$fgB/0BMe/q6ZEbMjwK7IzejevpgvimvQfq60lOOCpKlccRBvm/Mh.",
+  "status": true,
+  "roles": [
+    {
+      "$oid": "68ee2988f813eea3932472c9"
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-11-10T04:15:39.435Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T04:15:39.435Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691184c2ec82d62401028db7"
+  },
+  "firstName": "Chử",
+  "lastName": "Vinh",
+  "phone": "84862938972",
+  "email": "cvinh69@gmail.com",
+  "password": "$2b$10$D2YxiAxV7aramcyYsSVEEuz97mJoidTVyUuCtlZ9LgnskvtG74rjm",
+  "status": true,
+  "roles": [
+    {
+      "$oid": "68ee2988f813eea3932472c9"
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-11-10T06:22:58.242Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T06:22:58.242Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6911aecc56fa454cbaedfea1"
+  },
+  "firstName": "Cake",
+  "lastName": "Cloud",
+  "phone": "84978294658",
+  "email": "hoangtvhe160642@gmail.com",
+  "password": "$2b$10$/lNBwC.kB9ILk543G6hQsOdvgC1vNggunzlG9tI2QWhRmV/LtzeSC",
+  "status": true,
+  "roles": [
+    {
+      "$oid": "68ee2988f813eea3932472c9"
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-11-10T09:22:21.224Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T09:22:21.224Z"
+  },
+  "__v": 0
+}]
