@@ -1,0 +1,58 @@
+[{
+  "_id": {
+    "$oid": "690704f1f9abdf8b5f90df59"
+  },
+  "name": "Bánh Sinh Nhật",
+  "description": "Các loại bánh sinh nhật với nhiều hình dạng và hương vị khác nhau",
+  "image": "https://tse4.mm.bing.net/th/id/OIP.gPL2csheiZe6DW14vfaSvwHaHa?rs=1&pid=ImgDetMain&o=7&rm=3",
+  "icon": "birthday-cake",
+  "isActive": true,
+  "sortOrder": 1,
+  "updatedAt": {
+    "$date": "2025-11-06T06:19:50.910Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "690704f1f9abdf8b5f90df5b"
+  },
+  "name": "Bánh Mì Ngọt",
+  "description": "Bánh mì ngọt, bánh croissant, bánh pastry",
+  "image": "https://insanelygoodrecipes.com/wp-content/uploads/2021/07/Homemade-Braided-Sweet-Bread-with-Flaked-Almonds-800x530.jpg",
+  "icon": "sweet-bread",
+  "isActive": true,
+  "sortOrder": 3
+},
+{
+  "_id": {
+    "$oid": "690704f1f9abdf8b5f90df5a"
+  },
+  "name": "Bánh Kem",
+  "description": "Bánh kem tươi, bánh kem chocolate, bánh kem dâu",
+  "image": "https://cakeocean.vn/wp-content/uploads/73364142_2531997260246934_4489293924531175424_n_2531997246913602.jpg",
+  "icon": "cream-cake",
+  "isActive": true,
+  "sortOrder": 2
+},
+{
+  "_id": {
+    "$oid": "690704f1f9abdf8b5f90df5d"
+  },
+  "name": "Bánh Tart & Pie",
+  "description": "Bánh tart trái cây, bánh pie táo, bánh tart socola",
+  "image": "https://th.bing.com/th/id/R.5804b27f6579f9c8530f554e434824ff?rik=9QKRFvI43eR7OQ&pid=ImgRaw&r=0",
+  "icon": "tart-pie",
+  "isActive": true,
+  "sortOrder": 5
+},
+{
+  "_id": {
+    "$oid": "690704f1f9abdf8b5f90df5c"
+  },
+  "name": "Bánh Cupcake",
+  "description": "Cupcake các loại với nhiều topping đẹp mắt",
+  "image": "https://tse3.mm.bing.net/th/id/OIP.-JQKQuDw3rVV2UW9eSJu6wHaHa?rs=1&pid=ImgDetMain&o=7&rm=3",
+  "icon": "cupcake",
+  "isActive": true,
+  "sortOrder": 4
+}]

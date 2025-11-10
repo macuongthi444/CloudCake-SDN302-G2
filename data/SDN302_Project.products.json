@@ -1,0 +1,983 @@
+[{
+  "_id": {
+    "$oid": "690708b8f9abdf8b5f90df97"
+  },
+  "name": "Bánh Tart Dâu Tây",
+  "description": "Bánh tart với lớp vỏ giòn tan, nhân kem tươi và dâu tây tươi trên cùng. Vị chua ngọt hài hòa.",
+  "shortDescription": "Tart dâu tây với lớp vỏ giòn",
+  "basePrice": 220000,
+  "discountedPrice": 180000,
+  "sku": "BTD-DAU-001",
+  "tags": [
+    "tart",
+    "dâu tây",
+    "kem tươi",
+    "giòn"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762078072/cloudcake/products/pboi43pxlkpty639ol20.jpg",
+      "isPrimary": true,
+      "alt": "Bánh Tart Dâu Tây - Image 1",
+      "_id": {
+        "$oid": "69072d7a15385210182cf603"
+      }
+    }
+  ],
+  "ingredients": [
+    "Bột mì",
+    "Bơ",
+    "Kem tươi",
+    "Dâu tây tươi",
+    "Đường",
+    "Vanilla"
+  ],
+  "allergens": [
+    "Gluten",
+    "Dairy"
+  ],
+  "nutritionalInfo": {
+    "calories": 290,
+    "protein": 5,
+    "carbs": 40,
+    "fat": 12,
+    "fiber": 2,
+    "sugar": 20
+  },
+  "weight": {
+    "value": 400,
+    "unit": "g"
+  },
+  "shelfLife": {
+    "value": 2,
+    "unit": "days"
+  },
+  "status": "ACTIVE",
+  "isActive": true,
+  "isFeatured": false,
+  "rating": {
+    "average": 4.6,
+    "count": 78
+  },
+  "viewCount": 650,
+  "salesCount": 189,
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df5d"
+  },
+  "shopId": {
+    "$oid": "69070854f9abdf8b5f90df86"
+  },
+  "__v": 1,
+  "updatedAt": {
+    "$date": "2025-11-02T10:07:54.720Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "690708b8f9abdf8b5f90df93"
+  },
+  "name": "Bánh Sinh Nhật Chocolate Premium",
+  "description": "Bánh sinh nhật chocolate cao cấp với lớp kem chocolate ngọt ngào, trang trí hoa quả tươi. Phù hợp cho các dịp sinh nhật đặc biệt.",
+  "shortDescription": "Bánh sinh nhật chocolate cao cấp",
+  "basePrice": 450000,
+  "discountedPrice": 380000,
+  "sku": "BSN-CHOCO-001",
+  "tags": [
+    "sinh nhật",
+    "chocolate",
+    "cao cấp",
+    "kem tươi"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762144618/cloudcake/products/h0mtzbdnyb6bukn3e8nx.jpg",
+      "isPrimary": true,
+      "alt": "Bánh Sinh Nhật Chocolate Premium - Image 1",
+      "_id": {
+        "$oid": "6908316b353811ec8c83afef"
+      }
+    },
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762358744/cloudcake/products/gvwl7pixtkbrrnp4woyd.webp",
+      "isPrimary": false,
+      "alt": "Bánh Sinh Nhật Chocolate Premium - Image 2",
+      "_id": {
+        "$oid": "690b75da02dfdb8ac0c14830"
+      }
+    }
+  ],
+  "ingredients": [
+    "Bột mì",
+    "Đường",
+    "Trứng",
+    "Bơ",
+    "Chocolate đen",
+    "Kem tươi",
+    "Dâu tây",
+    "Quả cherry"
+  ],
+  "allergens": [
+    "Gluten",
+    "Dairy",
+    "Eggs"
+  ],
+  "nutritionalInfo": {
+    "calories": 320,
+    "protein": 6,
+    "carbs": 45,
+    "fat": 12,
+    "fiber": 2,
+    "sugar": 28
+  },
+  "weight": {
+    "value": 1200,
+    "unit": "g"
+  },
+  "shelfLife": {
+    "value": 2,
+    "unit": "days"
+  },
+  "status": "ACTIVE",
+  "isActive": true,
+  "isFeatured": true,
+  "rating": {
+    "average": 4.8,
+    "count": 45
+  },
+  "viewCount": 1250,
+  "salesCount": 320,
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df59"
+  },
+  "shopId": {
+    "$oid": "69070854f9abdf8b5f90df85"
+  },
+  "updatedAt": {
+    "$date": "2025-11-05T16:05:46.713Z"
+  },
+  "__v": 8
+},
+{
+  "_id": {
+    "$oid": "690708b8f9abdf8b5f90df94"
+  },
+  "name": "Bánh Kem Dâu Tây Tươi",
+  "description": "Bánh kem tươi với lớp kem whipping mát lạnh, kết hợp dâu tây tươi ngọt ngào. Hương vị thanh mát, phù hợp mọi lứa tuổi.",
+  "shortDescription": "Bánh kem dâu tây tươi ngọt ngào",
+  "basePrice": 280000,
+  "discountedPrice": null,
+  "sku": "BKD-DAU-001",
+  "tags": [
+    "kem tươi",
+    "dâu tây",
+    "bánh kem",
+    "tươi"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762077801/cloudcake/products/gl4jjamkdkocv7d6pqq6.jpg",
+      "isPrimary": true,
+      "alt": "Bánh Kem Dâu Tây Tươi - Image 2",
+      "_id": {
+        "$oid": "69072c6b15385210182cf572"
+      }
+    },
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762078709/cloudcake/products/z3n9dhxwnvpbjcmygula.webp",
+      "isPrimary": false,
+      "alt": "Bánh Kem Dâu Tây Tươi - Image 2",
+      "_id": {
+        "$oid": "69072ff731c237530d549ea4"
+      }
+    },
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762359507/cloudcake/products/vemfbzrfwlftl9ul99qw.jpg",
+      "isPrimary": false,
+      "alt": "Bánh Kem Dâu Tây Tươi - Image 3",
+      "_id": {
+        "$oid": "690b78d402dfdb8ac0c148f5"
+      }
+    }
+  ],
+  "ingredients": [
+    "Bột mì",
+    "Đường",
+    "Trứng",
+    "Kem whipping",
+    "Dâu tây tươi",
+    "Vanilla extract"
+  ],
+  "allergens": [
+    "Gluten",
+    "Dairy",
+    "Eggs"
+  ],
+  "nutritionalInfo": {
+    "calories": 280,
+    "protein": 5,
+    "carbs": 38,
+    "fat": 10,
+    "fiber": 1.5,
+    "sugar": 22
+  },
+  "weight": {
+    "value": 800,
+    "unit": "g"
+  },
+  "shelfLife": {
+    "value": 1,
+    "unit": "days"
+  },
+  "status": "ACTIVE",
+  "isActive": true,
+  "isFeatured": false,
+  "rating": {
+    "average": 4.7,
+    "count": 89
+  },
+  "viewCount": 890,
+  "salesCount": 245,
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df5a"
+  },
+  "shopId": {
+    "$oid": "69070854f9abdf8b5f90df86"
+  },
+  "__v": 4,
+  "updatedAt": {
+    "$date": "2025-11-05T16:18:28.941Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "690708b8f9abdf8b5f90df95"
+  },
+  "name": "Bánh Tiramisu Ý",
+  "description": "Bánh tiramisu truyền thống với mascarpone cheese, cà phê espresso, rượu rum. Hương vị đậm đà, sang trọng.",
+  "shortDescription": "Tiramisu truyền thống đậm đà",
+  "basePrice": 350000,
+  "discountedPrice": 299000,
+  "sku": "BTI-001",
+  "tags": [
+    "tiramisu",
+    "cao cấp",
+    "cà phê",
+    "Ý"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762077897/cloudcake/products/qg4lsfq1stcrbjw5qxyr.webp",
+      "isPrimary": true,
+      "alt": "Bánh Tiramisu Ý - Image 1",
+      "_id": {
+        "$oid": "69072ccc15385210182cf5c8"
+      }
+    }
+  ],
+  "ingredients": [
+    "Mascarpone cheese",
+    "Cà phê espresso",
+    "Rượu rum",
+    "Ladyfingers",
+    "Cocoa powder",
+    "Đường",
+    "Trứng"
+  ],
+  "allergens": [
+    "Gluten",
+    "Dairy",
+    "Eggs",
+    "Alcohol"
+  ],
+  "nutritionalInfo": {
+    "calories": 380,
+    "protein": 8,
+    "carbs": 32,
+    "fat": 18,
+    "fiber": 1,
+    "sugar": 20
+  },
+  "weight": {
+    "value": 600,
+    "unit": "g"
+  },
+  "shelfLife": {
+    "value": 3,
+    "unit": "days"
+  },
+  "status": "ACTIVE",
+  "isActive": true,
+  "isFeatured": true,
+  "rating": {
+    "average": 4.9,
+    "count": 67
+  },
+  "viewCount": 1120,
+  "salesCount": 198,
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df5c"
+  },
+  "shopId": {
+    "$oid": "69070854f9abdf8b5f90df85"
+  },
+  "__v": 1,
+  "updatedAt": {
+    "$date": "2025-11-02T10:05:00.423Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "690708b8f9abdf8b5f90df96"
+  },
+  "name": "Bánh Cupcake Vanilla",
+  "description": "Set 6 bánh cupcake vanilla với kem frosting đẹp mắt. Phù hợp cho tiệc nhỏ, quà tặng.",
+  "shortDescription": "Set 6 cupcake vanilla",
+  "basePrice": 180000,
+  "discountedPrice": null,
+  "sku": "BCU-VAN-001",
+  "tags": [
+    "cupcake",
+    "vanilla",
+    "set",
+    "quà tặng"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762077977/cloudcake/products/s8nei5bmvyxydspylmcx.webp",
+      "isPrimary": true,
+      "alt": "Bánh Cupcake Vanilla - Image 1",
+      "_id": {
+        "$oid": "69072d1c15385210182cf5eb"
+      }
+    },
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762077977/cloudcake/products/tytskp3xwgg7tr4dk6so.jpg",
+      "isPrimary": false,
+      "alt": "Bánh Cupcake Vanilla - Image 2",
+      "_id": {
+        "$oid": "69072d1c15385210182cf5ec"
+      }
+    }
+  ],
+  "ingredients": [
+    "Bột mì",
+    "Đường",
+    "Trứng",
+    "Bơ",
+    "Vanilla",
+    "Kem frosting",
+    "Sprinkles"
+  ],
+  "allergens": [
+    "Gluten",
+    "Dairy",
+    "Eggs"
+  ],
+  "nutritionalInfo": {
+    "calories": 250,
+    "protein": 4,
+    "carbs": 35,
+    "fat": 10,
+    "fiber": 0.5,
+    "sugar": 25
+  },
+  "weight": {
+    "value": 360,
+    "unit": "g"
+  },
+  "shelfLife": {
+    "value": 2,
+    "unit": "days"
+  },
+  "status": "ACTIVE",
+  "isActive": true,
+  "isFeatured": false,
+  "rating": {
+    "average": 4.5,
+    "count": 123
+  },
+  "viewCount": 750,
+  "salesCount": 456,
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df5c"
+  },
+  "shopId": {
+    "$oid": "69070854f9abdf8b5f90df85"
+  },
+  "__v": 1,
+  "updatedAt": {
+    "$date": "2025-11-02T10:06:20.155Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6911acb7c83fac2c7ddd04f4"
+  },
+  "name": "cake cloud",
+  "description": "banh bong nhu may",
+  "shortDescription": "Banh may",
+  "shopId": {
+    "$oid": "6910dbc86d4a9fd141c4e837"
+  },
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df59"
+  },
+  "basePrice": 100000,
+  "discountedPrice": null,
+  "sku": "PROD-1762766007790",
+  "tags": [
+    "[]"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762766006/cloudcake/products/audk3celm04wkdou07uq.jpg",
+      "isPrimary": true,
+      "alt": "cake cloud - Image 1",
+      "_id": {
+        "$oid": "6911acb7c83fac2c7ddd04f5"
+      }
+    }
+  ],
+  "ingredients": [
+    "[]"
+  ],
+  "allergens": [
+    "[]"
+  ],
+  "status": "DRAFT",
+  "isActive": false,
+  "isFeatured": false,
+  "rating": {
+    "average": 0,
+    "count": 0
+  },
+  "viewCount": 0,
+  "salesCount": 0,
+  "createdAt": {
+    "$date": "2025-11-10T09:13:27.798Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T09:13:27.798Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6911acbac83fac2c7ddd04fd"
+  },
+  "name": "cake cloud",
+  "description": "banh bong nhu may",
+  "shortDescription": "Banh may",
+  "shopId": {
+    "$oid": "6910dbc86d4a9fd141c4e837"
+  },
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df59"
+  },
+  "basePrice": 100000,
+  "discountedPrice": null,
+  "sku": "PROD-1762766010155",
+  "tags": [
+    "[]"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762766009/cloudcake/products/ymqbg5xynpezy6rs1b80.jpg",
+      "isPrimary": true,
+      "alt": "cake cloud - Image 1",
+      "_id": {
+        "$oid": "6911acbac83fac2c7ddd04fe"
+      }
+    }
+  ],
+  "ingredients": [
+    "[]"
+  ],
+  "allergens": [
+    "[]"
+  ],
+  "status": "DRAFT",
+  "isActive": false,
+  "isFeatured": false,
+  "rating": {
+    "average": 0,
+    "count": 0
+  },
+  "viewCount": 0,
+  "salesCount": 0,
+  "createdAt": {
+    "$date": "2025-11-10T09:13:30.159Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T09:13:30.159Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6911acbcc83fac2c7ddd050a"
+  },
+  "name": "cake cloud",
+  "description": "banh bong nhu may",
+  "shortDescription": "Banh may",
+  "shopId": {
+    "$oid": "6910dbc86d4a9fd141c4e837"
+  },
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df59"
+  },
+  "basePrice": 100000,
+  "discountedPrice": null,
+  "sku": "PROD-1762766012204",
+  "tags": [
+    "[]"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762766011/cloudcake/products/ytkoq96aeruaiwpsqsxt.jpg",
+      "isPrimary": true,
+      "alt": "cake cloud - Image 1",
+      "_id": {
+        "$oid": "6911acbcc83fac2c7ddd050b"
+      }
+    }
+  ],
+  "ingredients": [
+    "[]"
+  ],
+  "allergens": [
+    "[]"
+  ],
+  "status": "DRAFT",
+  "isActive": false,
+  "isFeatured": false,
+  "rating": {
+    "average": 0,
+    "count": 0
+  },
+  "viewCount": 0,
+  "salesCount": 0,
+  "createdAt": {
+    "$date": "2025-11-10T09:13:32.206Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T09:13:32.206Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6911acbcc83fac2c7ddd050f"
+  },
+  "name": "cake cloud",
+  "description": "banh bong nhu may",
+  "shortDescription": "Banh may",
+  "shopId": {
+    "$oid": "6910dbc86d4a9fd141c4e837"
+  },
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df59"
+  },
+  "basePrice": 100000,
+  "discountedPrice": null,
+  "sku": "PROD-1762766012677",
+  "tags": [
+    "[]"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762766011/cloudcake/products/ihxsols0hrnfp8yloxui.jpg",
+      "isPrimary": true,
+      "alt": "cake cloud - Image 1",
+      "_id": {
+        "$oid": "6911acbcc83fac2c7ddd0510"
+      }
+    }
+  ],
+  "ingredients": [
+    "[]"
+  ],
+  "allergens": [
+    "[]"
+  ],
+  "status": "DRAFT",
+  "isActive": false,
+  "isFeatured": false,
+  "rating": {
+    "average": 0,
+    "count": 0
+  },
+  "viewCount": 0,
+  "salesCount": 0,
+  "createdAt": {
+    "$date": "2025-11-10T09:13:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T09:13:32.686Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6911acbcc83fac2c7ddd0512"
+  },
+  "name": "cake cloud",
+  "description": "banh bong nhu may",
+  "shortDescription": "Banh may",
+  "shopId": {
+    "$oid": "6910dbc86d4a9fd141c4e837"
+  },
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df59"
+  },
+  "basePrice": 100000,
+  "discountedPrice": null,
+  "sku": "PROD-1762766012708",
+  "tags": [
+    "[]"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762766010/cloudcake/products/bnrmqwygaujklibubizw.jpg",
+      "isPrimary": true,
+      "alt": "cake cloud - Image 1",
+      "_id": {
+        "$oid": "6911acbcc83fac2c7ddd0513"
+      }
+    }
+  ],
+  "ingredients": [
+    "[]"
+  ],
+  "allergens": [
+    "[]"
+  ],
+  "status": "DRAFT",
+  "isActive": false,
+  "isFeatured": false,
+  "rating": {
+    "average": 0,
+    "count": 0
+  },
+  "viewCount": 0,
+  "salesCount": 0,
+  "createdAt": {
+    "$date": "2025-11-10T09:13:32.710Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T09:13:32.710Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6911acbdc83fac2c7ddd051c"
+  },
+  "name": "cake cloud",
+  "description": "banh bong nhu may",
+  "shortDescription": "Banh may",
+  "shopId": {
+    "$oid": "6910dbc86d4a9fd141c4e837"
+  },
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df59"
+  },
+  "basePrice": 100000,
+  "discountedPrice": null,
+  "sku": "PROD-1762766013967",
+  "tags": [
+    "[]"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762766012/cloudcake/products/zeuzfjq9rze5mtmu5mii.jpg",
+      "isPrimary": true,
+      "alt": "cake cloud - Image 1",
+      "_id": {
+        "$oid": "6911acbdc83fac2c7ddd051d"
+      }
+    }
+  ],
+  "ingredients": [
+    "[]"
+  ],
+  "allergens": [
+    "[]"
+  ],
+  "status": "DRAFT",
+  "isActive": false,
+  "isFeatured": false,
+  "rating": {
+    "average": 0,
+    "count": 0
+  },
+  "viewCount": 0,
+  "salesCount": 0,
+  "createdAt": {
+    "$date": "2025-11-10T09:13:33.973Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T09:13:33.973Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6911acbfc83fac2c7ddd0521"
+  },
+  "name": "cake cloud",
+  "description": "banh bong nhu may",
+  "shortDescription": "Banh may",
+  "shopId": {
+    "$oid": "6910dbc86d4a9fd141c4e837"
+  },
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df59"
+  },
+  "basePrice": 100000,
+  "discountedPrice": null,
+  "sku": "PROD-1762766015308",
+  "tags": [
+    "[]"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762766011/cloudcake/products/tdocyhq9pmbjewbxytak.jpg",
+      "isPrimary": true,
+      "alt": "cake cloud - Image 1",
+      "_id": {
+        "$oid": "6911acbfc83fac2c7ddd0522"
+      }
+    }
+  ],
+  "ingredients": [
+    "[]"
+  ],
+  "allergens": [
+    "[]"
+  ],
+  "status": "DRAFT",
+  "isActive": false,
+  "isFeatured": false,
+  "rating": {
+    "average": 0,
+    "count": 0
+  },
+  "viewCount": 0,
+  "salesCount": 0,
+  "createdAt": {
+    "$date": "2025-11-10T09:13:35.315Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T09:13:35.315Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6911acc0c83fac2c7ddd052b"
+  },
+  "name": "cake cloud",
+  "description": "banh bong nhu may",
+  "shortDescription": "Banh may",
+  "shopId": {
+    "$oid": "6910dbc86d4a9fd141c4e837"
+  },
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df59"
+  },
+  "basePrice": 100000,
+  "discountedPrice": null,
+  "sku": "PROD-1762766016379",
+  "tags": [
+    "[]"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762766015/cloudcake/products/kteodjhtvtg1klnpfwy4.jpg",
+      "isPrimary": true,
+      "alt": "cake cloud - Image 1",
+      "_id": {
+        "$oid": "6911acc0c83fac2c7ddd052c"
+      }
+    }
+  ],
+  "ingredients": [
+    "[]"
+  ],
+  "allergens": [
+    "[]"
+  ],
+  "status": "DRAFT",
+  "isActive": false,
+  "isFeatured": false,
+  "rating": {
+    "average": 0,
+    "count": 0
+  },
+  "viewCount": 0,
+  "salesCount": 0,
+  "createdAt": {
+    "$date": "2025-11-10T09:13:36.380Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T09:13:36.380Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6911acc0c83fac2c7ddd052e"
+  },
+  "name": "cake cloud",
+  "description": "banh bong nhu may",
+  "shortDescription": "Banh may",
+  "shopId": {
+    "$oid": "6910dbc86d4a9fd141c4e837"
+  },
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df59"
+  },
+  "basePrice": 100000,
+  "discountedPrice": null,
+  "sku": "PROD-1762766016464",
+  "tags": [
+    "[]"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762766015/cloudcake/products/owfy35hv0znysz8mvmnw.jpg",
+      "isPrimary": true,
+      "alt": "cake cloud - Image 1",
+      "_id": {
+        "$oid": "6911acc0c83fac2c7ddd052f"
+      }
+    }
+  ],
+  "ingredients": [
+    "[]"
+  ],
+  "allergens": [
+    "[]"
+  ],
+  "status": "DRAFT",
+  "isActive": false,
+  "isFeatured": false,
+  "rating": {
+    "average": 0,
+    "count": 0
+  },
+  "viewCount": 0,
+  "salesCount": 0,
+  "createdAt": {
+    "$date": "2025-11-10T09:13:36.465Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T09:13:36.465Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6911acc1c83fac2c7ddd0533"
+  },
+  "name": "cake cloud",
+  "description": "banh bong nhu may",
+  "shortDescription": "Banh may",
+  "shopId": {
+    "$oid": "6910dbc86d4a9fd141c4e837"
+  },
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df59"
+  },
+  "basePrice": 100000,
+  "discountedPrice": null,
+  "sku": "PROD-1762766017973",
+  "tags": [
+    "[]"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762766015/cloudcake/products/i4iu1qmn1xth81nlzuxi.jpg",
+      "isPrimary": true,
+      "alt": "cake cloud - Image 1",
+      "_id": {
+        "$oid": "6911acc1c83fac2c7ddd0534"
+      }
+    }
+  ],
+  "ingredients": [
+    "[]"
+  ],
+  "allergens": [
+    "[]"
+  ],
+  "status": "DRAFT",
+  "isActive": false,
+  "isFeatured": false,
+  "rating": {
+    "average": 0,
+    "count": 0
+  },
+  "viewCount": 0,
+  "salesCount": 0,
+  "createdAt": {
+    "$date": "2025-11-10T09:13:37.980Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T09:13:37.980Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6911ad67c83fac2c7ddd056f"
+  },
+  "name": "cloudCake",
+  "description": "banh bong nhu may",
+  "shortDescription": "banh may",
+  "shopId": {
+    "$oid": "6910dbc86d4a9fd141c4e837"
+  },
+  "categoryId": {
+    "$oid": "690704f1f9abdf8b5f90df59"
+  },
+  "basePrice": 100000,
+  "discountedPrice": 90000,
+  "sku": "S-12-21",
+  "tags": [
+    "[\"cupcake\"]"
+  ],
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762766181/cloudcake/products/bpsanwineeybwd48fmyo.jpg",
+      "isPrimary": true,
+      "alt": "cloudCake - Image 1",
+      "_id": {
+        "$oid": "6911ad67c83fac2c7ddd0570"
+      }
+    }
+  ],
+  "ingredients": [
+    "[]"
+  ],
+  "allergens": [
+    "[]"
+  ],
+  "status": "DRAFT",
+  "isActive": false,
+  "isFeatured": false,
+  "rating": {
+    "average": 0,
+    "count": 0
+  },
+  "viewCount": 0,
+  "salesCount": 0,
+  "createdAt": {
+    "$date": "2025-11-10T09:16:23.039Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T09:16:23.039Z"
+  },
+  "__v": 0
+}]

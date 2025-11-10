@@ -22,8 +22,9 @@ const {
 
 const session = require("express-session");
 const cors = require("cors");
-const path = require("path");
-const fs = require("fs");
+
+const swaggerUi = require("swagger-ui-express");
+const { swaggerSpec } = require("./src/docs/swagger");
 
 // Khởi tạo Express và server
 const app = express();
@@ -78,6 +79,13 @@ app.use("/api/order", OrderRouter);
 app.use("/api/orders", OrderRouter); // Alias for VNPay callback compatibility
 app.use("/api/address", AddressRouter);
 app.use("/api/user-address", AddressRouter);
+
+// Swagger docs
+app.get("/api-docs.json", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpec);
+});
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Kiểm soát lỗi
 app.use(async (req, res, next) => {

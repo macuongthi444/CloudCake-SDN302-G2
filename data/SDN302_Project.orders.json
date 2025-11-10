@@ -1,0 +1,550 @@
+[{
+  "_id": {
+    "$oid": "691036054dd1fa461a811592"
+  },
+  "userId": {
+    "$oid": "69070bf7e33436622f3326a6"
+  },
+  "shopId": {
+    "$oid": "69070854f9abdf8b5f90df85"
+  },
+  "items": [
+    {
+      "productId": {
+        "$oid": "690708b8f9abdf8b5f90df93"
+      },
+      "variantId": {
+        "$oid": "69071b8df9abdf8b5f90dfce"
+      },
+      "productName": "Bánh Sinh Nhật Chocolate Premium",
+      "variantName": "Lớn - Hình Tròn",
+      "quantity": 1,
+      "unitPrice": 480000,
+      "totalPrice": 480000,
+      "image": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762144618/cloudcake/products/h0mtzbdnyb6bukn3e8nx.jpg"
+    }
+  ],
+  "subtotal": 480000,
+  "shippingFee": 0,
+  "discount": 0,
+  "couponId": null,
+  "totalAmount": 480000,
+  "status": "CONFIRMED",
+  "paymentStatus": "PAID",
+  "paymentMethodId": {
+    "$oid": "690cc0e9bececeac18ca9fcf"
+  },
+  "shippingMethodId": {
+    "$oid": "690cc0e9bececeac18ca9fd3"
+  },
+  "shippingAddress": {
+    "address_line1": "123 Đường ABC",
+    "address_line2": "Tòa Nhà Cao Tầng VinHomes  tầng 5",
+    "city": "Thành phố Hà Nội",
+    "district": "",
+    "ward": "",
+    "postalCode": "",
+    "phone": "0356129119",
+    "recipientName": "khanhnxhe172843@fpt.edu.vn"
+  },
+  "createdAt": {
+    "$date": "2025-11-09T06:34:45.751Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-09T06:35:26.130Z"
+  },
+  "__v": 0,
+  "paymentMeta": {
+    "vnpay": {
+      "vnp_Amount": "48000000",
+      "vnp_BankCode": "NCB",
+      "vnp_BankTranNo": "VNP15247893",
+      "vnp_CardType": "ATM",
+      "vnp_OrderInfo": "Thanhtoandonhang691036054dd1fa461a811592",
+      "vnp_PayDate": "20251109133511",
+      "vnp_ResponseCode": "00",
+      "vnp_TmnCode": "XCAD2ZXD",
+      "vnp_TransactionNo": "15247893",
+      "vnp_TransactionStatus": "00",
+      "vnp_TxnRef": "691036054dd1fa461a811592",
+      "vnp_SecureHash": "13911b7b3da3df71538cb611479427989b87bb11b86e2b04af590debc760b05481282ab71da50cdeb0790472392e5b688e21787d3c859a4434efee95728372ef"
+    }
+  },
+  "transactionId": "15247893"
+},
+{
+  "_id": {
+    "$oid": "69105431ef99e8c8b20ba87c"
+  },
+  "userId": {
+    "$oid": "69070bf7e33436622f3326a6"
+  },
+  "shopId": {
+    "$oid": "69070854f9abdf8b5f90df85"
+  },
+  "items": [
+    {
+      "productId": {
+        "$oid": "690708b8f9abdf8b5f90df93"
+      },
+      "variantId": {
+        "$oid": "69071b8df9abdf8b5f90dfce"
+      },
+      "productName": "Bánh Sinh Nhật Chocolate Premium",
+      "variantName": "Lớn - Hình Tròn",
+      "quantity": 1,
+      "unitPrice": 480000,
+      "totalPrice": 480000,
+      "image": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762144618/cloudcake/products/h0mtzbdnyb6bukn3e8nx.jpg"
+    }
+  ],
+  "subtotal": 480000,
+  "shippingFee": 0,
+  "discount": 0,
+  "couponId": null,
+  "totalAmount": 480000,
+  "status": "PENDING",
+  "paymentStatus": "PENDING",
+  "paymentMethodId": {
+    "$oid": "690cc0e9bececeac18ca9fcf"
+  },
+  "paymentCode": "VNPAY",
+  "shippingMethodId": {
+    "$oid": "690cc0e9bececeac18ca9fd3"
+  },
+  "shippingAddress": {
+    "address_line1": "123 Đường ABC",
+    "address_line2": "Tòa Nhà Cao Tầng VinHomes  tầng 5",
+    "city": "Thành phố Hà Nội",
+    "district": "",
+    "ward": "",
+    "postalCode": "",
+    "phone": "0356129119",
+    "recipientName": "khanhnxhe172843@fpt.edu.vn"
+  },
+  "createdAt": {
+    "$date": "2025-11-09T08:43:29.605Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-09T08:43:29.605Z"
+  },
+  "orderNumber": "ORD-20251109-0001",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691167edf08b1dc1883247a0"
+  },
+  "userId": {
+    "$oid": "691166eb1183b3db4886b6e0"
+  },
+  "shopId": {
+    "$oid": "69070854f9abdf8b5f90df85"
+  },
+  "items": [
+    {
+      "productId": {
+        "$oid": "690708b8f9abdf8b5f90df93"
+      },
+      "variantId": {
+        "$oid": "69071b8df9abdf8b5f90dfcc"
+      },
+      "productName": "Bánh Sinh Nhật Chocolate Premium",
+      "variantName": "Nhỏ - Hình Tròn",
+      "quantity": 1,
+      "unitPrice": 320000,
+      "totalPrice": 320000,
+      "image": "https://i.pinimg.com/originals/e9/1c/b9/e91cb9b0e38be83872bed7661e474981.jpg"
+    }
+  ],
+  "subtotal": 320000,
+  "shippingFee": 0,
+  "discount": 0,
+  "couponId": null,
+  "totalAmount": 320000,
+  "status": "CONFIRMED",
+  "paymentStatus": "PAID",
+  "paymentMethodId": {
+    "$oid": "690cc0e9bececeac18ca9fcf"
+  },
+  "paymentCode": "VNPAY",
+  "shippingMethodId": {
+    "$oid": "690cc0e9bececeac18ca9fd3"
+  },
+  "shippingAddress": {
+    "address_line1": "123 Đường ABC",
+    "address_line2": "Tòa Nhà Cao Tầng Vinhomes 5",
+    "city": "Xã Ninh Hiệp, Huyện Gia Lâm, Thành phố Hà Nội",
+    "district": "",
+    "ward": "",
+    "postalCode": "",
+    "phone": "0356129119",
+    "recipientName": "michaelbay1888@gmail.com"
+  },
+  "createdAt": {
+    "$date": "2025-11-10T04:19:57.257Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T04:20:20.678Z"
+  },
+  "orderNumber": "ORD-20251110-0001",
+  "__v": 0,
+  "paymentMeta": {
+    "vnpay": {
+      "vnp_Amount": "32000000",
+      "vnp_BankCode": "NCB",
+      "vnp_BankTranNo": "VNP15249542",
+      "vnp_CardType": "ATM",
+      "vnp_OrderInfo": "ThanhtoandonhangORD202511100002",
+      "vnp_PayDate": "20251110112013",
+      "vnp_ResponseCode": "00",
+      "vnp_TmnCode": "XCAD2ZXD",
+      "vnp_TransactionNo": "15249542",
+      "vnp_TransactionStatus": "00",
+      "vnp_TxnRef": "ORD202511100002",
+      "vnp_SecureHash": "aa01248c783b6e792509ee2e4d3377d619eeb99eee7f7079e21897481098cffa3a75815438d61417355f09da76ddc91a7afab582649f79de89947a9c309bdcec"
+    }
+  },
+  "transactionId": "15249542"
+},
+{
+  "_id": {
+    "$oid": "69116848f08b1dc188324810"
+  },
+  "userId": {
+    "$oid": "691166eb1183b3db4886b6e0"
+  },
+  "shopId": {
+    "$oid": "69070854f9abdf8b5f90df85"
+  },
+  "items": [
+    {
+      "productId": {
+        "$oid": "690708b8f9abdf8b5f90df93"
+      },
+      "variantId": {
+        "$oid": "69071b8df9abdf8b5f90dfcd"
+      },
+      "productName": "Bánh Sinh Nhật Chocolate Premium",
+      "variantName": "Vừa - Hình Tròn",
+      "quantity": 1,
+      "unitPrice": 380000,
+      "totalPrice": 380000,
+      "image": "https://th.bing.com/th/id/R.7e85274823bde048f745c97dbdadc2f2?rik=U09Qr7aAWC4TEQ&pid=ImgRaw&r=0"
+    }
+  ],
+  "subtotal": 380000,
+  "shippingFee": 0,
+  "discount": 0,
+  "couponId": null,
+  "totalAmount": 380000,
+  "status": "PENDING",
+  "paymentStatus": "PENDING",
+  "paymentMethodId": {
+    "$oid": "690f504dfdb4aa1edf3ffb8b"
+  },
+  "paymentCode": "COD",
+  "shippingMethodId": {
+    "$oid": "690cc0e9bececeac18ca9fd3"
+  },
+  "shippingAddress": {
+    "address_line1": "123 Đường ABC",
+    "address_line2": "Tòa Nhà Cao Tầng Vinhomes 5",
+    "city": "Xã Ninh Hiệp, Huyện Gia Lâm, Thành phố Hà Nội",
+    "district": "",
+    "ward": "",
+    "postalCode": "",
+    "phone": "0356129119",
+    "recipientName": "michaelbay1888@gmail.com"
+  },
+  "createdAt": {
+    "$date": "2025-11-10T04:21:28.678Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T04:21:28.678Z"
+  },
+  "orderNumber": "ORD-20251110-0002",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691169f07a96e02ca0e5c90d"
+  },
+  "userId": {
+    "$oid": "691166eb1183b3db4886b6e0"
+  },
+  "shopId": {
+    "$oid": "69070854f9abdf8b5f90df85"
+  },
+  "items": [
+    {
+      "productId": {
+        "$oid": "690708b8f9abdf8b5f90df96"
+      },
+      "variantId": {
+        "$oid": "69071b8df9abdf8b5f90dfd3"
+      },
+      "productName": "Bánh Cupcake Vanilla",
+      "variantName": "Set 6 Cupcake Vanilla",
+      "quantity": 1,
+      "unitPrice": 180000,
+      "totalPrice": 180000,
+      "image": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762077977/cloudcake/products/s8nei5bmvyxydspylmcx.webp"
+    }
+  ],
+  "subtotal": 180000,
+  "shippingFee": 0,
+  "discount": 0,
+  "couponId": null,
+  "totalAmount": 180000,
+  "status": "CANCELLED",
+  "paymentStatus": "PENDING",
+  "paymentMethodId": {
+    "$oid": "690f504dfdb4aa1edf3ffb8b"
+  },
+  "paymentCode": "COD",
+  "shippingMethodId": {
+    "$oid": "690cc0e9bececeac18ca9fd3"
+  },
+  "shippingAddress": {
+    "address_line1": "123 Đường ABC",
+    "address_line2": "Tòa Nhà Cao Tầng Vinhomes 5",
+    "city": "Xã Ninh Hiệp, Huyện Gia Lâm, Thành phố Hà Nội",
+    "district": "",
+    "ward": "",
+    "postalCode": "",
+    "phone": "0356129119",
+    "recipientName": "michaelbay1888@gmail.com"
+  },
+  "createdAt": {
+    "$date": "2025-11-10T04:28:32.679Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T04:28:58.485Z"
+  },
+  "orderNumber": "ORD-20251110-0003",
+  "__v": 0,
+  "cancellationReason": "Đổi loại bánh không thích ăn loại này nữa",
+  "cancelledAt": {
+    "$date": "2025-11-10T04:28:58.483Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6911741e96de8381b1342ee9"
+  },
+  "userId": {
+    "$oid": "691166eb1183b3db4886b6e0"
+  },
+  "shopId": {
+    "$oid": "69070854f9abdf8b5f90df85"
+  },
+  "items": [
+    {
+      "productId": {
+        "$oid": "690708b8f9abdf8b5f90df93"
+      },
+      "variantId": {
+        "$oid": "69071b8df9abdf8b5f90dfce"
+      },
+      "productName": "Bánh Sinh Nhật Chocolate Premium",
+      "variantName": "Lớn - Hình Tròn",
+      "quantity": 1,
+      "unitPrice": 480000,
+      "totalPrice": 480000,
+      "image": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762144618/cloudcake/products/h0mtzbdnyb6bukn3e8nx.jpg"
+    }
+  ],
+  "subtotal": 480000,
+  "shippingFee": 0,
+  "discount": 0,
+  "couponId": null,
+  "totalAmount": 480000,
+  "status": "CANCELLED",
+  "paymentStatus": "PAID",
+  "paymentMethodId": {
+    "$oid": "690cc0e9bececeac18ca9fcf"
+  },
+  "paymentCode": "VNPAY",
+  "shippingMethodId": {
+    "$oid": "690cc0e9bececeac18ca9fd3"
+  },
+  "shippingAddress": {
+    "address_line1": "123 Đường ABC",
+    "address_line2": "Tòa Nhà Cao Tầng Vinhomes 5",
+    "city": "Xã Ninh Hiệp, Huyện Gia Lâm, Thành phố Hà Nội",
+    "district": "",
+    "ward": "",
+    "postalCode": "",
+    "phone": "0356129119",
+    "recipientName": "michaelbay1888@gmail.com"
+  },
+  "createdAt": {
+    "$date": "2025-11-10T05:11:58.881Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T06:55:04.055Z"
+  },
+  "orderNumber": "ORD-20251110-0004",
+  "__v": 0,
+  "paymentMeta": {
+    "vnpay": {
+      "vnp_Amount": "48000000",
+      "vnp_BankCode": "NCB",
+      "vnp_BankTranNo": "VNP15249647",
+      "vnp_CardType": "ATM",
+      "vnp_OrderInfo": "ThanhtoandonhangORD202511100004",
+      "vnp_PayDate": "20251110121214",
+      "vnp_ResponseCode": "00",
+      "vnp_TmnCode": "XCAD2ZXD",
+      "vnp_TransactionNo": "15249647",
+      "vnp_TransactionStatus": "00",
+      "vnp_TxnRef": "ORD202511100004",
+      "vnp_SecureHash": "dbb79ee291b1217368155deddc23e1d13ab2b260705a685f2e7b3b4f9925e165555c1833b51c8ca1909642160b899940a31bf488d93eea4769cb04e1269ea7d7"
+    }
+  },
+  "transactionId": "15249647",
+  "cancellationReason": "huy",
+  "cancelledAt": {
+    "$date": "2025-11-10T06:55:04.049Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6911744996de8381b1342f34"
+  },
+  "userId": {
+    "$oid": "691166eb1183b3db4886b6e0"
+  },
+  "shopId": {
+    "$oid": "69070854f9abdf8b5f90df85"
+  },
+  "items": [
+    {
+      "productId": {
+        "$oid": "690708b8f9abdf8b5f90df93"
+      },
+      "variantId": {
+        "$oid": "69071b8df9abdf8b5f90dfce"
+      },
+      "productName": "Bánh Sinh Nhật Chocolate Premium",
+      "variantName": "Lớn - Hình Tròn",
+      "quantity": 1,
+      "unitPrice": 480000,
+      "totalPrice": 480000,
+      "image": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762144618/cloudcake/products/h0mtzbdnyb6bukn3e8nx.jpg"
+    }
+  ],
+  "subtotal": 480000,
+  "shippingFee": 0,
+  "discount": 0,
+  "couponId": null,
+  "totalAmount": 480000,
+  "status": "CANCELLED",
+  "paymentStatus": "PENDING",
+  "paymentMethodId": {
+    "$oid": "690f504dfdb4aa1edf3ffb8b"
+  },
+  "paymentCode": "COD",
+  "shippingMethodId": {
+    "$oid": "690cc0e9bececeac18ca9fd3"
+  },
+  "shippingAddress": {
+    "address_line1": "123 Đường ABC",
+    "address_line2": "Tòa Nhà Cao Tầng Vinhomes 5",
+    "city": "Xã Ninh Hiệp, Huyện Gia Lâm, Thành phố Hà Nội",
+    "district": "",
+    "ward": "",
+    "postalCode": "",
+    "phone": "0356129119",
+    "recipientName": "michaelbay1888@gmail.com"
+  },
+  "createdAt": {
+    "$date": "2025-11-10T05:12:41.853Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T05:12:54.522Z"
+  },
+  "orderNumber": "ORD-20251110-0005",
+  "__v": 0,
+  "cancellationReason": "CANCEL",
+  "cancelledAt": {
+    "$date": "2025-11-10T05:12:54.520Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6911a47ac83fac2c7ddd0440"
+  },
+  "userId": {
+    "$oid": "68f39ad29a7f35264d913b57"
+  },
+  "shopId": {
+    "$oid": "69070854f9abdf8b5f90df86"
+  },
+  "items": [
+    {
+      "productId": {
+        "$oid": "690708b8f9abdf8b5f90df97"
+      },
+      "variantId": {
+        "$oid": "69071b8df9abdf8b5f90dfd4"
+      },
+      "productName": "Bánh Tart Dâu Tây",
+      "variantName": "Tart Dâu Tiêu Chuẩn",
+      "quantity": 1,
+      "unitPrice": 180000,
+      "totalPrice": 180000,
+      "image": "https://res.cloudinary.com/dqanjlzvj/image/upload/v1762078072/cloudcake/products/pboi43pxlkpty639ol20.jpg"
+    }
+  ],
+  "subtotal": 180000,
+  "shippingFee": 0,
+  "discount": 0,
+  "couponId": null,
+  "totalAmount": 180000,
+  "status": "CONFIRMED",
+  "paymentStatus": "PAID",
+  "paymentMethodId": {
+    "$oid": "690cc0e9bececeac18ca9fcf"
+  },
+  "paymentCode": "VNPAY",
+  "shippingMethodId": {
+    "$oid": "690cc0e9bececeac18ca9fd3"
+  },
+  "shippingAddress": {
+    "address_line1": "123 duong abc",
+    "address_line2": "",
+    "city": "Huyện An Phú, Tỉnh An Giang",
+    "district": "",
+    "ward": "",
+    "postalCode": "",
+    "phone": "0912846123",
+    "recipientName": "hoangtvhe160642@gmail.com"
+  },
+  "createdAt": {
+    "$date": "2025-11-10T08:38:18.471Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T08:39:37.930Z"
+  },
+  "orderNumber": "ORD-20251110-0006",
+  "__v": 0,
+  "paymentMeta": {
+    "vnpay": {
+      "vnp_Amount": "18000000",
+      "vnp_BankCode": "NCB",
+      "vnp_BankTranNo": "VNP15250269",
+      "vnp_CardType": "ATM",
+      "vnp_OrderInfo": "ThanhtoandonhangORD202511100006",
+      "vnp_PayDate": "20251110153913",
+      "vnp_ResponseCode": "00",
+      "vnp_TmnCode": "XCAD2ZXD",
+      "vnp_TransactionNo": "15250269",
+      "vnp_TransactionStatus": "00",
+      "vnp_TxnRef": "ORD202511100006",
+      "vnp_SecureHash": "ef7b19f47fb56fdb2094428fe57e9c0cd4d71c73b7a96a659aa831706c73546a00e8866ecb57f88620081fa3b92b2d4f480ee91a4145389f33a55689458606ad"
+    }
+  },
+  "transactionId": "15250269"
+}]

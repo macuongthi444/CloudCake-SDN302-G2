@@ -1,0 +1,129 @@
+[{
+  "_id": {
+    "$oid": "69070854f9abdf8b5f90df86"
+  },
+  "name": "Sweet Dreams Bakery",
+  "description": "Bánh kem tươi, bánh mì ngọt, bánh tart",
+  "ownerId": {
+    "$oid": "6907072a640de1f14a93a005"
+  },
+  "logo": "https://example.com/images/shops/sweet-dreams-logo.jpg",
+  "coverImage": "https://example.com/images/shops/sweet-dreams-cover.jpg",
+  "address": {
+    "street": "456 Lê Lợi",
+    "city": "Hà Nội",
+    "district": "Hoàn Kiếm",
+    "ward": "Phường Hàng Bông",
+    "postalCode": "100000"
+  },
+  "phone": "84987654321",
+  "email": "sweetdreams@example.com",
+  "status": "ACTIVE",
+  "isActive": true,
+  "rating": {
+    "average": 4.6,
+    "count": 89
+  },
+  "openingHours": {
+    "monday": {
+      "open": "07:00",
+      "close": "21:00"
+    },
+    "tuesday": {
+      "open": "07:00",
+      "close": "21:00"
+    },
+    "wednesday": {
+      "open": "07:00",
+      "close": "21:00"
+    },
+    "thursday": {
+      "open": "07:00",
+      "close": "21:00"
+    },
+    "friday": {
+      "open": "07:00",
+      "close": "22:00"
+    },
+    "saturday": {
+      "open": "07:00",
+      "close": "22:00"
+    },
+    "sunday": {
+      "open": "08:00",
+      "close": "21:00"
+    }
+  },
+  "bankAccount": {
+    "bankName": "BIDV",
+    "accountNumber": "9876543210",
+    "accountHolder": "Sweet Dreams Bakery"
+  }
+},
+{
+  "_id": {
+    "$oid": "6910dbc86d4a9fd141c4e837"
+  },
+  "name": "cocoaandfig",
+  "description": "An award winning boutique bakery, Cocoa & Fig is owned by husband and wife team Joe and Laurie Lin. For over 10 years this duo has sweetened events both large and small with their delectable treats and signature table scape styling. All of our sweets are made from scratch in small batches to guarantee that everything tastes just as good as it looks.",
+  "ownerId": {
+    "$oid": "69106045fd5a0f7710f467c1"
+  },
+  "address": {
+    "street": "123 Nguyễn Văn Cừ",
+    "city": "TP. Hồ Chí Minh",
+    "district": "Quận 5",
+    "ward": "Phường 4",
+    "postalCode": "700000"
+  },
+  "phone": "0974858982",
+  "email": "lanhki456@gmail.com",
+  "status": "ACTIVE",
+  "isActive": true,
+  "rating": {
+    "average": 0,
+    "count": 0
+  },
+  "openingHours": {
+    "monday": {
+      "open": "08:00",
+      "close": "17:00"
+    },
+    "tuesday": {
+      "open": "08:00",
+      "close": "17:00"
+    },
+    "wednesday": {
+      "open": "08:00",
+      "close": "17:00"
+    },
+    "thursday": {
+      "open": "08:00",
+      "close": "17:00"
+    },
+    "friday": {
+      "open": "08:00",
+      "close": "17:00"
+    },
+    "saturday": {
+      "open": "08:00",
+      "close": "12:00"
+    },
+    "sunday": {
+      "open": "",
+      "close": ""
+    }
+  },
+  "bankAccount": {
+    "bankName": "",
+    "accountNumber": "",
+    "accountHolder": ""
+  },
+  "createdAt": {
+    "$date": "2025-11-09T18:22:00.521Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-09T18:24:32.394Z"
+  },
+  "__v": 0
+}]

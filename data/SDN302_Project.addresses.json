@@ -1,0 +1,84 @@
+[{
+  "_id": {
+    "$oid": "690f55d3c14df0d097d4c68d"
+  },
+  "user_id": {
+    "$oid": "69070bf7e33436622f3326a6"
+  },
+  "address_line1": "123 Đường ABC",
+  "address_line2": "Tòa Nhà Cao Tầng VinHomes  tầng 5",
+  "city": "Thành phố Hà Nội",
+  "country": "Vietnam",
+  "status": true,
+  "phone": "0356129119",
+  "createdAt": {
+    "$date": "2025-11-08T14:38:11.473Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-08T14:39:10.776Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691167181183b3db4886b71a"
+  },
+  "user_id": {
+    "$oid": "691166eb1183b3db4886b6e0"
+  },
+  "address_line1": "123 Đường ABC",
+  "address_line2": "Tòa Nhà Cao Tầng Vinhomes 5",
+  "city": "Xã Ninh Hiệp, Huyện Gia Lâm, Thành phố Hà Nội",
+  "country": "Vietnam",
+  "status": true,
+  "phone": "0356129119",
+  "createdAt": {
+    "$date": "2025-11-10T04:16:24.240Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T04:16:24.240Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691184ffec82d62401028e0c"
+  },
+  "user_id": {
+    "$oid": "691184c2ec82d62401028db7"
+  },
+  "address_line1": "111",
+  "address_line2": "1111",
+  "city": "Xã Vĩnh Lộc, Huyện An Phú, Tỉnh An Giang",
+  "country": "Vietnam",
+  "status": true,
+  "phone": "0862938931",
+  "createdAt": {
+    "$date": "2025-11-10T06:23:59.903Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T06:23:59.903Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6911a467c83fac2c7ddd042c"
+  },
+  "user_id": {
+    "$oid": "68f39ad29a7f35264d913b57"
+  },
+  "address_line1": "123 duong abc",
+  "address_line2": "",
+  "city": "Huyện An Phú, Tỉnh An Giang",
+  "country": "Vietnam",
+  "status": true,
+  "phone": "0912846123",
+  "createdAt": {
+    "$date": "2025-11-10T08:37:59.547Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-10T08:37:59.547Z"
+  },
+  "__v": 0
+}]

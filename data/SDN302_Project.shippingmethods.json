@@ -1,0 +1,26 @@
+[{
+  "_id": {
+    "$oid": "690cc0e9bececeac18ca9fd3"
+  },
+  "name": "Miễn phí",
+  "code": "FREE",
+  "feeType": "FREE",
+  "baseFee": 0,
+  "perKgFee": 0,
+  "perKmFee": 0,
+  "estimatedDays": {
+    "min": 1,
+    "max": 3
+  },
+  "isActive": true,
+  "isDefault": true,
+  "freeShippingThreshold": null,
+  "applicableAreas": [],
+  "createdAt": {
+    "$date": "2025-11-06T15:38:17.562Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-06T15:38:17.562Z"
+  },
+  "__v": 0
+}]
