@@ -29,13 +29,16 @@ async function getAll(req, res, next) {
         if (shopId) query.shopId = shopId
         if (isActive !== undefined) query.isActive = isActive === 'true'
         
-        // Text search - sử dụng regex thay vì text index
-        if (search) {
-            query.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } },
-                { tags: { $regex: search, $options: 'i' } }
-            ]
+        // Tìm kiếm: ưu tiên text index (nhanh hơn) nếu có từ khóa
+        let projection = undefined
+        let sort = { [sortBy]: parseInt(sortOrder) }
+        if (search && search.trim().length > 0) {
+            query.$text = { $search: search.trim() }
+            // Thêm điểm số text để sắp xếp theo độ phù hợp nếu sortBy mặc định
+            projection = { score: { $meta: "textScore" } }
+            sort = sortBy === 'createdAt' 
+                ? { score: { $meta: "textScore" }, createdAt: -1 }
+                : { score: { $meta: "textScore" } }
         }
         
         // Price filter
@@ -71,8 +74,10 @@ async function getAll(req, res, next) {
         // Pagination
         const skip = (parseInt(page) - 1) * parseInt(limit)
 
-        // Sort
-        const sort = { [sortBy]: parseInt(sortOrder) }
+        // Sort (nếu không dùng text search)
+        if (!query.$text) {
+            sort = { [sortBy]: parseInt(sortOrder) }
+        }
 
         // Cache tạm thời comment để tránh lỗi
         // const cacheKey = `products:${JSON.stringify({ categoryId, shopId, search, minPrice, maxPrice, isActive, limit, sortBy, sortOrder })}`;
@@ -85,7 +90,8 @@ async function getAll(req, res, next) {
         // }
 
         // Sử dụng .lean() để tăng tốc độ
-        const products = await Product.find(query)
+        const products = await Product.find(query, projection)
+            .select('name shortDescription basePrice discountedPrice images categoryId shopId status isActive createdAt') // giới hạn field
             .populate('categoryId', 'name')
             .populate('shopId', 'name logo')
             .sort(sort)
@@ -105,12 +111,8 @@ async function getAll(req, res, next) {
             }
         }
 
-        // Cache tạm thời comment
-        // if (parseInt(page) === 1) {
-        //     cache.set(cacheKey, response, 300000);
-        // }
-
-        res.set('Cache-Control', 'public, max-age=300');
+        // Tránh cache danh sách sản phẩm để đảm bảo luôn thấy dữ liệu mới nhất
+        res.set('Cache-Control', 'no-store');
         res.status(200).json(response)
     } catch (error) {
         next(error)
@@ -307,6 +309,17 @@ async function update(req, res, next) {
             product.shopId = req.body.shopId
         }
 
+        // Prevent seller from activating products (only admin can activate)
+        if (!isAdmin) {
+            // Seller cannot change status to ACTIVE or set isActive to true
+            if (req.body.status === 'ACTIVE') {
+                throw createHttpError.Forbidden("Only admin can activate products. Please contact admin for approval.")
+            }
+            if (req.body.isActive === true || req.body.isActive === 'true') {
+                throw createHttpError.Forbidden("Only admin can activate products. Please contact admin for approval.")
+            }
+        }
+
         // Update fields
         const updatableFields = [
             'name', 'description', 'shortDescription', 'categoryId',
@@ -363,56 +376,105 @@ async function update(req, res, next) {
             }
         }
 
-        // Handle image updates
-        // If existingImages is provided, replace all images with remaining existing + new ones
-        if (req.body.existingImages !== undefined) {
-            try {
-                // Parse existingImages if it's a JSON string (from FormData)
-                let existingImages = req.body.existingImages;
-                if (typeof existingImages === 'string') {
-                    try {
-                        existingImages = JSON.parse(existingImages);
-                    } catch (parseErr) {
-                        console.warn('Could not parse existingImages as JSON, treating as empty:', parseErr);
-                        existingImages = [];
-                    }
+        // Handle image updates safely (avoid wiping images by accident)
+        // 1) Support removing by URLs via removeImageUrls (CSV or JSON array)
+        // 2) Support replacing existing images via existingImages (array of objects or URLs)
+        // 3) Append newly uploaded images from req.files/req.file
+        // 4) Never clear images if inputs are malformed
+        // Remove requested images first (if any)
+        const parseArrayField = (value) => {
+            if (value === undefined || value === null) return undefined;
+            if (Array.isArray(value)) return value;
+            if (typeof value === 'string') {
+                const trimmed = value.trim();
+                if (trimmed.startsWith('[')) {
+                    try { return JSON.parse(trimmed); } catch { return undefined; }
                 }
-                
-                // Start with remaining existing images
-                product.images = Array.isArray(existingImages) ? existingImages : [];
-                
-                // Add new uploaded images
-                if (req.files && req.files.length > 0) {
-                    const newImages = req.files.map((file, index) => ({
-                        url: file.path,
-                        isPrimary: product.images.length === 0 && index === 0,
-                        alt: `${product.name} - Image ${product.images.length + index + 1}`
-                    }));
-                    product.images = [...product.images, ...newImages];
-                }
-                
-                // Ensure at least one image is primary
-                if (product.images.length > 0 && !product.images.some(img => img.isPrimary)) {
-                    product.images[0].isPrimary = true;
-                }
-            } catch (parseErr) {
-                console.error('Error parsing existingImages:', parseErr);
-                // Fall through to default behavior
+                // CSV
+                return trimmed.length ? trimmed.split(',').map(s => s.trim()).filter(Boolean) : [];
             }
-        } else {
-            // Default behavior: add new images to existing ones
-            if (req.files && req.files.length > 0) {
-                const newImages = req.files.map((file, index) => ({
-                    url: file.path,
-                    isPrimary: product.images.length === 0 && index === 0,
-                    alt: `${product.name} - Image ${product.images.length + index + 1}`
-                }));
-                product.images = [...product.images, ...newImages];
-            } else if (req.file) {
-                product.images.push({
-                    url: req.file.path,
-                    isPrimary: product.images.length === 0,
-                    alt: product.name
+            return undefined;
+        };
+
+        const removeImageUrls = parseArrayField(req.body.removeImageUrls);
+        if (removeImageUrls && removeImageUrls.length > 0) {
+            product.images = (product.images || []).filter(img => !removeImageUrls.includes(img.url));
+        }
+
+        // If existingImages is provided, try to normalize and replace safely
+        if (req.body.existingImages !== undefined) {
+            let existingInput = req.body.existingImages;
+            // Some clients send multiple fields with same name -> array of strings
+            if (typeof existingInput === 'string') {
+                const trimmed = existingInput.trim();
+                if (trimmed.startsWith('[')) {
+                    try { existingInput = JSON.parse(trimmed); } catch { existingInput = undefined; }
+                } else {
+                    // Treat as single URL
+                    existingInput = [trimmed];
+                }
+            }
+            // Normalize to array
+            const existingArr = Array.isArray(existingInput) ? existingInput : undefined;
+            if (existingArr) {
+                // Map strings to objects, keep objects as-is (url, isPrimary, alt)
+                const normalized = existingArr.map(item => {
+                    if (typeof item === 'string') {
+                        return { url: item, isPrimary: false, alt: product.name };
+                    }
+                    if (item && typeof item === 'object' && item.url) {
+                        return {
+                            url: item.url,
+                            isPrimary: Boolean(item.isPrimary),
+                            alt: item.alt || product.name
+                        };
+                    }
+                    return null;
+                }).filter(Boolean);
+                if (normalized.length > 0) {
+                    product.images = normalized;
+                } else {
+                    // Do not clear images if normalized is empty; keep current images
+                    console.warn('existingImages normalized empty; preserving current images');
+                }
+            } else {
+                // If cannot parse, preserve
+                console.warn('existingImages parse failed; preserving current images');
+            }
+        }
+
+        // Append new uploads
+        if (req.files && req.files.length > 0) {
+            const newImages = req.files.map((file, index) => ({
+                url: file.path,
+                isPrimary: (product.images?.length || 0) === 0 && index === 0,
+                alt: `${product.name} - Image ${(product.images?.length || 0) + index + 1}`
+            }));
+            product.images = [...(product.images || []), ...newImages];
+        } else if (req.file) {
+            product.images = product.images || [];
+            product.images.push({
+                url: req.file.path,
+                isPrimary: product.images.length === 0,
+                alt: product.name
+            });
+        }
+
+        // Ensure exactly one primary if images exist
+        if (product.images && product.images.length > 0) {
+            const hasPrimary = product.images.some(img => img.isPrimary);
+            if (!hasPrimary) {
+                product.images[0].isPrimary = true;
+            } else {
+                // If multiple primaries, keep the first
+                let seen = false;
+                product.images = product.images.map(img => {
+                    if (img.isPrimary) {
+                        if (seen) return { ...img, isPrimary: false };
+                        seen = true;
+                        return img;
+                    }
+                    return img;
                 });
             }
         }
@@ -558,7 +620,9 @@ async function getByShop(req, res, next) {
             isActive: true 
         })
         .populate('categoryId', 'name')
+        .select('name shortDescription basePrice discountedPrice images categoryId shopId status isActive createdAt')
         .sort({ createdAt: -1 })
+        .lean()
 
         res.status(200).json(products)
     } catch (error) {
