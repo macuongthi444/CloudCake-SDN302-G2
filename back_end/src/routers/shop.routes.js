@@ -202,5 +202,10 @@ ShopRouter.post(
   uploadMiddleware.uploadShopImage, 
   shopController.uploadShopImage
 );
+ShopRouter.get(
+  "/my-products",
+  authJwt.verifyToken,
+  shopController.getMyProducts
+);
 module.exports = ShopRouter
 
