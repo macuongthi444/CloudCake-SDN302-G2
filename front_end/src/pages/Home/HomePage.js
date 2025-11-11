@@ -21,7 +21,7 @@ const HomePage = () => {
       
       // Load featured products
       const productsData = await ProductService.getProducts({
-        isActive: 'true',
+        status: 'ACTIVE',
         limit: 8,
         sortBy: 'isFeatured',
         sortOrder: -1

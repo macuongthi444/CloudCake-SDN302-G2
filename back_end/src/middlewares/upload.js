@@ -13,7 +13,27 @@ const storage = new CloudinaryStorage({
         ]
     }
 });
-
+const shopImageStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'cloudcake/shops', // ĐÚNG: folder riêng cho shop
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+        transformation: [
+            { width: 500, height: 500, crop: 'limit', quality: 'auto' }
+        ]
+    }
+});
+const uploadShopImageMiddleware = multer({
+    storage: shopImageStorage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Chỉ chấp nhận file ảnh!'), false);
+        }
+    }
+}).single('image');
 // Configure multer
 const upload = multer({
     storage: storage,
@@ -119,25 +139,12 @@ const uploadOptionalMultiple = (req, res, next) => {
             });
     });
 };
-const uploadShopImage = (req, res, next) => {
-  cloudinaryUploadShopImage(req, res, function (err) {
-    if (err instanceof multer.MulterError) {
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        return next(createHttpError.BadRequest('File size exceeds limit (5MB)'));
-      }
-      return next(createHttpError.BadRequest(`Upload error: ${err.message}`));
-    } else if (err) {
-      return next(err);
-    }
-    next();
-  });
-};
+
 module.exports = {
     uploadSingle,
     uploadMultiple,
     uploadOptionalMultiple,
-    upload,
-    uploadShopImage
+    uploadShopImageMiddleware
 };
 
 

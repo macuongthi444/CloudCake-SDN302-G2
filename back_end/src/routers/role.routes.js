@@ -1,41 +1,361 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const { roleController } = require('../controller')
 
-const RoleRouter = express.Router()
-RoleRouter.use(bodyParser.json())
+// Require directly from file to avoid cache issues
+let orderController;
+try {
+    // Clear cache if exists
+    delete require.cache[require.resolve('../controller/order.controller')];
+    orderController = require('../controller/order.controller');
+    
+    // Debug: Check if functions are defined
+    console.log('OrderController loaded. Available methods:', Object.keys(orderController));
+    console.log('updateOrderStatus type:', typeof orderController.updateOrderStatus);
+    console.log('cancelOrder type:', typeof orderController.cancelOrder);
+    console.log('rejectOrderBySeller type:', typeof orderController.rejectOrderBySeller);
+    
+    if (!orderController.updateOrderStatus) {
+        console.error('ERROR: orderController.updateOrderStatus is undefined!');
+    }
+    if (!orderController.cancelOrder) {
+        console.error('ERROR: orderController.cancelOrder is undefined!');
+    }
+    if (!orderController.rejectOrderBySeller) {
+        console.error('ERROR: orderController.rejectOrderBySeller is undefined!');
+    }
+    if (!orderController.createFromCart) {
+        console.error('ERROR: orderController.createFromCart is undefined!');
+    }
+} catch (error) {
+    console.error('ERROR loading orderController:', error);
+    throw error;
+}
+
+const VerifyJwt = require('../middlewares/jwtAuth')
+const authJwt = require('../middlewares/jwtAuth')
+const vnpayController = require('../controller/vnpay.controller')
+
+const orderRouter = express.Router()
+orderRouter.use(bodyParser.json())
+
+// Use the controller directly
+const controller = orderController
 
 /**
  * @swagger
  * tags:
- *   - name: Role
- *     description: Vai trò người dùng
+ *   - name: Order
+ *     description: Quản lý đơn hàng
  */
 
 /**
  * @swagger
- * /api/role/create:
+ * /api/order/create-from-cart:
  *   post:
- *     summary: Tạo vai trò
- *     tags: [Role]
- *     requestBody:
- *       required: true
+ *     summary: Tạo đơn hàng từ giỏ hàng
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       201:
- *         description: Tạo thành công
+ *         description: Tạo đơn thành công
  */
-RoleRouter.post("/create", roleController.create)
+orderRouter.post('/create-from-cart', authJwt.verifyToken, controller.createFromCart)
 
 /**
  * @swagger
- * /api/role/all:
+ * /api/order/find/{id}:
  *   get:
- *     summary: Danh sách vai trò
- *     tags: [Role]
+ *     summary: Lấy đơn hàng theo ID
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: OK
  */
-RoleRouter.get("/all", roleController.getAllRoles)
+orderRouter.get('/find/:id', authJwt.verifyToken, controller.getById)
 
-module.exports = RoleRouter
+/**
+ * @swagger
+ * /api/order/user/{userId}:
+ *   get:
+ *     summary: Lấy đơn hàng theo User
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ */
+orderRouter.get('/user/:userId', authJwt.verifyToken, controller.getByUserId)
+
+/**
+ * @swagger
+ * /api/order/{orderId}/cancel:
+ *   post:
+ *     summary: Người dùng hủy đơn hàng
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Đã hủy
+ */
+orderRouter.post('/:orderId/cancel', authJwt.verifyToken, controller.cancelOrder)
+// Lấy tất cả đơn đặt hàng (chỉ admin có quyền)
+/**
+ * @swagger
+ * /api/order/list:
+ *   get:
+ *     summary: Danh sách đơn hàng (Admin)
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: OK
+ */
+orderRouter.get("/list", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], controller.getAllOrders)
+// Lấy đơn đặt hàng theo ID
+/**
+ * @swagger
+ * /api/order/find/{id}:
+ *   get:
+ *     summary: Xem đơn hàng theo ID
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ */
+orderRouter.get("/find/:id", [VerifyJwt.verifyToken], controller.getOrderById)
+// Lấy đơn đặt hàng theo ID người dùng
+/**
+ * @swagger
+ * /api/order/user/{userId}:
+ *   get:
+ *     summary: Danh sách đơn hàng theo người dùng
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ */
+orderRouter.get("/user/:userId", [VerifyJwt.verifyToken], controller.getOrdersByUserId)
+// Tạo đơn đặt hàng mới
+/**
+ * @swagger
+ * /api/order/create:
+ *   post:
+ *     summary: Tạo đơn hàng
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       201:
+ *         description: Tạo thành công
+ */
+orderRouter.post("/create", [VerifyJwt.verifyToken], controller.createOrder)
+// Cập nhật trạng thái đơn hàng (chỉ admin và seller có quyền)
+/**
+ * @swagger
+ * /api/order/status/{id}:
+ *   put:
+ *     summary: Cập nhật trạng thái đơn hàng
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Cập nhật thành công
+ */
+orderRouter.put("/status/:id", [VerifyJwt.verifyToken, VerifyJwt.isSellerOrAdmin], controller.updateOrderStatus)
+// Hủy đơn hàng
+/**
+ * @swagger
+ * /api/order/cancel/{id}:
+ *   put:
+ *     summary: Hủy đơn hàng
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Đã hủy
+ */
+orderRouter.put("/cancel/:id", [VerifyJwt.verifyToken], controller.cancelOrder)
+//  Từ chối đơn hàng (dành cho seller)
+/**
+ * @swagger
+ * /api/order/reject/{id}:
+ *   put:
+ *     summary: Từ chối đơn hàng (Seller)
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Đã từ chối
+ */
+orderRouter.put("/reject/:id", [VerifyJwt.verifyToken, VerifyJwt.isSeller], controller.rejectOrderBySeller)
+// Xóa đơn hàng (xóa mềm) (chỉ admin có quyền)
+/**
+ * @swagger
+ * /api/order/delete/{id}:
+ *   delete:
+ *     summary: Xóa đơn hàng (Admin)
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Đã xóa
+ */
+orderRouter.delete("/delete/:id", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], controller.deleteOrder)
+// Lấy thống kê đơn hàng (chỉ admin có quyền)
+/**
+ * @swagger
+ * /api/order/statistics:
+ *   get:
+ *     summary: Thống kê đơn hàng (Admin)
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: OK
+ */
+orderRouter.get("/statistics", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], controller.getOrderStatistics)
+orderRouter.get("/shop/:shopId", [VerifyJwt.verifyToken, VerifyJwt.isSeller], controller.getOrdersByShopId)
+orderRouter.get("/refunds", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], controller.getOrdersNeedingRefund)
+// Đánh dấu đã hoàn tiền cho đơn hàng
+/**
+ * @swagger
+ * /api/order/refund/{id}:
+ *   put:
+ *     summary: Đánh dấu hoàn tiền (Admin)
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ */
+orderRouter.put("/refund/:id", [VerifyJwt.verifyToken, VerifyJwt.isAdmin], controller.markAsRefunded)
+
+// VNPay callback route (public, no auth required)
+// Handle both correct format (?params) and incorrect format (&params)
+/**
+ * @swagger
+ * /api/order/vnpay-callback:
+ *   get:
+ *     summary: Callback VNPay
+ *     tags: [Order]
+ *     responses:
+ *       200:
+ *         description: OK
+ */
+orderRouter.get('/vnpay-callback*', (req, res, next) => {
+  console.log('\n========== VNPay: CALLBACK ROUTE HIT ==========')
+  console.log('Original req.url:', req.url)
+  console.log('Original req.path:', req.path)
+  console.log('Original req.query:', req.query)
+  console.log('Original req.originalUrl:', req.originalUrl)
+  
+  // If URL has params appended with & instead of ?, fix it
+  // VNPay sometimes redirects to: /vnpay-callback&vnp_TmnCode=... instead of /vnpay-callback?vnp_TmnCode=...
+  if (req.url.includes('&vnp_') && !req.url.includes('?vnp_')) {
+    console.log('⚠️ VNPay callback URL has incorrect format (using & instead of ?), fixing...')
+    
+    // Parse the malformed URL
+    const urlParts = req.url.split('&')
+    if (urlParts.length > 1) {
+      // First part is the path, rest are query params
+      const path = urlParts[0]
+      const queryString = urlParts.slice(1).join('&')
+      
+      // Reconstruct URL with proper query string
+      req.url = path + '?' + queryString
+      console.log('Fixed req.url:', req.url)
+      
+      // Re-parse query using url module
+      const url = require('url')
+      const parsed = url.parse(req.url, true)
+      req.query = parsed.query
+      console.log('Fixed req.query:', req.query)
+    }
+  } else if (req.url.includes('?vnp_')) {
+    console.log('✅ VNPay callback URL format is correct')
+  }
+  
+  console.log('Final req.url:', req.url)
+  console.log('Final req.query:', req.query)
+  console.log('==========================================\n')
+  
+  return vnpayController.returnCallback(req, res, next)
+})
+
+module.exports = orderRouter

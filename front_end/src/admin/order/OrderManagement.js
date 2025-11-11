@@ -29,7 +29,7 @@ const OrderManagement = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
   const [selectedPaymentDetails, setSelectedPaymentDetails] = useState(null);
-  
+
   // Process state
   const [isProcessing, setIsProcessing] = useState(false);
   const [processSuccess, setProcessSuccess] = useState(null);
@@ -62,7 +62,7 @@ const OrderManagement = () => {
     try {
       setLoading(true);
       let endpoint = '/order/list';
-      
+
       // Nếu filter cần hoàn tiền được chọn, sử dụng API riêng cho đơn hàng cần hoàn tiền
       if (filter.needRefund) {
         endpoint = '/order/refunds';
@@ -86,7 +86,27 @@ const OrderManagement = () => {
         console.log("Customer data analysis:", customerDataTypes);
       }
 
-      setOrders(response);
+      // Chuẩn hóa dữ liệu để UI cũ hiển thị được cả model mới
+      const normalized = Array.isArray(response) ? response.map(o => {
+        const isModern = o.userId || o.shopId || o.paymentMethodId || o.shippingMethodId || (o.totalAmount !== undefined);
+        if (!isModern) return o;
+        return {
+          ...o,
+          id: o._id || o.id,
+          // Map các trường mới sang tên cũ mà UI đang dùng
+          customer_id: o.customer_id || o.userId || null,
+          shipping_id: o.shipping_id || o.shippingMethodId || null,
+          payment_id: o.payment_id || o.paymentMethodId || null,
+          payment_method: o.payment_method || o.paymentMethodId?.name || o.paymentMethod || '',
+          order_status: (o.order_status || o.status || '').toLowerCase(),
+          status_id: o.status_id || ((o.paymentStatus === 'PAID' || o.paymentStatus === 'paid') ? 'paid' : 'pending'),
+          payment_details: o.payment_details || o.paymentDetails || {},
+          created_at: o.created_at || o.createdAt,
+          total_price: (o.total_price !== undefined ? o.total_price : o.totalAmount)
+        };
+      }) : [];
+
+      setOrders(normalized);
       setTotalItems(response.length);
       setLoading(false);
     } catch (error) {
@@ -100,11 +120,11 @@ const OrderManagement = () => {
     try {
       const response = await ApiService.get('/order/statistics');
       console.log("Statistics response:", response);
-      
+
       // Thêm đếm số đơn hàng cần hoàn tiền (nếu API không trả về)
-      const refundNeededCount = response.refundNeededCount || 
+      const refundNeededCount = response.refundNeededCount ||
         orders.filter(order => order.need_pay_back).length;
-      
+
       setStatistics({
         ...response,
         refundNeededCount
@@ -130,12 +150,12 @@ const OrderManagement = () => {
       try {
         setIsProcessing(true);
         setProcessError(null);
-        
+
         const response = await ApiService.put(`/order/refund/${orderId}`, {});
-        
+
         console.log('Mark as refunded response:', response);
         setProcessSuccess('Đã đánh dấu hoàn tiền thành công!');
-        
+
         // Refresh data
         setTimeout(() => {
           fetchOrders();
@@ -222,13 +242,15 @@ const OrderManagement = () => {
 
   // Handle view order detail
   const handleViewOrderDetail = (order) => {
-    // Chuyển đổi payment_details từ Object sang định dạng đúng nếu cần
-    if (order.payment_details && typeof order.payment_details === 'object') {
-      // Xử lý dữ liệu payment_details nếu cần
-      console.log("Payment details available:", order.payment_details);
+    const orderId = order.id || order._id;
+    console.log("Xem chi tiết đơn hàng ID:", orderId); // ← DEBUG
+
+    if (!orderId) {
+      alert("Lỗi: Không có mã đơn hàng!");
+      return;
     }
 
-    setSelectedOrder(order);
+    setSelectedOrder({ id: orderId });
     setShowOrderDetail(true);
   };
 
@@ -287,24 +309,32 @@ const OrderManagement = () => {
     }
   };
 
-  // Hàm kiểm tra phương thức thanh toán VNPay
+  // Hàm kiểm tra PT thanh toán online (tương thích cả model cũ và mới)
   const isOnlinePayment = (order) => {
-    if (!order || !order.payment_id || !order.payment_id.name) {
-      return false;
-    }
-
-    const paymentMethod = order.payment_id.name.toLowerCase();
-    // Kiểm tra các phương thức thanh toán online
-    return paymentMethod.includes('qr') ||
-      paymentMethod.includes('mã qr') ||
-      paymentMethod.includes('payos') ||
-      paymentMethod.includes('momo') ||
-      paymentMethod.includes('online');
+    if (!order) return false;
+    // support legacy: payment_id.name
+    let name =
+      order.payment_id?.name ||
+      order.paymentMethod?.name ||
+      order.paymentMethodId?.name ||
+      order.paymentMethod ||
+      '';
+    name = String(name).toLowerCase();
+    return (
+      name.includes('qr') ||
+      name.includes('mã qr') ||
+      name.includes('payos') ||
+      name.includes('momo') ||
+      name.includes('online') ||
+      name.includes('vnpay')
+    );
   };
 
-  // Convert status to Vietnamese
+  // Convert status to Vietnamese (tolerant to undefined / mixed schemas)
   const getStatusText = (status) => {
-    switch (status) {
+    if (!status) return 'KHÔNG XÁC ĐỊNH';
+    const s = String(status).toLowerCase();
+    switch (s) {
       case 'pending':
         return 'CHỜ XÁC NHẬN';
       case 'processing':
@@ -316,7 +346,7 @@ const OrderManagement = () => {
       case 'cancelled':
         return 'HỦY ĐƠN';
       default:
-        return status.toUpperCase();
+        return String(status).toUpperCase();
     }
   };
 
@@ -420,7 +450,10 @@ const OrderManagement = () => {
   return (
     <div className="flex-1 bg-gray-50">
       {showOrderDetail ? (
-        <OrderDetail orderId={selectedOrder._id} onBack={handleBackFromDetail} />
+        <OrderDetail
+          orderId={selectedOrder.id}
+          onBack={handleBackFromDetail}
+        />
       ) : (
         <>
           {/* Dashboard Statistics */}
@@ -544,10 +577,10 @@ const OrderManagement = () => {
                         Khách hàng
                       </th>
                       <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap" >
-                        Phương thức vận chuyển
+                        PT vận chuyển
                       </th>
                       <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap" >
-                        Phương thức thanh toán
+                        PT thanh toán
                       </th>
                       <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap" >
                         Trạng thái đơn hàng
@@ -555,9 +588,7 @@ const OrderManagement = () => {
                       <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap" >
                         Trạng thái thanh toán
                       </th>
-                      <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap" >
-                        Chi tiết thanh toán
-                      </th>
+
                       <th className="py-3 px-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap" >
                         Thời gian đặt hàng
                       </th>
@@ -571,8 +602,8 @@ const OrderManagement = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {currentOrders.map((order) => (
-                      <tr 
-                        key={order._id} 
+                      <tr
+                        key={order._id}
                         className={`hover:bg-gray-50 ${order.need_pay_back ? 'bg-orange-50' : ''}`}
                       >
                         <td className="py-4 px-4">
@@ -619,26 +650,7 @@ const OrderManagement = () => {
                           )}
                         </td>
                         {/* Chi tiết thanh toán */}
-                        <td className="py-4 px-4">
-                          {isOnlinePayment(order) ? (
-                            order.payment_details && Object.keys(order.payment_details).length > 0 ? (
-                              <button
-                                onClick={() => {
-                                  setSelectedPaymentDetails(order.payment_details);
-                                  setSelectedOrder(order); // Lưu thông tin đơn hàng để lấy status_id
-                                  setShowPaymentDetails(true);
-                                }}
-                                className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-xs hover:bg-blue-200"
-                              >
-                                Xem chi tiết
-                              </button>
-                            ) : (
-                              <span className="text-gray-400 text-xs">Không có dữ liệu</span>
-                            )
-                          ) : (
-                            <span className="text-gray-400 text-xs">Không áp dụng</span>
-                          )}
-                        </td>
+
                         <td className="py-4 px-4 text-sm text-gray-700">
                           {formatDate(order.created_at)}
                         </td>
@@ -665,7 +677,7 @@ const OrderManagement = () => {
                                 <XCircle size={18} />
                               </button>
                             )}
-                            
+
                             {/* Hiển thị nút đánh dấu đã hoàn tiền khi cần hoàn tiền */}
                             {order.need_pay_back && (
                               <button

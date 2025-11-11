@@ -309,6 +309,17 @@ async function update(req, res, next) {
             product.shopId = req.body.shopId
         }
 
+        // Prevent seller from activating products (only admin can activate)
+        if (!isAdmin) {
+            // Seller cannot change status to ACTIVE or set isActive to true
+            if (req.body.status === 'ACTIVE') {
+                throw createHttpError.Forbidden("Only admin can activate products. Please contact admin for approval.")
+            }
+            if (req.body.isActive === true || req.body.isActive === 'true') {
+                throw createHttpError.Forbidden("Only admin can activate products. Please contact admin for approval.")
+            }
+        }
+
         // Update fields
         const updatableFields = [
             'name', 'description', 'shortDescription', 'categoryId',

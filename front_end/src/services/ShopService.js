@@ -80,15 +80,15 @@ class ShopService {
     async checkShopStatus() {
         try {
             const currentUser = AuthService.getCurrentUser();
-            
+
             // Nếu không có user hoặc không có user ID, trả về null
             if (!currentUser || !currentUser.id) {
                 return null;
             }
-            
+
             // Gọi API để lấy thông tin cửa hàng của người dùng hiện tại
             const shop = await this.getMyShop();
-            
+
             // Kiểm tra nếu cửa hàng tồn tại
             if (shop) {
                 return {
@@ -97,7 +97,7 @@ class ShopService {
                     shopData: shop
                 };
             }
-            
+
             return { notFound: true };
         } catch (error) {
             console.error("Không thể kiểm tra trạng thái cửa hàng:", error);
@@ -108,47 +108,58 @@ class ShopService {
             return null;
         }
     }
-    
+
     // Kiểm tra xem người dùng có thể truy cập vào seller dashboard không
     async canAccessSellerDashboard() {
         try {
             const shopStatus = await this.checkShopStatus();
-            
+
             // Nếu không tìm thấy cửa hàng
             if (!shopStatus || shopStatus.notFound) {
-                return { 
-                    canAccess: false, 
-                    reason: "not_found" 
+                return {
+                    canAccess: false,
+                    reason: "not_found"
                 };
             }
-            
+
             // Kiểm tra isActive và status
             if (!shopStatus.isActive) {
-                return { 
-                    canAccess: false, 
-                    reason: "inactive" 
+                return {
+                    canAccess: false,
+                    reason: "inactive"
                 };
             }
-            
+
             if (shopStatus.status !== "ACTIVE") {
-                return { 
-                    canAccess: false, 
+                return {
+                    canAccess: false,
                     reason: shopStatus.status // "PENDING" hoặc "REJECTED"
                 };
             }
-            
+
             // Cửa hàng đang hoạt động bình thường
-            return { 
+            return {
                 canAccess: true,
                 shopData: shopStatus.shopData
             };
         } catch (error) {
             console.error("Lỗi kiểm tra quyền truy cập cửa hàng:", error);
-            return { 
-                canAccess: false, 
-                reason: "error" 
+            return {
+                canAccess: false,
+                reason: "error"
             };
         }
+    }
+    async uploadShopImage(shopId, file, field = 'logo') {
+        if (!file) throw new Error('File is required');
+        if (file.size > 5 * 1024 * 1024) throw new Error('File quá lớn (tối đa 5MB)');
+
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('field', field);
+
+        
+        return await ApiService.uploadFile(`/shop/upload/${shopId}`, formData, true);
     }
 }
 

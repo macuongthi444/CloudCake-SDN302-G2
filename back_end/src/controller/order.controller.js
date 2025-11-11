@@ -24,10 +24,29 @@ const Address = db.address;
 // OLD MODEL FUNCTIONS (order_status, customer_id)
 // ============================================
 
-// Lấy tất cả đơn đặt hàng
+// Lấy tất cả đơn đặt hàng (tương thích cả model cũ và mới)
 const getAllOrders = async (req, res) => {
     try {
-        const orders = await Order.find({ is_delete: false })
+        // Thử query theo model mới trước
+        try {
+            const modernOrders = await Order.find({ is_delete: { $ne: true } })
+                .populate('userId', 'firstName lastName email phone')
+                .populate('shopId', 'name')
+                .populate('paymentMethodId', 'name paymentCode')
+                .populate('shippingMethodId', 'name')
+                .sort({ createdAt: -1 })
+                .lean();
+            
+            if (Array.isArray(modernOrders) && modernOrders.length > 0) {
+                return res.status(200).json(modernOrders);
+            }
+        } catch (e) {
+            // Bỏ qua, fallback xuống model cũ
+        }
+
+        // Fallback: query theo model cũ, tắt strictPopulate để tránh lỗi path không có trong schema
+        const legacyOrders = await Order.find({ is_delete: { $ne: true } })
+            .setOptions({ strictPopulate: false })
             .populate({
                 path: 'customer_id',
                 model: 'users',
@@ -37,8 +56,10 @@ const getAllOrders = async (req, res) => {
             .populate('payment_id')
             .populate('discount_id')
             .populate('coupon_id')
-            .populate('user_address_id');
-        res.status(200).json(orders);
+            .populate('user_address_id')
+            .lean();
+
+        return res.status(200).json(legacyOrders);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -676,20 +697,40 @@ const deleteOrder = async (req, res) => {
 // Lấy thống kê đơn hàng
 const getOrderStatistics = async (req, res) => {
     try {
-        const totalOrders = await Order.countDocuments({ is_delete: false });
-        const pendingOrders = await Order.countDocuments({ order_status: 'pending', is_delete: false });
-        const processingOrders = await Order.countDocuments({ order_status: 'processing', is_delete: false });
-        const shippedOrders = await Order.countDocuments({ order_status: 'shipped', is_delete: false });
-        const deliveredOrders = await Order.countDocuments({ order_status: 'delivered', is_delete: false });
-        const cancelledOrders = await Order.countDocuments({ order_status: 'cancelled', is_delete: false });
+        const totalOrders = await Order.countDocuments({ is_delete: { $ne: true } });
+        const pendingOrders = await Order.countDocuments({
+            is_delete: { $ne: true },
+            $or: [{ order_status: 'pending' }, { status: 'PENDING' }]
+        });
+        const processingOrders = await Order.countDocuments({
+            is_delete: { $ne: true },
+            $or: [{ order_status: 'processing' }, { status: 'PROCESSING' }]
+        });
+        const shippedOrders = await Order.countDocuments({
+            is_delete: { $ne: true },
+            $or: [{ order_status: 'shipped' }, { status: 'SHIPPED' }]
+        });
+        const deliveredOrders = await Order.countDocuments({
+            is_delete: { $ne: true },
+            $or: [{ order_status: 'delivered' }, { status: 'DELIVERED' }]
+        });
+        const cancelledOrders = await Order.countDocuments({
+            is_delete: { $ne: true },
+            $or: [{ order_status: 'cancelled' }, { status: 'CANCELLED' }]
+        });
 
-        const revenue = await Order.aggregate([
-            { $match: { order_status: 'delivered', is_delete: false } },
+        const revenueOld = await Order.aggregate([
+            { $match: { order_status: 'delivered', is_delete: { $ne: true } } },
             { $group: { _id: null, total: { $sum: "$total_price" } } }
         ]);
 
+        const revenueNew = await Order.aggregate([
+            { $match: { status: 'DELIVERED', is_delete: { $ne: true } } },
+            { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+        ]);
+
         const discountTotal = await Order.aggregate([
-            { $match: { order_status: 'delivered', is_delete: false } },
+            { $match: { order_status: 'delivered', is_delete: { $ne: true } } },
             {
                 $group: {
                     _id: null,
@@ -701,15 +742,17 @@ const getOrderStatistics = async (req, res) => {
 
         const ordersWithDiscount = await Order.countDocuments({
             discount_id: { $exists: true, $ne: null },
-            is_delete: false
+            is_delete: { $ne: true }
         });
 
         const ordersWithCoupon = await Order.countDocuments({
             coupon_id: { $exists: true, $ne: null },
-            is_delete: false
+            is_delete: { $ne: true }
         });
 
-        const totalRevenue = revenue.length > 0 ? revenue[0].total : 0;
+        const totalRevenue =
+            (revenueOld.length > 0 ? revenueOld[0].total : 0) +
+            (revenueNew.length > 0 ? revenueNew[0].total : 0);
         const totalDiscountAmount = discountTotal.length > 0 ? discountTotal[0].discountAmount || 0 : 0;
         const totalCouponAmount = discountTotal.length > 0 ? discountTotal[0].couponAmount || 0 : 0;
 

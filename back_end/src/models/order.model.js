@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 const { Schema } = mongoose
-
+const mongoosePaginate = require('mongoose-paginate-v2');
 const orderItemSchema = new Schema({
     productId: {
         type: Schema.Types.ObjectId,
@@ -189,7 +189,7 @@ orderSchema.index({ userId: 1, createdAt: -1 })
 orderSchema.index({ shopId: 1, status: 1 })
 orderSchema.index({ orderNumber: 1 }, { unique: true, sparse: true })
 orderSchema.index({ status: 1, createdAt: -1 })
-
+orderSchema.plugin(mongoosePaginate);
 
 const Order = mongoose.model("Order", orderSchema)
 module.exports = Order
