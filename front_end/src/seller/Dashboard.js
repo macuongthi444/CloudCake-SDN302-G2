@@ -31,7 +31,7 @@ const Dashboard = () => {
         const shopData = await ShopService.getMyShop().catch(() => null);
         setShop(shopData);
 
-        const prodsResp = await ProductService.getMyProducts({ limit: 5 }).catch(() => ({ products: [], pagination: {} }));
+        const prodsResp = await ProductService.getProducts({ limit: 5, isActive: 'true' }).catch(() => ({ products: [] }));
         const prods = prodsResp.products || [];
         setProducts(prods);
 
