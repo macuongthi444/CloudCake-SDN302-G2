@@ -90,6 +90,8 @@ const OrderManagement = () => {
       const normalized = Array.isArray(response) ? response.map(o => {
         const isModern = o.userId || o.shopId || o.paymentMethodId || o.shippingMethodId || (o.totalAmount !== undefined);
         if (!isModern) return o;
+        const paymentStatusRaw = o.paymentStatus || '';
+        const paymentStatus = paymentStatusRaw.toString().toUpperCase();
         return {
           ...o,
           id: o._id || o.id,
@@ -99,8 +101,8 @@ const OrderManagement = () => {
           payment_id: o.payment_id || o.paymentMethodId || null,
           payment_method: o.payment_method || o.paymentMethodId?.name || o.paymentMethod || '',
           order_status: (o.order_status || o.status || '').toLowerCase(),
-          status_id: o.status_id || ((o.paymentStatus === 'PAID' || o.paymentStatus === 'paid') ? 'paid' : 'pending'),
-          payment_details: o.payment_details || o.paymentDetails || {},
+          status_id: o.status_id || (paymentStatus === 'PAID' ? 'paid' : paymentStatus === 'PENDING' || paymentStatus === 'UNPAID' ? 'pending' : ''),
+          payment_details: o.payment_details || o.paymentDetails || o.paymentMeta || {},
           created_at: o.created_at || o.createdAt,
           total_price: (o.total_price !== undefined ? o.total_price : o.totalAmount)
         };

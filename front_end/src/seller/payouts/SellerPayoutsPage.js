@@ -8,6 +8,7 @@ import { toastError } from '../../utils/toast';
 const SellerPayoutsPage = () => {
   const [loading, setLoading] = useState(true);
   const [shopId, setShopId] = useState(null);
+  const [payingOrderId, setPayingOrderId] = useState(null);
   const [statistics, setStatistics] = useState({
     totalRevenue: 0,
     pendingPayout: 0,
@@ -16,6 +17,7 @@ const SellerPayoutsPage = () => {
     lastMonth: 0
   });
   const [orders, setOrders] = useState([]);
+  const [chartData, setChartData] = useState([]); // [{label, value}]
 
   useEffect(() => {
     const loadData = async () => {
@@ -36,15 +38,31 @@ const SellerPayoutsPage = () => {
     loadData();
   }, []);
 
+  const normalizeShopOrders = (raw) => {
+    const list = Array.isArray(raw) ? raw : [];
+    return list.map(item => {
+      const o = item.order ? { ...item.order } : { ...item };
+      return {
+        ...o,
+        id: o._id || o.id,
+        order_status: (o.order_status || o.status || '').toString().toLowerCase(),
+        paymentStatus: (o.paymentStatus || o.status_id || '').toString().toLowerCase(),
+        totalAmount: o.totalAmount ?? o.total_price ?? 0,
+        createdAt: o.createdAt ?? o.created_at,
+        updatedAt: o.updatedAt ?? o.updated_at
+      };
+    });
+  };
+
   const loadStatistics = async (shopId) => {
     try {
       // Get orders for this shop
       const response = await ApiService.get(`/order/shop/${shopId}`, true);
-      const shopOrders = response || [];
+      const shopOrders = normalizeShopOrders(response);
 
       // Calculate statistics
       const deliveredOrders = shopOrders.filter(o => o.order_status === 'delivered');
-      const totalRevenue = deliveredOrders.reduce((sum, o) => sum + (o.totalAmount || o.total_price || 0), 0);
+      const totalRevenue = deliveredOrders.reduce((sum, o) => sum + o.totalAmount, 0);
       
       const now = new Date();
       const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -52,22 +70,37 @@ const SellerPayoutsPage = () => {
       const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
 
       const thisMonthOrders = deliveredOrders.filter(o => {
-        const orderDate = new Date(o.createdAt || o.created_at);
+        const orderDate = new Date(o.createdAt);
         return orderDate >= thisMonthStart;
       });
 
       const lastMonthOrders = deliveredOrders.filter(o => {
-        const orderDate = new Date(o.createdAt || o.created_at);
+        const orderDate = new Date(o.createdAt);
         return orderDate >= lastMonthStart && orderDate <= lastMonthEnd;
       });
 
-      const thisMonth = thisMonthOrders.reduce((sum, o) => sum + (o.totalAmount || o.total_price || 0), 0);
-      const lastMonth = lastMonthOrders.reduce((sum, o) => sum + (o.totalAmount || o.total_price || 0), 0);
+      const thisMonth = thisMonthOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+      const lastMonth = lastMonthOrders.reduce((sum, o) => sum + o.totalAmount, 0);
 
       const pendingOrders = shopOrders.filter(o => 
         ['processing', 'shipped'].includes(o.order_status) && o.paymentStatus === 'paid'
       );
-      const pendingPayout = pendingOrders.reduce((sum, o) => sum + (o.totalAmount || o.total_price || 0), 0);
+      const pendingPayout = pendingOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+
+      // Build last 6 months series for chart
+      const nowYM = new Date(now.getFullYear(), now.getMonth(), 1);
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(nowYM.getFullYear(), nowYM.getMonth() - i, 1);
+        months.push({ key: `${d.getFullYear()}-${d.getMonth() + 1}`, label: `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`, value: 0 });
+      }
+      const byKey = Object.fromEntries(months.map(m => [m.key, m]));
+      deliveredOrders.forEach(o => {
+        const d = new Date(o.createdAt);
+        const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+        if (byKey[key]) byKey[key].value += o.totalAmount;
+      });
+      setChartData(months);
 
       setStatistics({
         totalRevenue,
@@ -84,12 +117,12 @@ const SellerPayoutsPage = () => {
   const loadOrders = async (shopId) => {
     try {
       const response = await ApiService.get(`/order/shop/${shopId}`, true);
-      const shopOrders = response || [];
+      const shopOrders = normalizeShopOrders(response);
       
       // Filter only delivered orders for payout tracking
       const deliveredOrders = shopOrders
         .filter(o => o.order_status === 'delivered')
-        .sort((a, b) => new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at))
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, 20); // Latest 20 orders
 
       setOrders(deliveredOrders);
@@ -98,11 +131,75 @@ const SellerPayoutsPage = () => {
     }
   };
 
+  const handlePayOrder = async (order) => {
+    try {
+      setPayingOrderId(order._id || order.id);
+      // Call VNPay create URL API
+      const res = await ApiService.post('/payment/vnpay/create', { orderId: order._id || order.id }, true);
+      const paymentUrl = res?.paymentUrl || res?.url || '';
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
+      } else {
+        throw new Error('Không nhận được URL thanh toán');
+      }
+    } catch (err) {
+      console.error('Create payment URL error:', err);
+      toastError('Không tạo được URL thanh toán');
+    } finally {
+      setPayingOrderId(null);
+    }
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND'
     }).format(amount);
+  };
+
+  const renderBarChart = () => {
+    const width = 900;
+    const height = 260;
+    const padding = { top: 10, right: 20, bottom: 40, left: 50 };
+    const innerW = width - padding.left - padding.right;
+    const innerH = height - padding.top - padding.bottom;
+    const maxVal = Math.max(...chartData.map(d => d.value), 1);
+    const barW = innerW / Math.max(chartData.length, 1) - 12;
+    return (
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-64">
+        <rect x="0" y="0" width={width} height={height} fill="white" />
+        {/* Y axis ticks */}
+        {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
+          const y = padding.top + innerH - t * innerH;
+          const val = Math.round((t * maxVal));
+          return (
+            <g key={i}>
+              <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#eee" />
+              <text x={padding.left - 8} y={y + 4} fontSize="10" textAnchor="end" fill="#6b7280">
+                {formatCurrency(val).replace(/\s?₫/,'')}
+              </text>
+            </g>
+          );
+        })}
+        {/* Bars */}
+        {chartData.map((d, idx) => {
+          const x = padding.left + idx * (innerW / chartData.length) + 6;
+          const h = (d.value / maxVal) * innerH;
+          const y = padding.top + innerH - h;
+          return (
+            <g key={d.label}>
+              <rect x={x} y={y} width={barW} height={h} rx="4" fill="#3b82f6" />
+              <text x={x + barW / 2} y={height - padding.bottom + 16} fontSize="10" textAnchor="middle" fill="#6b7280">
+                {d.label}
+              </text>
+              <text x={x + barW / 2} y={y - 6} fontSize="10" textAnchor="middle" fill="#1f2937">
+                {d.value > 0 ? formatCurrency(d.value) : ''}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    );
   };
 
   if (loading) {
@@ -140,7 +237,7 @@ const SellerPayoutsPage = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        {/* <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Đang chờ thanh toán</p>
@@ -152,7 +249,7 @@ const SellerPayoutsPage = () => {
               <Calendar className="text-yellow-600" size={24} />
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
@@ -183,15 +280,19 @@ const SellerPayoutsPage = () => {
         </div>
       </div>
 
-      {/* Revenue Chart Placeholder */}
+      {/* Revenue Chart */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Biểu đồ doanh thu</h3>
-        <div className="h-64 flex items-center justify-center text-gray-400 border-2 border-dashed rounded-lg">
-          <div className="text-center">
-            <TrendingUp size={48} className="mx-auto mb-2" />
-            <p>Tính năng biểu đồ sẽ được bổ sung</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Biểu đồ doanh thu 6 tháng gần nhất</h3>
+        {chartData.length === 0 ? (
+          <div className="h-64 flex items-center justify-center text-gray-400 border-2 border-dashed rounded-lg">
+            <div className="text-center">
+              <TrendingUp size={48} className="mx-auto mb-2" />
+              <p>Chưa có dữ liệu</p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="w-full">{renderBarChart()}</div>
+        )}
       </div>
 
       {/* Recent Orders */}
@@ -213,6 +314,7 @@ const SellerPayoutsPage = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ngày giao</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tổng tiền</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái thanh toán</th>
+                <th className="px-6 py-3"></th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -236,7 +338,7 @@ const SellerPayoutsPage = () => {
                         : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {formatCurrency(order.totalAmount || order.total_price || 0)}
+                      {formatCurrency(order.totalAmount)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
@@ -246,6 +348,17 @@ const SellerPayoutsPage = () => {
                       }`}>
                         {order.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chờ thanh toán'}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      {order.paymentStatus !== 'paid' && (
+                        <button
+                          onClick={() => handlePayOrder(order)}
+                          disabled={payingOrderId === (order._id || order.id)}
+                          className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          {payingOrderId === (order._id || order.id) ? 'Đang tạo...' : 'Thanh toán'}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

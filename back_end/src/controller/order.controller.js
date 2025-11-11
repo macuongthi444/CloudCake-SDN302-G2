@@ -68,7 +68,62 @@ const getAllOrders = async (req, res) => {
 // Lấy đơn đặt hàng theo ID
 const getOrderById = async (req, res) => {
     try {
-        const order = await Order.findById(req.params.id)
+        const { id } = req.params;
+        const mongoose = require('mongoose');
+        const isValidObjectId = mongoose.Types.ObjectId.isValid(id);
+
+        // Try new model first (supports ObjectId or orderNumber)
+        try {
+            let modernOrder;
+            if (isValidObjectId) {
+                modernOrder = await Order.findById(id)
+                    .populate('userId', 'firstName lastName email phone')
+                    .populate('shopId', 'name')
+                    .populate('paymentMethodId', 'name paymentCode')
+                    .populate('shippingMethodId', 'name')
+                    .lean();
+            } else if (id) {
+                if (!id.includes('-') && id.startsWith('ORD') && id.length >= 11) {
+                    const match = id.match(/^ORD(\d{8})(\d+)$/);
+                    if (match) {
+                        const [, datePart, seqPart] = match;
+                        const formattedOrderNumber = `ORD-${datePart}-${seqPart.padStart(4, '0')}`;
+                        modernOrder = await Order.findOne({
+                            $or: [
+                                { orderNumber: id },
+                                { orderNumber: formattedOrderNumber }
+                            ]
+                        })
+                            .populate('userId', 'firstName lastName email phone')
+                            .populate('shopId', 'name')
+                            .populate('paymentMethodId', 'name paymentCode')
+                            .populate('shippingMethodId', 'name')
+                            .lean();
+                    }
+                }
+                if (!modernOrder) {
+                    modernOrder = await Order.findOne({ orderNumber: id })
+                        .populate('userId', 'firstName lastName email phone')
+                        .populate('shopId', 'name')
+                        .populate('paymentMethodId', 'name paymentCode')
+                        .populate('shippingMethodId', 'name')
+                        .lean();
+                }
+            }
+
+            if (modernOrder && (modernOrder.items || modernOrder.status !== undefined)) {
+                return res.status(200).json({
+                    order: modernOrder,
+                    orderDetails: modernOrder.items || []
+                });
+            }
+        } catch (e) {
+            console.warn('Modern order lookup failed, fallback to legacy model:', e.message);
+        }
+
+        // Legacy model fallback
+        const legacyOrder = await Order.findById(id)
+            .setOptions({ strictPopulate: false })
             .populate({
                 path: 'customer_id',
                 model: 'users',
@@ -80,16 +135,16 @@ const getOrderById = async (req, res) => {
             .populate('coupon_id')
             .populate('user_address_id');
 
-        if (!order) {
+        if (!legacyOrder) {
             return res.status(404).json({ message: "Order not found" });
         }
 
-        const orderDetails = await OrderDetail.find({ order_id: order._id })
+        const orderDetails = await OrderDetail.find({ order_id: legacyOrder._id })
             .populate('product_id')
             .populate('variant_id')
             .populate('discount_id');
 
-        res.status(200).json({ order, orderDetails });
+        res.status(200).json({ order: legacyOrder, orderDetails });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -447,59 +502,67 @@ const createOrder = async (req, res) => {
     }
 };
 
-// Cập nhật trạng thái đơn hàng
+// Cập nhật trạng thái đơn hàng (hỗ trợ cả model cũ và mới, cả status và order_status)
 const updateOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { order_status } = req.body;
+        const bodyStatus = req.body.status || req.body.order_status;
+        if (!bodyStatus) {
+            return res.status(400).json({ message: "Status is required" });
+        }
 
         const order = await Order.findById(id);
         if (!order) {
             return res.status(404).json({ message: "Order not found" });
         }
 
-        order.order_status = order_status;
+        // Determine model type
+        const isNewModel = order.status !== undefined || order.paymentStatus !== undefined;
+        const normalized = String(bodyStatus).toLowerCase();
 
-        if (order_status === 'delivered') {
-            order.order_delivered_at = new Date();
+        // Map to appropriate casing per model
+        const mapNew = {
+            pending: 'PENDING',
+            processing: 'CONFIRMED',
+            confirmed: 'CONFIRMED',
+            shipped: 'SHIPPING',
+            shipping: 'SHIPPING',
+            delivered: 'DELIVERED',
+            cancelled: 'CANCELLED'
+        };
+        const mapOld = {
+            pending: 'pending',
+            processing: 'processing',
+            confirmed: 'processing',
+            shipped: 'shipped',
+            shipping: 'shipped',
+            delivered: 'delivered',
+            cancelled: 'cancelled'
+        };
+
+        if (isNewModel) {
+            const target = mapNew[normalized] || bodyStatus;
+            order.status = target;
+            if (target === 'DELIVERED') {
+                order.deliveredAt = new Date();
+            }
+        } else {
+            const target = mapOld[normalized] || bodyStatus;
+            order.order_status = target;
+            if (target === 'delivered') {
+                order.order_delivered_at = new Date();
+            }
         }
 
         await order.save();
-
-        if (order_status === 'delivered') {
-            try {
-                const axios = require('axios');
-                const BASE_URL = process.env.API_BASE_URL || 'http://localhost:9999';
-                const jwt = require('jsonwebtoken');
-                const config = require("../config/auth.config");
-
-                const adminToken = jwt.sign({ id: req.userId, isAdmin: true }, config.secret, {
-                    algorithm: "HS256",
-                    expiresIn: 60
-                });
-
-                await axios.post(
-                    `${BASE_URL}/api/revenue/create`,
-                    { order_id: id },
-                    {
-                        headers: {
-                            'x-access-token': adminToken
-                        }
-                    }
-                );
-
-                console.log(`Revenue record created for order ${id}`);
-            } catch (revenueError) {
-                console.error('Error creating revenue record:', revenueError.response?.data || revenueError.message);
-            }
-        }
 
         res.status(200).json({
             message: "Order status updated successfully",
             order
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Error updating order status:', error);
+        res.status(500).json({ message: error.message || 'Internal server error' });
     }
 };
 
@@ -780,6 +843,43 @@ const getOrderStatistics = async (req, res) => {
 const getOrdersByShopId = async (req, res) => {
     try {
         const { shopId } = req.params;
+
+        // New model first: orders carry shopId and items array
+        try {
+            const newModelOrders = await Order.find({ shopId })
+                .populate('userId', 'firstName lastName email phone')
+                .populate('shopId', 'name')
+                .populate('paymentMethodId', 'name paymentCode')
+                .populate('shippingMethodId', 'name')
+                .sort({ createdAt: -1 })
+                .lean();
+
+            if (Array.isArray(newModelOrders) && newModelOrders.length > 0) {
+                return res.status(200).json(
+                    newModelOrders.map(o => ({
+                        order: {
+                            _id: o._id,
+                            id: o._id,
+                            order_status: (o.status || 'PENDING').toLowerCase(),
+                            status: o.status,
+                            total_price: o.totalAmount,
+                            totalAmount: o.totalAmount,
+                            customer_id: o.userId,
+                            created_at: o.createdAt,
+                            createdAt: o.createdAt,
+                            paymentStatus: o.paymentStatus,
+                            payment_details: o.paymentDetails || o.paymentMeta || {},
+                            payment_id: o.paymentMethodId
+                        },
+                        orderDetails: o.items || []
+                    }))
+                );
+            }
+        } catch (e) {
+            // fall through to legacy
+        }
+
+        // Legacy model fallback: derive by product's shop_id in OrderDetail
         const orderDetails = await OrderDetail.find()
             .populate({
                 path: 'product_id',
@@ -790,10 +890,10 @@ const getOrdersByShopId = async (req, res) => {
         const validOrderDetails = orderDetails.filter(detail => detail.product_id !== null);
         const orderIds = [...new Set(validOrderDetails.map(detail => detail.order_id))];
 
-        const orders = await Order.find({
-            _id: { $in: orderIds },
-            is_delete: false
-        })
+        const findCriteria = { is_delete: { $ne: true } };
+        if (orderIds.length > 0) findCriteria._id = { $in: orderIds };
+
+        const orders = await Order.find(findCriteria)
             .populate({
                 path: 'customer_id',
                 model: 'users',
@@ -814,12 +914,10 @@ const getOrdersByShopId = async (req, res) => {
             orderDetailsMap[detail.order_id].push(detail);
         });
 
-        const result = orders.map(order => {
-            return {
-                order,
-                orderDetails: orderDetailsMap[order._id] || []
-            };
-        });
+        const result = orders.map(order => ({
+            order,
+            orderDetails: orderDetailsMap[order._id] || []
+        }));
 
         res.status(200).json(result);
     } catch (error) {

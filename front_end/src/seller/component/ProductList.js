@@ -13,6 +13,7 @@ import ProductService from "../../services/ProductService";
 import CategoryService from "../../services/CategoryService";
 import ShopService from "../../services/ShopService";
 import VariantManagement from "./VariantManagement";
+import ModalPortal from "../../components/ModalPortal";
 import { useAuth } from "../../pages/Login/context/AuthContext";
 import { toastSuccess, toastError, toastWarning } from "../../utils/toast";
 
@@ -567,8 +568,9 @@ const ProductList = () => {
 
             {/* Create/Edit Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[95vh] overflow-y-auto">
+                <ModalPortal>
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto">
+                        <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[95vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold">{isEditing ? "Chỉnh sửa" : "Thêm sản phẩm"}</h2>
                             <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
@@ -712,14 +714,16 @@ const ProductList = () => {
                                 </div>
                             </form>
                         )}
+                        </div>
                     </div>
-                </div>
+                </ModalPortal>
             )}
 
             {/* Delete Modal */}
             {showDeleteModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                <ModalPortal>
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-lg p-6 w-full max-w-md">
                         <h3 className="text-lg font-bold mb-3">Xác nhận xóa</h3>
                         <p className="text-gray-700 mb-6">
                             Xóa sản phẩm "<strong>{selectedProduct?.name}</strong>"? Không thể hoàn tác.
@@ -738,14 +742,16 @@ const ProductList = () => {
                                 Xóa
                             </button>
                         </div>
+                        </div>
                     </div>
-                </div>
+                </ModalPortal>
             )}
 
             {/* Variant Modal */}
             {showVariantModal && selectedProduct && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+                <ModalPortal>
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
                         <div className="p-4 border-b flex justify-between items-center">
                             <h3 className="text-xl font-bold">Biến thể - {selectedProduct.name}</h3>
                             <button
@@ -768,8 +774,9 @@ const ProductList = () => {
                                 }}
                             />
                         </div>
+                        </div>
                     </div>
-                </div>
+                </ModalPortal>
             )}
         </div>
     );

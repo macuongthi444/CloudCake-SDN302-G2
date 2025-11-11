@@ -15,18 +15,46 @@ const OrderDetail = ({ orderId, onBack }) => {
   const fetchOrderDetail = async () => {
     try {
       setLoading(true);
-      const res = await ApiService.get(`/order/${orderId}`);
+      const res = await ApiService.get(`/order/find/${orderId}`);
       const data = res.order || res;
+
+      const shippingAddress = data.user_address_id || data.shippingAddress || {};
+      const paymentSource = data.payment_id || data.paymentMethodId || {};
+
+      const normalizedItems = Array.isArray(data.items)
+        ? data.items.map(item => {
+            const quantity = Number(item.quantity ?? item.qty ?? item.quantityOrdered ?? 0);
+            const unitPrice = Number(item.unitPrice ?? item.price ?? (quantity ? (item.totalPrice || 0) / quantity : 0));
+            return {
+              ...item,
+              quantity,
+              unitPrice,
+              totalPrice: Number(item.totalPrice ?? unitPrice * quantity),
+              productName: item.productName || item.product?.name || 'Sản phẩm',
+              image: item.image || item.product?.images?.[0]?.url,
+              variantLabel: item.variantName || (item.variant?.options ? item.variant.options.join(' / ') : '')
+            };
+          })
+        : [];
 
       const normalized = {
         ...data,
         id: data._id || data.id,
         customer: data.customer_id || data.userId || { firstName: 'Khách lẻ', email: '', phone: '' },
-        shipping: data.shipping_id || data.shippingMethodId || { name: 'Không rõ' },
-        payment: data.payment_id || data.paymentMethodId || { name: 'Tiền mặt' },
-        items: Array.isArray(data.items) ? data.items : [],
+        shipping: {
+          name: data.shipping_id?.name || data.shippingMethodId?.name || 'Không rõ',
+          address: shippingAddress.address || shippingAddress.address_line1 || '',
+          phone: shippingAddress.phone || shippingAddress.recipientPhone || '',
+          recipient: shippingAddress.recipientName || '',
+          raw: shippingAddress
+        },
+        payment: {
+          ...paymentSource,
+          name: paymentSource?.name || data.payment_method || data.paymentCode || 'Tiền mặt'
+        },
+        items: normalizedItems,
         status: (data.order_status || data.status || 'pending').toLowerCase(),
-        paymentStatus: data.status_id || (data.paymentStatus === 'PAID' ? 'paid' : 'pending'),
+        paymentStatus: (data.status_id || data.paymentStatus || '').toString().toLowerCase().includes('paid') ? 'paid' : 'pending',
         total: data.total_price || data.totalAmount || 0,
         createdAt: data.created_at || data.createdAt,
         needRefund: !!data.need_pay_back,
@@ -184,7 +212,9 @@ const OrderDetail = ({ orderId, onBack }) => {
               </h3>
               <div className="space-y-2 text-sm">
                 <p><strong>Phương thức:</strong> {order.shipping.name}</p>
+                <p><strong>Người nhận:</strong> {order.shipping.recipient || order.customer.firstName}</p>
                 <p><strong>Địa chỉ:</strong> {order.shipping.address || 'Không có'}</p>
+                <p><strong>SĐT:</strong> {order.shipping.phone || 'Không có'}</p>
               </div>
             </div>
           </div>
@@ -209,7 +239,7 @@ const OrderDetail = ({ orderId, onBack }) => {
                 <div className="text-xs bg-gray-50 p-3 rounded">
                   <p className="font-medium mb-1">Chi tiết thanh toán:</p>
                   {Object.entries(order.paymentDetails).map(([k, v]) => (
-                    <p key={k}><strong>{k}:</strong> {v}</p>
+                    <p key={k}><strong>{k}:</strong> {String(v)}</p>
                   ))}
                 </div>
               )}
@@ -225,22 +255,22 @@ const OrderDetail = ({ orderId, onBack }) => {
               {order.items.map((item, i) => (
                 <div key={i} className="flex items-center justify-between border-b pb-3 last:border-0">
                   <div className="flex items-center gap-3">
-                    {item.product?.images?.[0] ? (
-                      <img src={item.product.images[0].url} alt="" className="w-16 h-16 object-cover rounded-lg" />
+                    {item.image ? (
+                      <img src={item.image} alt="" className="w-16 h-16 object-cover rounded-lg" />
                     ) : (
                       <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
                         <Package size={24} className="text-gray-400" />
                       </div>
                     )}
                     <div>
-                      <p className="font-medium">{item.product?.name || 'Sản phẩm'}</p>
+                      <p className="font-medium">{item.productName}</p>
                       <p className="text-sm text-gray-600">
-                        {item.variant ? `${item.variant.options?.join(' - ')}` : ''} 
-                        {item.quantity && ` × ${item.quantity}`}
+                        {item.variantLabel && `${item.variantLabel} · `}
+                        Số lượng: {item.quantity}
                       </p>
                     </div>
                   </div>
-                  <p className="font-medium">{formatVND(item.price * item.quantity)}</p>
+                  <p className="font-medium">{formatVND(item.totalPrice || item.unitPrice * item.quantity)}</p>
                 </div>
               ))}
             </div>
