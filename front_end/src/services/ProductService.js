@@ -3,38 +3,30 @@ import ApiService from './ApiService';
 class ProductService {
   // Get all products (public)
   async getProducts(params = {}) {
-  try {
-    
-    const currentPath = window.location.pathname;
-    const isSellerPage = currentPath.includes('/seller');
+    try {
+      // Build query string
+      const queryParams = new URLSearchParams();
+      if (params.categoryId) queryParams.append('categoryId', params.categoryId);
+      if (params.shopId) queryParams.append('shopId', params.shopId);
+      if (params.search) queryParams.append('search', params.search);
+      if (params.minPrice) queryParams.append('minPrice', params.minPrice);
+      if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice);
+      if (params.page) queryParams.append('page', params.page);
+      if (params.limit) queryParams.append('limit', params.limit);
+      if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+      if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+      if (params.isActive !== undefined) queryParams.append('isActive', params.isActive);
 
-    if (isSellerPage) {
-      return await this.getMyProducts(params);
+      const queryString = queryParams.toString();
+      const endpoint = `/product/list${queryString ? `?${queryString}` : ''}`;
+      
+      const data = await ApiService.get(endpoint, false);
+      return data;
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      throw error;
     }
-
-    // CÒN LẠI: DÙNG API CÔNG KHAI (cho khách, admin)
-    const queryParams = new URLSearchParams();
-    if (params.categoryId) queryParams.append('categoryId', params.categoryId);
-    if (params.shopId) queryParams.append('shopId', params.shopId);
-    if (params.search) queryParams.append('search', params.search);
-    if (params.minPrice) queryParams.append('minPrice', params.minPrice);
-    if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice);
-    if (params.page) queryParams.append('page', params.page);
-    if (params.limit) queryParams.append('limit', params.limit);
-    if (params.sortBy) queryParams.append('sortBy', params.sortBy);
-    if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
-    if (params.isActive !== undefined) queryParams.append('isActive', params.isActive);
-
-    const queryString = queryParams.toString();
-    const endpoint = `/product/list${queryString ? `?${queryString}` : ''}`;
-    
-    const data = await ApiService.get(endpoint, false);
-    return data;
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    throw error;
   }
-}
 
   // Get product by ID (public)
   async getProductById(id) {
@@ -62,7 +54,7 @@ class ProductService {
   async createProduct(productData, images = []) {
     try {
       const formData = new FormData();
-
+      
       // Add text fields
       Object.keys(productData).forEach(key => {
         if (key !== 'images' && productData[key] !== undefined && productData[key] !== null) {
@@ -95,7 +87,7 @@ class ProductService {
   async updateProduct(id, productData, newImages = []) {
     try {
       const formData = new FormData();
-
+      
       // Add text fields
       Object.keys(productData).forEach(key => {
         if (key !== 'images' && productData[key] !== undefined && productData[key] !== null) {
@@ -150,22 +142,6 @@ class ProductService {
       return await this.getProducts(params);
     } catch (error) {
       console.error('Error searching products:', error);
-      throw error;
-    }
-  }
-  async getMyProducts(params = {}) {
-    try {
-      const queryParams = new URLSearchParams();
-      if (params.page) queryParams.append('page', params.page);
-      if (params.limit) queryParams.append('limit', params.limit);
-      queryParams.append('_t', Date.now());
-      const queryString = queryParams.toString();
-      const endpoint = `/shop/my-products${queryString ? `?${queryString}` : ''}`;
-
-      const data = await ApiService.get(endpoint, true); // true = cần token
-      return data;
-    } catch (error) {
-      console.error('Error fetching my products:', error);
       throw error;
     }
   }

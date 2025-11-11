@@ -36,7 +36,7 @@ const LoginPage = () => {
             redirectPath = '/admin';
             console.log("Redirecting to admin dashboard");
         } else if (hasSellerRole) {
-            redirectPath = '/seller';
+            redirectPath = '/seller-dashboard';
             console.log("Redirecting to seller dashboard");
         } else {
             console.log("Redirecting to home (member role)");

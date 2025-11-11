@@ -1,7 +1,6 @@
 const db = require("../models")
 const Shop = db.shop
 const User = db.user
-const Product = db.product
 const createHttpError = require('http-errors')
 
 // Get all shops (public)
@@ -23,8 +22,6 @@ async function getAll(req, res, next) {
         next(error)
     }
 }
-
-
 
 // Get shop by ID (public)
 async function getById(req, res, next) {
@@ -424,44 +421,6 @@ const unlockShop = async (req, res, next) => {
         next(error);
     }
 };
-async function getMyProducts(req, res, next) {
-    try {
-        const shop = await Shop.findOne({ ownerId: req.userId });
-        if (!shop) throw createHttpError.NotFound("Shop not found");
-
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const skip = (page - 1) * limit;
-
-        const products = await Product.find({ shopId: shop._id })
-            .populate('categoryId', 'name')
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .lean();
-
-        const total = await Product.countDocuments({ shopId: shop._id });
-
-       
-        res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.set('Pragma', 'no-cache');
-        res.set('Expires', '0');
-
-        
-        res.json({
-            products,
-            pagination: {
-                page,
-                limit,
-                total,
-                pages: Math.ceil(total / limit)
-            }
-        });
-
-    } catch (error) {
-        next(error);
-    }
-}
 const shopController = {
     getAll,
     getById,
@@ -473,8 +432,7 @@ const shopController = {
     deleteShop,
     approveShop,
     rejectShop,
-    unlockShop,
-    getMyProducts
+    unlockShop
 }
 
 module.exports = shopController
