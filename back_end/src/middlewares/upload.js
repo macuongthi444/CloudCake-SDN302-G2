@@ -14,7 +14,27 @@ const storage = new CloudinaryStorage({
         ]
     }
 });
-
+const shopImageStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'cloudcake/shops', // ĐÚNG: folder riêng cho shop
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+        transformation: [
+            { width: 500, height: 500, crop: 'limit', quality: 'auto' }
+        ]
+    }
+});
+const uploadShopImageMiddleware = multer({
+    storage: shopImageStorage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Chỉ chấp nhận file ảnh!'), false);
+        }
+    }
+}).single('image');
 // Configure multer
 const upload = multer({
     storage: storage,
@@ -120,50 +140,12 @@ const uploadOptionalMultiple = (req, res, next) => {
             });
     });
 };
-// Separate storage for shop images
-const shopStorage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: 'cloudcake/shops',
-        allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-        transformation: [
-            { width: 1000, height: 1000, crop: 'limit', quality: 'auto' }
-        ]
-    }
-});
-const uploadShopSingle = multer({
-    storage: shopStorage,
-    limits: {
-        fileSize: 5 * 1024 * 1024
-    },
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only image files are allowed!'), false);
-        }
-    }
-}).single('image');
 
-const uploadShopImage = (req, res, next) => {
-  uploadShopSingle(req, res, function (err) {
-    if (err instanceof multer.MulterError) {
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        return next(createHttpError.BadRequest('File size exceeds limit (5MB)'));
-      }
-      return next(createHttpError.BadRequest(`Upload error: ${err.message}`));
-    } else if (err) {
-      return next(err);
-    }
-    next();
-  });
-};
 module.exports = {
     uploadSingle,
     uploadMultiple,
     uploadOptionalMultiple,
-    upload,
-    uploadShopImage
+    uploadShopImageMiddleware
 };
 
 

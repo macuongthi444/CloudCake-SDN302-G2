@@ -50,9 +50,9 @@ const StoreList = () => {
     // Helper function to check if shop is inactive
     const isInactive = (shop) => {
         return (
-            shop.isActive === false ||
-            shop.isActive === 0 ||
-            shop.isActive === '0' ||
+            shop.is_active === false ||
+            shop.is_active === 0 ||
+            shop.is_active === '0' ||
             ['SUSPENDED', 'REJECTED'].includes(shop.status)
         );
     };
@@ -71,15 +71,12 @@ const StoreList = () => {
                 return;
             }
 
-            const isInactive = (shop) => {
-                return shop.isActive === false ||
-                    shop.isActive === 0 ||
-                    ['SUSPENDED', 'REJECTED'].includes(shop.status);
-            };
+            
+            
 
             const processedShops = response.map(shop => ({
                 ...shop,
-                isInactive: isInactive(shop)
+                isInactive: shop.is_active === 0 || ['SUSPENDED', 'REJECTED'].includes(shop.status)
             }));
 
             setAllStores(processedShops);
@@ -87,8 +84,8 @@ const StoreList = () => {
             // Cập nhật filter counts
             setFilterCounts({
                 all: processedShops.length,
-                active: processedShops.filter(s => !s.isInactive).length,
-                locked: processedShops.filter(s => s.isInactive).length
+                active: processedShops.filter(s => s.status === 'ACTIVE' && s.is_active === 1).length,
+                locked: processedShops.filter(s => s.is_active === 0).length
             });
             const ownersData = {};
             for (const shop of processedShops) {
@@ -131,8 +128,9 @@ const StoreList = () => {
 
         if (filter.active) {
             filteredShops = filteredShops.filter(shop =>
-                shop.status === 'active' && !isInactive(shop)
+                shop.status === 'ACTIVE' && shop.is_active === 1
             );
+
         } else if (filter.locked) {
             filteredShops = filteredShops.filter(shop => isInactive(shop));
             console.log("After locked filter applied:", filteredShops);

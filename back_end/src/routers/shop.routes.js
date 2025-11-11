@@ -198,8 +198,9 @@ ShopRouter.put("/reject/:id", [authJwt.verifyToken, authJwt.isAdmin], shopContro
 ShopRouter.put("/unlock/:id", [authJwt.verifyToken, authJwt.isAdmin], shopController.unlockShop);
 ShopRouter.post(
   "/upload/:id", 
-  [authJwt.verifyToken, authJwt.isShopOwner], 
-  uploadMiddleware.uploadShopImage, 
+  authJwt.verifyToken, 
+  uploadMiddleware.uploadShopImageMiddleware, 
+  authJwt.isShopOwner, 
   shopController.uploadShopImage
 );
 module.exports = ShopRouter

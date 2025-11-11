@@ -21,10 +21,10 @@ const verifyToken = async (req, res, next) => {
 
         // Verify token
         const decoded = jwt.verify(token, config.secret);
-        
+
         // Find user and populate roles
         const user = await User.findById(decoded.id).populate('roles', '-__v');
-        
+
         if (!user) {
             throw createHttpError.Unauthorized("User not found")
         }
@@ -32,7 +32,7 @@ const verifyToken = async (req, res, next) => {
         // Attach user info to request
         req.userId = decoded.id;
         req.user = user;
-        
+
         next();
     } catch (error) {
         if (error.name === 'JsonWebTokenError') {
@@ -125,35 +125,28 @@ const isSellerOrAdmin = async (req, res, next) => {
         next(error);
     }
 }
-async function isShopOwner(req, res, next) {
+const isShopOwner = async (req, res, next) => {
     try {
         const shopId = req.params.id;
         const userId = req.userId;
 
-        const shop = await Shop.findById(shopId);
-        if (!shop || shop.isActive === false) {
-            throw createHttpError.NotFound("Shop not found");
+        // Nếu đang upload ảnh, bỏ qua kiểm tra owner (vì multer cần chạy trước)
+        if (req.path.includes('/upload/') && req.method === 'POST') {
+            // Chỉ kiểm tra user tồn tại
+            if (!userId) return res.status(401).json({ message: "Unauthorized" });
+            return next(); // Bỏ qua kiểm tra owner, để controller xử lý
         }
 
-        // Owner check (schema uses ownerId)
-        if (shop.ownerId && userId && shop.ownerId.toString() === userId.toString()) {
-            return next();
+        const shop = await Shop.findById(shopId).populate('ownerId');
+        if (!shop || !shop.ownerId || shop.ownerId._id.toString() !== userId) {
+            return res.status(403).json({ message: "Forbidden: Not shop owner" });
         }
 
-        // Admin bypass
-        const existUser = await User.findById(userId).exec();
-        const roles = await Role.find({ _id: { $in: (existUser?.roles || []) } });
-
-        if (roles.some(role => role.name === "ADMIN")) {
-            req.isAdmin = true;
-            return next();
-        }
-
-        throw createHttpError.Forbidden("You are not the owner of this shop");
+        next();
     } catch (error) {
         next(error);
     }
-}
+};
 const authJwt = {
     verifyToken,
     isAdmin,

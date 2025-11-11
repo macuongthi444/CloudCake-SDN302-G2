@@ -10,11 +10,11 @@ const cloudinary = require('../config/cloudinary.config')
 // Get all shops (public)
 async function getAll(req, res, next) {
     try {
-        const { status, isActive } = req.query
+        const { status, is_active } = req.query
         const query = {}
 
         if (status) query.status = status
-        if (isActive !== undefined) query.isActive = isActive === 'true'
+        if (is_active !== undefined) query.is_active = is_active === 'true'
 
         const shops = await Shop.find(query)
             .populate('ownerId', 'firstName lastName email')
@@ -83,6 +83,7 @@ async function create(req, res, next) {
             email,
             openingHours,
             bankAccount
+
         } = req.body
 
         if (!name) {
@@ -101,7 +102,7 @@ async function create(req, res, next) {
             openingHours: openingHours || {},
             bankAccount: bankAccount || {},
             status: 'PENDING',
-            isActive: false
+            is_active: false
         })
 
         await newShop.save()
@@ -122,13 +123,13 @@ async function update(req, res, next) {
         const userId = req.userId
         const isAdmin = req.user.roles.some(role => role.name === 'ADMIN')
 
-        const shop = await Shop.findById(id)
+        const shop = await Shop.findById(id).populate('ownerId');
         if (!shop) {
             throw createHttpError.NotFound("Shop not found")
         }
 
         // Check permissions
-        if (!isAdmin && shop.ownerId.toString() !== userId) {
+        if (!isAdmin && (!shop.ownerId || shop.ownerId._id.toString() !== userId)) {
             throw createHttpError.Forbidden("You can only update your own shop")
         }
 
@@ -159,7 +160,7 @@ async function update(req, res, next) {
     }
 }
 
-// Update shop status (Admin only)
+// Updatze shop status (Admin only)
 async function updateStatus(req, res, next) {
     try {
         const { id } = req.params
@@ -175,7 +176,7 @@ async function updateStatus(req, res, next) {
         }
 
         shop.status = status
-        shop.isActive = status === 'ACTIVE'
+        shop.is_active = status === 'ACTIVE'
 
         await shop.save()
 
@@ -192,53 +193,62 @@ async function updateStatus(req, res, next) {
 }
 const uploadShopImage = async (req, res, next) => {
     try {
+        console.log("req.file:", req.file);
+        console.log("req.body:", req.body);
+
         if (!req.file) {
             throw createHttpError.BadRequest("Không có file được upload");
         }
 
         const shopId = req.params.id;
-        const field = req.body.field;
-
-        const validFields = ['logo', 'coverImage', 'identity_card_image_front', 'identity_card_image_back', 'business_license'];
+        const field = req.body.field || 'logo';
+        const validFields = ['logo', 'coverImage'];
         if (!validFields.includes(field)) {
             throw createHttpError.BadRequest("Trường không hợp lệ");
         }
 
-        const shop = await Shop.findById(shopId);
+        const userId = req.userId;
+        const isAdmin = req.user?.roles?.some(role => role.name === 'ADMIN') || false;
+
+        const shop = await Shop.findById(shopId).populate('ownerId');
         if (!shop) throw createHttpError.NotFound("Shop không tồn tại");
 
-        // Xóa ảnh cũ nếu có
-        if (shop[field]) {
-            const publicId = shop[field].split('/').pop().split('.')[0];
-            await cloudinary.uploader.destroy(publicId);
+        // KIỂM TRA QUYỀN
+        if (!isAdmin && (!shop.ownerId || shop.ownerId._id.toString() !== userId)) {
+            throw createHttpError.Forbidden("Bạn chỉ có thể cập nhật ảnh cửa hàng của mình");
         }
 
-        // LẤY URL ĐẦY ĐỦ HTTPS TỪ CLOUIDNARY
-        const imageUrl = req.file.path; // Đây là secure_url[](https://...)
+        // XÓA ẢNH CŨ
+        if (shop[field]) {
+            const publicId = shop[field].split('/').pop().split('.')[0];
+            await cloudinary.uploader.destroy(publicId).catch(() => { });
+        }
 
-        shop[field] = imageUrl;
+        const imageUrl = req.file.path;
 
-        await shop.save();
+        // SỬA TẠI ĐÂY: DÙNG updateOne + $set + runValidators: false
+        await Shop.updateOne(
+            { _id: shopId },
+            { $set: { [field]: imageUrl } },
+            { runValidators: false } // BỎ QUA VALIDATION
+        );
+
+        // Lấy lại shop để trả về
+        const updatedShop = await Shop.findById(shopId).populate('ownerId');
 
         res.json({
             message: "Upload thành công",
             [field]: imageUrl,
-            preview: imageUrl
+            shop: updatedShop
         });
-
     } catch (error) {
-        if (req.file && req.file.path) {
-            // Xóa file nếu lỗi
-            const publicId = req.file.path.split('/').pop().split('.')[0];
-            await cloudinary.uploader.destroy(publicId).catch(() => { });
-        }
         next(error);
     }
 };
 const deleteShop = async (req, res, next) => {
     try {
         const shop = await Shop.findById(req.params.id);
-        if (!shop || shop.isActive === false) {
+        if (!shop || shop.is_active === 0) {
             throw createHttpError.NotFound("Shop not found");
         }
 
@@ -257,7 +267,7 @@ const deleteShop = async (req, res, next) => {
             await cloudinary.uploader.destroy(publicId).catch(() => { });
         }
 
-        shop.isActive = false; // Thay đổi trạng thái thành không hoạt động
+        shop.is_active = 0; // Thay đổi trạng thái thành không hoạt động
         await shop.save();
         res.status(200).json({ message: "Shop deleted successfully" });
     } catch (error) {
@@ -270,7 +280,7 @@ const deleteShop = async (req, res, next) => {
 const approveShop = async (req, res, next) => {
     try {
         const shop = await Shop.findById(req.params.id);
-        if (!shop || shop.isActive === false) {
+        if (!shop || shop.is_active === 0) {
             throw createHttpError.NotFound("Không tìm thấy cửa hàng");
         }
 
@@ -351,7 +361,7 @@ const rejectShop = async (req, res, next) => {
         const rejectionReason = reason || "Không đáp ứng yêu cầu của chúng tôi";
 
         const shop = await Shop.findById(req.params.id);
-        if (!shop || shop.isActive === false) {
+        if (!shop || shop.is_active === 0) {
             throw createHttpError.NotFound("Không tìm thấy cửa hàng");
         }
 
@@ -416,8 +426,8 @@ const unlockShop = async (req, res, next) => {
             throw createHttpError.NotFound("Shop not found");
         }
 
-        // Set isActive to true (unlocked)
-        shop.isActive = true;
+        // Set is_active to 1 (unlocked)
+        shop.is_active = 1;
         await shop.save();
 
         res.status(200).json({

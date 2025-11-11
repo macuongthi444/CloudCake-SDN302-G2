@@ -23,15 +23,20 @@ const Dashboard = () => {
   const [shop, setShop] = useState(null);
   const [products, setProducts] = useState([]);
   const [hiddenCount, setHiddenCount] = useState(0);
-
+const [totalProducts, setTotalProducts] = useState(0);
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
         const shopData = await ShopService.getMyShop().catch(() => null);
         setShop(shopData);
-
-        const prodsResp = await ProductService.getProducts({ limit: 5, isActive: 'true' }).catch(() => ({ products: [] }));
+        if (!shopData?._id) {
+          setProducts([]);
+          setHiddenCount(0);
+          setTotalProducts(0);
+          return;
+        }
+        const prodsResp = await ProductService.getProducts({ limit: 5,shopId: shopData._id, }).catch(() => ({ products: [] }));
         const prods = prodsResp.products || [];
         setProducts(prods);
 
@@ -77,7 +82,11 @@ const Dashboard = () => {
       {shop && (
         <div className="bg-white rounded-xl shadow p-5 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-lg bg-green-50 text-green-600"><Store size={20} /></div>
+            <div className="p-3 rounded-lg bg-green-50 text-green-600"> <img
+                src={shop.logo || shop.image_cover || 'https://via.placeholder.com/150'}
+                alt="Shop logo"
+                className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200"
+              /> </div>
             <div>
               <div className="font-semibold text-gray-900">{shop.name || 'Cửa hàng của tôi'}</div>
               <div className="text-sm text-gray-500">Trạng thái: <span className={`font-medium ${shop.status === 'ACTIVE' ? 'text-green-600' : 'text-yellow-600'}`}>{shop.status}</span> {shop.isActive === false && <span className="text-red-600">(đang ẩn)</span>}</div>
@@ -102,9 +111,8 @@ const Dashboard = () => {
 
       {/* KPI */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard icon={<Package size={18} />} label="Sản phẩm đang bán" value={products.length} sub="5 sản phẩm gần đây" />
-        <StatCard icon={<TrendingUp size={18} />} label="Doanh thu 7 ngày" value="—" sub="Sắp cập nhật" />
-        <StatCard icon={<DollarSign size={18} />} label="Đang chờ thanh toán" value="—" sub="Sắp cập nhật" />
+        <StatCard icon={<Package size={18} />} label="Sản phẩm đang bán" value={products.length} />
+
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

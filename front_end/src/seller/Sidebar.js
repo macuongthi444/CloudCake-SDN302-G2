@@ -21,6 +21,10 @@ const Sidebar = () => {
         <p className="text-sm text-gray-500">Quản lý cửa hàng của bạn</p>
       </div>
       <nav className="flex-1 p-4 space-y-2">
+        <Link to="/seller" className={`flex items-center gap-3 p-3 rounded-lg ${isActive('/seller') ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-gray-700'}`}>
+          <Package size={18} />
+          Dashboard
+        </Link>
         <Link to="/seller/products" className={`flex items-center gap-3 p-3 rounded-lg ${isActive('/seller/products') ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-gray-700'}`}>
           <Package size={18} />
           Sản phẩm

@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Upload, Store, MapPin, Phone, Mail, AlertCircle, CheckCircle } from 'lucide-react';
 import ShopService from '../../services/ShopService';
-import ApiService from '../../services/ApiService';
 import { toastSuccess, toastError } from '../../utils/toast';
 
 const SellerShopManagement = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState({ logo: false, coverImage: false });
+  const [uploading, setUploading] = useState(false);
   const [shop, setShop] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     phone: '',
     email: '',
+    CCCD: '',
     address: {
       street: '',
       ward: '',
@@ -37,6 +37,7 @@ const SellerShopManagement = () => {
         description: shopData.description || '',
         phone: shopData.phone || '',
         email: shopData.email || '',
+        CCCD: shopData.CCCD,
         address: {
           street: shopData.address?.street || '',
           ward: shopData.address?.ward || '',
@@ -92,57 +93,23 @@ const SellerShopManagement = () => {
     }
   };
 
-  const handleImageUpload = async (e, field) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-
-    if (!shop || !shop._id) {
-      toastError('Không tìm thấy cửa hàng');
-      return;
-    }
-
-    // Validate file before upload
-    if (!file.type.startsWith('image/')) {
-      toastError('Chỉ hỗ trợ tập tin hình ảnh');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toastError('Kích thước tối đa 5MB');
-      return;
-    }
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-      toastError('Bạn cần đăng nhập để tải ảnh');
-      return;
-    }
-
-    // Optimistic preview
-    try {
-      const localPreviewUrl = URL.createObjectURL(file);
-      setShop(prev => ({ ...prev, [field]: localPreviewUrl }));
-    } catch {}
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !shop?._id) return;
 
     try {
-      setUploading(prev => ({ ...prev, [field]: true }));
-      const formData = new FormData();
-      formData.append('image', file);
-      formData.append('field', field);
+      setUploading(true);
+      const result = await ShopService.uploadShopImage(shop._id, file, 'logo');
 
-      const data = await ApiService.uploadFile(`/shop/upload/${shop._id}`, formData, true);
-      // Cập nhật UI ngay lập tức bằng URL trả về
-      setShop(prev => ({ ...prev, [field]: data[field] || data.preview || prev[field] }));
-      // Đồng bộ vào form để khi lưu thông tin khác thì vẫn giữ URL
-      if (field === 'logo' || field === 'coverImage') {
-        setFormData(prev => ({ ...prev, [field]: data[field] || data.preview || '' }));
-      }
-      
+
+      setShop(prev => ({ ...prev, logo: result.logo }));
       toastSuccess('Cập nhật ảnh thành công!');
+      await loadShop(); // reload để đồng bộ
     } catch (error) {
       console.error('Error uploading image:', error);
-      toastError('Lỗi khi tải ảnh lên: ' + (error.message || ''));
+      toastError('Lỗi khi tải ảnh lên');
     } finally {
-      setUploading(prev => ({ ...prev, [field]: false }));
+      setUploading(false);
     }
   };
 
@@ -183,11 +150,10 @@ const SellerShopManagement = () => {
 
       {/* Status Alert */}
       {shop.status !== 'ACTIVE' && (
-        <div className={`rounded-lg p-4 ${
-          shop.status === 'PENDING' 
-            ? 'bg-yellow-50 border border-yellow-200 text-yellow-800'
-            : 'bg-red-50 border border-red-200 text-red-800'
-        }`}>
+        <div className={`rounded-lg p-4 ${shop.status === 'PENDING'
+          ? 'bg-yellow-50 border border-yellow-200 text-yellow-800'
+          : 'bg-red-50 border border-red-200 text-red-800'
+          }`}>
           <div className="flex items-center gap-2">
             {shop.status === 'PENDING' ? (
               <>
@@ -216,7 +182,9 @@ const SellerShopManagement = () => {
       <form onSubmit={handleSave} className="bg-white rounded-lg shadow p-6 space-y-6">
         {/* Shop Logo */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Ảnh đại diện cửa hàng</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Ảnh đại diện cửa hàng
+          </label>
           <div className="flex items-center gap-4">
             <div className="relative">
               <img
@@ -224,28 +192,36 @@ const SellerShopManagement = () => {
                 alt="Shop logo"
                 className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200"
               />
-              {uploading.logo && (
+              {uploading && (
                 <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
                 </div>
               )}
             </div>
+
             <div>
+              {/* NÚT CHỈ LÀ HIỂN THỊ, KHÔNG DISABLE INPUT */}
               <label
-                htmlFor="shopLogoInput"
-                className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                htmlFor="shop-logo-upload"
+                className={`cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white transition ${uploading
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
               >
                 <Upload size={18} />
-                {uploading.logo ? 'Đang tải...' : 'Tải ảnh lên'}
+                {uploading ? 'Đang tải...' : 'Tải ảnh lên'}
               </label>
+
+              {/* INPUT ẨN, KHÔNG BAO GIỜ DISABLE */}
               <input
-                id="shopLogoInput"
+                id="shop-logo-upload"
                 type="file"
                 accept="image/*"
-                onChange={(e) => handleImageUpload(e, 'logo')}
+                onChange={handleImageUpload}
                 className="hidden"
-                disabled={uploading.logo}
+              // XÓA disabled={uploading}
               />
+
               <p className="text-xs text-gray-500 mt-2">JPG, PNG tối đa 5MB</p>
             </div>
           </div>
@@ -296,7 +272,25 @@ const SellerShopManagement = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Căn cước công dân (CCCD) *
+            </label>
+            <input
+              type="text"
+              name="CCCD"
+              value={formData.CCCD}
+              onChange={handleInputChange}
+              required
+              pattern="[0-9]{12}"
+              title="CCCD phải có đúng 12 chữ số"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Nhập 12 số CCCD"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Vui lòng nhập đúng 12 số CCCD để xác minh danh tính
+            </p>
+          </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">Mô tả cửa hàng</label>
             <textarea
@@ -398,4 +392,3 @@ const SellerShopManagement = () => {
 };
 
 export default SellerShopManagement;
-
