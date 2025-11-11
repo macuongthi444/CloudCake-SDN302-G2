@@ -1,5 +1,6 @@
 // src/components/modal/ProductDetailModal.jsx
 import React from 'react';
+import ModalPortal from '../../components/ModalPortal';
 import { X, Package, Tag, Info, AlertCircle, Clock, Calendar, Store } from 'lucide-react';
 
 const ProductDetailModal = ({ product, onClose }) => {
@@ -8,7 +9,8 @@ const ProductDetailModal = ({ product, onClose }) => {
   const formatPrice = (price) => price?.toLocaleString('vi-VN') + ' ₫' || '-';
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <ModalPortal>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000] p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
@@ -235,6 +237,7 @@ const ProductDetailModal = ({ product, onClose }) => {
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 };
 

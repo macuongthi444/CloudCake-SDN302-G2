@@ -86,7 +86,27 @@ const OrderManagement = () => {
         console.log("Customer data analysis:", customerDataTypes);
       }
 
-      setOrders(response);
+      // Chuẩn hóa dữ liệu để UI cũ hiển thị được cả model mới
+      const normalized = Array.isArray(response) ? response.map(o => {
+        const isModern = o.userId || o.shopId || o.paymentMethodId || o.shippingMethodId || (o.totalAmount !== undefined);
+        if (!isModern) return o;
+        return {
+          ...o,
+          id: o._id || o.id,
+          // Map các trường mới sang tên cũ mà UI đang dùng
+          customer_id: o.customer_id || o.userId || null,
+          shipping_id: o.shipping_id || o.shippingMethodId || null,
+          payment_id: o.payment_id || o.paymentMethodId || null,
+          payment_method: o.payment_method || o.paymentMethodId?.name || o.paymentMethod || '',
+          order_status: (o.order_status || o.status || '').toLowerCase(),
+          status_id: o.status_id || ((o.paymentStatus === 'PAID' || o.paymentStatus === 'paid') ? 'paid' : 'pending'),
+          payment_details: o.payment_details || o.paymentDetails || {},
+          created_at: o.created_at || o.createdAt,
+          total_price: (o.total_price !== undefined ? o.total_price : o.totalAmount)
+        };
+      }) : [];
+
+      setOrders(normalized);
       setTotalItems(response.length);
       setLoading(false);
     } catch (error) {
@@ -287,24 +307,32 @@ const OrderManagement = () => {
     }
   };
 
-  // Hàm kiểm tra phương thức thanh toán VNPay
+  // Hàm kiểm tra phương thức thanh toán online (tương thích cả model cũ và mới)
   const isOnlinePayment = (order) => {
-    if (!order || !order.payment_id || !order.payment_id.name) {
-      return false;
-    }
-
-    const paymentMethod = order.payment_id.name.toLowerCase();
-    // Kiểm tra các phương thức thanh toán online
-    return paymentMethod.includes('qr') ||
-      paymentMethod.includes('mã qr') ||
-      paymentMethod.includes('payos') ||
-      paymentMethod.includes('momo') ||
-      paymentMethod.includes('online');
+    if (!order) return false;
+    // support legacy: payment_id.name
+    let name =
+      order.payment_id?.name ||
+      order.paymentMethod?.name ||
+      order.paymentMethodId?.name ||
+      order.paymentMethod ||
+      '';
+    name = String(name).toLowerCase();
+    return (
+      name.includes('qr') ||
+      name.includes('mã qr') ||
+      name.includes('payos') ||
+      name.includes('momo') ||
+      name.includes('online') ||
+      name.includes('vnpay')
+    );
   };
 
-  // Convert status to Vietnamese
+  // Convert status to Vietnamese (tolerant to undefined / mixed schemas)
   const getStatusText = (status) => {
-    switch (status) {
+    if (!status) return 'KHÔNG XÁC ĐỊNH';
+    const s = String(status).toLowerCase();
+    switch (s) {
       case 'pending':
         return 'CHỜ XÁC NHẬN';
       case 'processing':
@@ -316,7 +344,7 @@ const OrderManagement = () => {
       case 'cancelled':
         return 'HỦY ĐƠN';
       default:
-        return status.toUpperCase();
+        return String(status).toUpperCase();
     }
   };
 

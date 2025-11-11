@@ -1,8 +1,11 @@
 const db = require("../models")
 const Shop = db.shop
 const User = db.user
+const Role = db.role
 const Product = db.product
 const createHttpError = require('http-errors')
+const nodemailer = require('nodemailer')
+const cloudinary = require('../config/cloudinary.config')
 
 // Get all shops (public)
 async function getAll(req, res, next) {
@@ -237,20 +240,26 @@ const uploadShopImage = async (req, res, next) => {
 const deleteShop = async (req, res, next) => {
     try {
         const shop = await Shop.findById(req.params.id);
-        if (!shop || shop.isActive === 0) {
+        if (!shop || shop.isActive === false) {
             throw createHttpError.NotFound("Shop not found");
         }
 
-        // Xóa logo và image_cover từ Cloudinary nếu có
-        if (shop.logo && shop.logo.includes('cloudinary')) {
-            await removeFile(shop.logo);
+        // Xóa logo và coverImage từ Cloudinary nếu có
+        if (shop.logo) {
+            const publicId = shop.logo.split('/').pop().split('.')[0];
+            await cloudinary.uploader.destroy(publicId).catch(() => { });
+        }
+        if (shop.coverImage) {
+            const publicId = shop.coverImage.split('/').pop().split('.')[0];
+            await cloudinary.uploader.destroy(publicId).catch(() => { });
+        }
+        // Clean legacy field if present
+        if (shop.image_cover) {
+            const publicId = shop.image_cover.split('/').pop().split('.')[0];
+            await cloudinary.uploader.destroy(publicId).catch(() => { });
         }
 
-        if (shop.image_cover && shop.image_cover.includes('cloudinary')) {
-            await removeFile(shop.image_cover);
-        }
-
-        shop.isActive = 0; // Thay đổi trạng thái thành không hoạt động
+        shop.isActive = false; // Thay đổi trạng thái thành không hoạt động
         await shop.save();
         res.status(200).json({ message: "Shop deleted successfully" });
     } catch (error) {
@@ -263,13 +272,33 @@ const deleteShop = async (req, res, next) => {
 const approveShop = async (req, res, next) => {
     try {
         const shop = await Shop.findById(req.params.id);
-        if (!shop || shop.isActive === 0) {
+        if (!shop || shop.isActive === false) {
             throw createHttpError.NotFound("Không tìm thấy cửa hàng");
         }
 
         shop.status = "ACTIVE";
+        shop.isActive = true;
 
         await shop.save();
+
+        // Gán role SELLER cho owner nếu chưa có
+        try {
+            const sellerRole = await Role.findOne({ name: 'SELLER' });
+            if (sellerRole) {
+                const owner = await User.findById(shop.ownerId);
+                if (owner) {
+                    const hasSeller = (owner.roles || []).some(r => r.toString() === sellerRole._id.toString());
+                    if (!hasSeller) {
+                        owner.roles = [...(owner.roles || []), sellerRole._id];
+                        await owner.save();
+                    }
+                }
+            } else {
+                console.error("Role SELLER không tồn tại trong DB!");
+            }
+        } catch (roleErr) {
+            console.error("Không thể gán role SELLER cho owner:", roleErr);
+        }
 
         // Gửi email thông báo chấp nhận
         try {
@@ -294,7 +323,6 @@ const approveShop = async (req, res, next) => {
                     <p>Thông tin cửa hàng:</p>
                     <ul>
                         <li><strong>Tên cửa hàng:</strong> ${shop.name}</li>
-                        <li><strong>Tên đăng nhập:</strong> ${shop.username}</li>
                         <li><strong>Email:</strong> ${shop.email}</li>
                     </ul>
                     <p>Cảm ơn bạn đã lựa chọn nền tảng của chúng tôi.</p>
@@ -325,32 +353,14 @@ const rejectShop = async (req, res, next) => {
         const rejectionReason = reason || "Không đáp ứng yêu cầu của chúng tôi";
 
         const shop = await Shop.findById(req.params.id);
-        if (!shop || shop.isActive === 0) {
+        if (!shop || shop.isActive === false) {
             throw createHttpError.NotFound("Không tìm thấy cửa hàng");
         }
 
         shop.status = "REJECTED";
-        shop.reject_reason = rejectionReason;
 
         await shop.save();
-        const Role = require('../models/Role'); // Đảm bảo có model Role
-        const sellerRole = await Role.findOne({ name: 'SELLER' });
-        if (!sellerRole) {
-            console.error("Role SELLER không tồn tại trong DB!");
-            throw createHttpError.InternalServerError("Role SELLER missing");
-        }
 
-        const user = shop.ownerId;
-        if (user && !user.roles.includes(sellerRole._id)) {
-            user.roles.push(sellerRole._id);
-            await user.save();
-            console.log(`User ${user.email} đã được thêm role SELLER`);
-        }
-
-        res.json({
-            message: "Duyệt thành công! User đã trở thành Seller",
-            shop
-        });
         // Gửi email thông báo từ chối
         try {
             // Tạo transporter
@@ -375,7 +385,6 @@ const rejectShop = async (req, res, next) => {
                     <p>Thông tin cửa hàng:</p>
                     <ul>
                         <li><strong>Tên cửa hàng:</strong> ${shop.name}</li>
-                        <li><strong>Tên đăng nhập:</strong> ${shop.username}</li>
                         <li><strong>Email:</strong> ${shop.email}</li>
                     </ul>
                     <p>Bạn có thể khắc phục các vấn đề đã nêu và gửi đơn đăng ký mới trong tương lai.</p>
@@ -393,7 +402,7 @@ const rejectShop = async (req, res, next) => {
             console.error("Không thể gửi email thông báo từ chối:", emailError);
         }
 
-        res.status(200).json({ message: "Từ chối cửa hàng", shop });
+        res.status(200).json({ message: "Từ chối cửa hàng", shop, reason: rejectionReason });
     } catch (error) {
         if (error.name === 'CastError') {
             return next(createHttpError.BadRequest("ID cửa hàng không hợp lệ"));
@@ -409,8 +418,8 @@ const unlockShop = async (req, res, next) => {
             throw createHttpError.NotFound("Shop not found");
         }
 
-        // Set is_active to 1 (unlocked)
-        shop.isActive = 1;
+        // Set isActive to true (unlocked)
+        shop.isActive = true;
         await shop.save();
 
         res.status(200).json({

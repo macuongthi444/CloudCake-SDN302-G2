@@ -138,7 +138,15 @@ class ApiService {
   // Xử lý response
   async handleResponse(response) {
     const text = await response.text();
-    const data = text && JSON.parse(text);
+    let data = null;
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        // Non-JSON response (e.g., HTML error page); keep raw text for error message
+        data = { raw: text };
+      }
+    }
 
     if (!response.ok) {
       // Nếu lỗi 401 Unauthorized, đăng xuất người dùng
@@ -147,7 +155,11 @@ class ApiService {
         window.location.href = '/login';
       }
 
-      const error = (data && data.message) || response.statusText;
+      const error =
+        (data && (data.message || data.error?.message)) ||
+        (data && data.raw) ||
+        response.statusText ||
+        `HTTP ${response.status}`;
       return Promise.reject(error);
     }
 

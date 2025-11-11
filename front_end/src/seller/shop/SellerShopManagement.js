@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Upload, Store, MapPin, Phone, Mail, AlertCircle, CheckCircle } from 'lucide-react';
 import ShopService from '../../services/ShopService';
+import ApiService from '../../services/ApiService';
 import { toastSuccess, toastError } from '../../utils/toast';
 
 const SellerShopManagement = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState({ logo: false, coverImage: false });
   const [shop, setShop] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -91,8 +92,8 @@ const SellerShopManagement = () => {
     }
   };
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
+  const handleImageUpload = async (e, field) => {
+    const file = e.target.files && e.target.files[0];
     if (!file) return;
 
     if (!shop || !shop._id) {
@@ -100,29 +101,48 @@ const SellerShopManagement = () => {
       return;
     }
 
+    // Validate file before upload
+    if (!file.type.startsWith('image/')) {
+      toastError('Chỉ hỗ trợ tập tin hình ảnh');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toastError('Kích thước tối đa 5MB');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toastError('Bạn cần đăng nhập để tải ảnh');
+      return;
+    }
+
+    // Optimistic preview
     try {
-      setUploading(true);
+      const localPreviewUrl = URL.createObjectURL(file);
+      setShop(prev => ({ ...prev, [field]: localPreviewUrl }));
+    } catch {}
+
+    try {
+      setUploading(prev => ({ ...prev, [field]: true }));
       const formData = new FormData();
       formData.append('image', file);
+      formData.append('field', field);
 
-      // Assuming API endpoint exists for shop image upload
-      const response = await fetch(`/api/shop/upload/${shop._id}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: formData
-      });
-
-      if (!response.ok) throw new Error('Upload failed');
+      const data = await ApiService.uploadFile(`/shop/upload/${shop._id}`, formData, true);
+      // Cập nhật UI ngay lập tức bằng URL trả về
+      setShop(prev => ({ ...prev, [field]: data[field] || data.preview || prev[field] }));
+      // Đồng bộ vào form để khi lưu thông tin khác thì vẫn giữ URL
+      if (field === 'logo' || field === 'coverImage') {
+        setFormData(prev => ({ ...prev, [field]: data[field] || data.preview || '' }));
+      }
       
-      toastSuccess('Cập nhật ảnh cửa hàng thành công!');
-      await loadShop();
+      toastSuccess('Cập nhật ảnh thành công!');
     } catch (error) {
       console.error('Error uploading image:', error);
-      toastError('Lỗi khi tải ảnh lên');
+      toastError('Lỗi khi tải ảnh lên: ' + (error.message || ''));
     } finally {
-      setUploading(false);
+      setUploading(prev => ({ ...prev, [field]: false }));
     }
   };
 
@@ -204,23 +224,27 @@ const SellerShopManagement = () => {
                 alt="Shop logo"
                 className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200"
               />
-              {uploading && (
+              {uploading.logo && (
                 <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
                 </div>
               )}
             </div>
             <div>
-              <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <label
+                htmlFor="shopLogoInput"
+                className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
                 <Upload size={18} />
-                {uploading ? 'Đang tải...' : 'Tải ảnh lên'}
+                {uploading.logo ? 'Đang tải...' : 'Tải ảnh lên'}
               </label>
               <input
+                id="shopLogoInput"
                 type="file"
                 accept="image/*"
-                onChange={handleImageUpload}
+                onChange={(e) => handleImageUpload(e, 'logo')}
                 className="hidden"
-                disabled={uploading}
+                disabled={uploading.logo}
               />
               <p className="text-xs text-gray-500 mt-2">JPG, PNG tối đa 5MB</p>
             </div>

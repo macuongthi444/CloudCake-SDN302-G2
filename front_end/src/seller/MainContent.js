@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../pages/Login/context/AuthContext';
-import ProductManagement from '../admin/product/ProductManagement';
+import SellerProductManagement from './product/SellerProductManagement';
 import Dashboard from './Dashboard';
 import SellerOrderManagement from './order/SellerOrderManagement';
 import SellerShopManagement from './shop/SellerShopManagement';
@@ -17,7 +17,7 @@ const MainContent = () => {
   return (
     <Routes>
       <Route path="/" element={<Dashboard />} />
-      <Route path="/products" element={<ProductManagement />} />
+      <Route path="/products" element={<SellerProductManagement />} />
       <Route path="/orders" element={<SellerOrderManagement />} />
       <Route path="/shop" element={<SellerShopManagement />} />
       <Route path="/payouts" element={<SellerPayoutsPage />} />

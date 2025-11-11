@@ -41,10 +41,10 @@ const shopSchema = new Schema({
          type: String,
          required: true,
          unique: true
-       },
-       CCCD: {
+      },
+      CCCD: {
          type: String,
-         required: true
+         default: null
        },
        nation_id: {
          type: Number,
@@ -60,8 +60,7 @@ const shopSchema = new Schema({
        },
        is_active: {
          type: Number,
-         default: 1,
-         required: true
+         default: 1
        },
        follower: {
          type: Number,
@@ -70,8 +69,8 @@ const shopSchema = new Schema({
        },
        user_id: {
          type: Schema.Types.ObjectId,
-         required: true,
-         ref: 'User' 
+         ref: 'User',
+         default: null
        },
        website: {
          type: String,

@@ -1,6 +1,7 @@
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('../config/cloudinary.config');
+const createHttpError = require('http-errors');
 
 // Configure multer storage with Cloudinary
 const storage = new CloudinaryStorage({
@@ -119,8 +120,33 @@ const uploadOptionalMultiple = (req, res, next) => {
             });
     });
 };
+// Separate storage for shop images
+const shopStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'cloudcake/shops',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+        transformation: [
+            { width: 1000, height: 1000, crop: 'limit', quality: 'auto' }
+        ]
+    }
+});
+const uploadShopSingle = multer({
+    storage: shopStorage,
+    limits: {
+        fileSize: 5 * 1024 * 1024
+    },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed!'), false);
+        }
+    }
+}).single('image');
+
 const uploadShopImage = (req, res, next) => {
-  cloudinaryUploadShopImage(req, res, function (err) {
+  uploadShopSingle(req, res, function (err) {
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         return next(createHttpError.BadRequest('File size exceeds limit (5MB)'));

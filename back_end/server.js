@@ -32,7 +32,7 @@ const server = http.createServer(app);
 
 const corsOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",")
-  : ["http://localhost:3000"];
+  : ["http://localhost:3000", "http://127.0.0.1:3000"];
 const corsMethods = process.env.CORS_METHODS
   ? process.env.CORS_METHODS.split(",")
   : ["GET", "POST", "PUT", "DELETE", "OPTIONS"];
@@ -115,21 +115,9 @@ server.listen(
   process.env.PORT || 9999,
   process.env.HOST_NAME || "localhost",
   () => {
-    console.log(
-      `Server is running on http://${process.env.HOST_NAME || "localhost"}:${
-        process.env.PORT || 9999
-      }`
-    );
+    console.log(`Server is running on http://${process.env.HOST_NAME || "localhost"}:${process.env.PORT || 9999}`);
     db.connectDB();
   }
 );
-
-module.exports = server;
-console.log(
-  `Server is running on http://${process.env.HOST_NAME || "localhost"}:${
-    process.env.PORT || 9999
-  }`
-);
-db.connectDB();
 
 module.exports = server;

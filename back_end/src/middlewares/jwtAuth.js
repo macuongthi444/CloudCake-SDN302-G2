@@ -131,16 +131,18 @@ async function isShopOwner(req, res, next) {
         const userId = req.userId;
 
         const shop = await Shop.findById(shopId);
-        if (!shop || shop.is_active === 0) {
+        if (!shop || shop.isActive === false) {
             throw createHttpError.NotFound("Shop not found");
         }
 
-        if (shop.user_id.toString() === userId.toString()) {
+        // Owner check (schema uses ownerId)
+        if (shop.ownerId && userId && shop.ownerId.toString() === userId.toString()) {
             return next();
         }
 
+        // Admin bypass
         const existUser = await User.findById(userId).exec();
-        const roles = await Role.find({ _id: { $in: existUser.roles } });
+        const roles = await Role.find({ _id: { $in: (existUser?.roles || []) } });
 
         if (roles.some(role => role.name === "ADMIN")) {
             req.isAdmin = true;
