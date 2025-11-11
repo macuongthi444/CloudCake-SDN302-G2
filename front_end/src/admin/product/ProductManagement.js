@@ -8,6 +8,7 @@ import {
   Image as ImageIcon,
   Package,
   Layers,
+  CheckCircle,
 } from "lucide-react";
 import ProductService from "../../services/ProductService";
 import CategoryService from "../../services/CategoryService";
@@ -42,6 +43,8 @@ const ProductManagement = () => {
     allergens: "",
     weight: { value: "", unit: "g" },
     shelfLife: { value: "", unit: "days" },
+    status: "DRAFT",
+    isActive: false,
   });
   const [categories, setCategories] = useState([]);
   const [myShop, setMyShop] = useState(null);
@@ -129,6 +132,8 @@ const ProductManagement = () => {
       allergens: "",
       weight: { value: "", unit: "g" },
       shelfLife: { value: "", unit: "days" },
+      status: "DRAFT",
+      isActive: false,
     });
     setImageFiles([]);
     setImagePreviews([]);
@@ -163,6 +168,7 @@ const ProductManagement = () => {
         weight: fullProduct.weight || { value: "", unit: "g" },
         shelfLife: fullProduct.shelfLife || { value: "", unit: "days" },
         status: fullProduct.status || "DRAFT",
+        isActive: fullProduct.isActive !== undefined ? fullProduct.isActive : false,
       });
 
       setImageFiles([]);
@@ -256,6 +262,13 @@ const ProductManagement = () => {
         },
       };
 
+      // Remove status and isActive from productData if user is not admin
+      // Seller cannot change these fields - only admin can activate products
+      if (!isAdmin) {
+        delete productData.status;
+        delete productData.isActive;
+      }
+
       if (isAdmin && !productData.shopId) {
         toastWarning("Vui lòng chọn cửa hàng");
         return;
@@ -319,6 +332,31 @@ const ProductManagement = () => {
     } catch (error) {
       console.error("Error saving product:", error);
       toastError("Không thể lưu sản phẩm: " + (error.message || "Lỗi mạng"));
+    }
+  };
+
+  const handleApproveProduct = async (product) => {
+    try {
+      const updatedProduct = await ProductService.updateProduct(
+        product._id,
+        {
+          status: "ACTIVE",
+          isActive: true,
+        },
+        []
+      );
+
+      // Cập nhật trong state
+      setProducts((prevProducts) =>
+        prevProducts.map((p) =>
+          p._id === product._id ? { ...p, ...updatedProduct } : p
+        )
+      );
+
+      toastSuccess("Sản phẩm đã được kích hoạt thành công!");
+    } catch (error) {
+      console.error("Error approving product:", error);
+      toastError("Không thể kích hoạt sản phẩm: " + (error.message || "Lỗi không xác định"));
     }
   };
 
@@ -526,6 +564,15 @@ const ProductManagement = () => {
                   </td>
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right">
                     <div className="flex items-center justify-end gap-2">
+                      {isAdmin && product.status === "DRAFT" && (
+                        <button
+                          onClick={() => handleApproveProduct(product)}
+                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
+                          title="Kích hoạt sản phẩm"
+                        >
+                          <CheckCircle size={18} />
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEditClick(product)}
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
@@ -592,6 +639,15 @@ const ProductManagement = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 ml-2">
+                    {isAdmin && product.status === "DRAFT" && (
+                      <button
+                        onClick={() => handleApproveProduct(product)}
+                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
+                        title="Kích hoạt sản phẩm"
+                      >
+                        <CheckCircle size={18} />
+                      </button>
+                    )}
                     <button
                       onClick={() => handleEditClick(product)}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
@@ -881,6 +937,47 @@ const ProductManagement = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
               </div>
+
+              {/* Status and Active Fields - Only for Admin */}
+              {isAdmin && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Trạng thái
+                    </label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) =>
+                        setFormData({ ...formData, status: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    >
+                      <option value="DRAFT">Nháp</option>
+                      <option value="ACTIVE">Đang bán</option>
+                      <option value="OUT_OF_STOCK">Hết hàng</option>
+                      <option value="DISCONTINUED">Ngừng bán</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.isActive}
+                        onChange={(e) =>
+                          setFormData({ ...formData, isActive: e.target.checked })
+                        }
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm font-medium text-gray-700">
+                        Kích hoạt sản phẩm
+                      </span>
+                    </label>
+                    <span className="ml-2 text-xs text-gray-500">
+                      (Sản phẩm sẽ hiển thị cho khách hàng)
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Image Upload */}
               <div>

@@ -426,26 +426,83 @@ const createOrder = async (req, res) => {
     }
 };
 
-// Cập nhật trạng thái đơn hàng
+// Cập nhật trạng thái đơn hàng (hỗ trợ cả old và new model)
 const updateOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { order_status } = req.body;
+        const { order_status, status } = req.body;
 
-        const order = await Order.findById(id);
+        // Support both ObjectId and orderNumber
+        const mongoose = require('mongoose');
+        const isValidObjectId = mongoose.Types.ObjectId.isValid(id);
+        let order;
+        
+        if (isValidObjectId) {
+            order = await Order.findById(id);
+        } else {
+            order = await Order.findOne({ orderNumber: id });
+        }
+
         if (!order) {
             return res.status(404).json({ message: "Order not found" });
         }
 
-        order.order_status = order_status;
+        // Detect model type
+        const isNewModel = order.status !== undefined;
+        const isOldModel = order.order_status !== undefined;
 
-        if (order_status === 'delivered') {
-            order.order_delivered_at = new Date();
+        // Get status value from request (prioritize status over order_status)
+        let newStatus = status || order_status;
+        if (!newStatus) {
+            return res.status(400).json({ message: "Status is required" });
         }
 
+        // Normalize status to handle both lowercase and uppercase
+        const normalizedStatus = newStatus.toLowerCase();
+
+        // Map frontend status values to backend format
+        const statusMap = {
+            'pending': isNewModel ? 'PENDING' : 'pending',
+            'processing': isNewModel ? 'CONFIRMED' : 'processing',
+            'shipped': isNewModel ? 'SHIPPING' : 'shipped',
+            'delivered': isNewModel ? 'DELIVERED' : 'delivered',
+            'cancelled': isNewModel ? 'CANCELLED' : 'cancelled'
+        };
+
+        const mappedStatus = statusMap[normalizedStatus] || newStatus;
+
+        // Update status based on model type
+        if (isNewModel) {
+            // Validate new model status values
+            const validStatuses = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'SHIPPING', 'DELIVERED', 'CANCELLED', 'REFUNDED'];
+            if (!validStatuses.includes(mappedStatus)) {
+                return res.status(400).json({ 
+                    message: `Invalid status. Valid statuses: ${validStatuses.join(', ')}` 
+                });
+            }
+            order.status = mappedStatus;
+            
+            // Set deliveredAt for new model
+            if (mappedStatus === 'DELIVERED') {
+                order.deliveredAt = new Date();
+            }
+        } else if (isOldModel) {
+            order.order_status = mappedStatus;
+            
+            // Set order_delivered_at for old model
+            if (mappedStatus === 'delivered') {
+                order.order_delivered_at = new Date();
+            }
+        } else {
+            return res.status(400).json({ message: "Cannot determine order model type" });
+        }
+
+        order.updated_at = new Date();
         await order.save();
 
-        if (order_status === 'delivered') {
+        // Create revenue record when delivered
+        const isDelivered = (isNewModel && mappedStatus === 'DELIVERED') || (isOldModel && mappedStatus === 'delivered');
+        if (isDelivered) {
             try {
                 const axios = require('axios');
                 const BASE_URL = process.env.API_BASE_URL || 'http://localhost:9999';
@@ -478,7 +535,8 @@ const updateOrderStatus = async (req, res) => {
             order
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Error updating order status:', error);
+        res.status(500).json({ message: error.message || 'Internal server error' });
     }
 };
 
@@ -737,50 +795,95 @@ const getOrderStatistics = async (req, res) => {
 const getOrdersByShopId = async (req, res) => {
     try {
         const { shopId } = req.params;
-        const orderDetails = await OrderDetail.find()
-            .populate({
-                path: 'product_id',
-                match: { shop_id: shopId },
-                select: 'name price shop_id'
+        if (!shopId) {
+            return res.status(400).json({ message: 'Shop ID is required' });
+        }
+
+        // Try new model first (Order with shopId field)
+        const newModelOrders = await Order.find({ shopId })
+            .populate('userId', 'firstName lastName email phone')
+            .populate('shopId', 'name')
+            .populate('paymentMethodId', 'name paymentCode')
+            .populate('shippingMethodId', 'name')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        if (newModelOrders && newModelOrders.length > 0) {
+            // Format for frontend compatibility
+            const result = newModelOrders.map(order => ({
+                order: {
+                    _id: order._id,
+                    id: order._id,
+                    order_status: order.status?.toLowerCase() || 'pending',
+                    status: order.status,
+                    total_price: order.totalAmount,
+                    totalAmount: order.totalAmount,
+                    customer_id: order.userId,
+                    customerId: order.userId,
+                    created_at: order.createdAt,
+                    createdAt: order.createdAt,
+                    paymentStatus: order.paymentStatus,
+                    ...order
+                },
+                orderDetails: order.items || []
+            }));
+            return res.status(200).json(result);
+        }
+
+        // Fallback to old model (if exists)
+        try {
+            const orderDetails = await OrderDetail.find()
+                .populate({
+                    path: 'product_id',
+                    match: { $or: [{ shopId: shopId }, { shop_id: shopId }] },
+                    select: 'name price shopId shop_id'
+                });
+
+            const validOrderDetails = orderDetails.filter(detail => detail.product_id !== null);
+            const orderIds = [...new Set(validOrderDetails.map(detail => detail.order_id))];
+
+            if (orderIds.length === 0) {
+                return res.status(200).json([]);
+            }
+
+            const orders = await Order.find({
+                _id: { $in: orderIds },
+                is_delete: false
+            })
+                .populate({
+                    path: 'customer_id',
+                    model: 'users',
+                    select: 'firstName lastName email phone'
+                })
+                .populate('shipping_id')
+                .populate('payment_id')
+                .populate('discount_id')
+                .populate('coupon_id')
+                .populate('user_address_id')
+                .sort({ created_at: -1 });
+
+            const orderDetailsMap = {};
+            validOrderDetails.forEach(detail => {
+                if (!orderDetailsMap[detail.order_id]) {
+                    orderDetailsMap[detail.order_id] = [];
+                }
+                orderDetailsMap[detail.order_id].push(detail);
             });
 
-        const validOrderDetails = orderDetails.filter(detail => detail.product_id !== null);
-        const orderIds = [...new Set(validOrderDetails.map(detail => detail.order_id))];
-
-        const orders = await Order.find({
-            _id: { $in: orderIds },
-            is_delete: false
-        })
-            .populate({
-                path: 'customer_id',
-                model: 'users',
-                select: 'firstName lastName email phone'
-            })
-            .populate('shipping_id')
-            .populate('payment_id')
-            .populate('discount_id')
-            .populate('coupon_id')
-            .populate('user_address_id')
-            .sort({ created_at: -1 });
-
-        const orderDetailsMap = {};
-        validOrderDetails.forEach(detail => {
-            if (!orderDetailsMap[detail.order_id]) {
-                orderDetailsMap[detail.order_id] = [];
-            }
-            orderDetailsMap[detail.order_id].push(detail);
-        });
-
-        const result = orders.map(order => {
-            return {
+            const result = orders.map(order => ({
                 order,
                 orderDetails: orderDetailsMap[order._id] || []
-            };
-        });
+            }));
 
-        res.status(200).json(result);
+            return res.status(200).json(result);
+        } catch (oldModelError) {
+            // If old model also fails, return empty array
+            console.error('Error with old model:', oldModelError);
+            return res.status(200).json([]);
+        }
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Error in getOrdersByShopId:', error);
+        res.status(500).json({ message: error.message || 'Internal server error' });
     }
 };
 
@@ -1083,7 +1186,7 @@ async function getById(req, res, next) {
     let order
     if (isValidObjectId) {
       order = await Order.findById(id)
-        .populate('userId', 'firstName lastName email')
+        .populate('userId', 'firstName lastName email phone')
         .populate('shopId', 'name')
         .populate('paymentMethodId', 'name paymentCode')
         .populate('shippingMethodId', 'name')
@@ -1099,20 +1202,20 @@ async function getById(req, res, next) {
               { orderNumber: formattedOrderNumber }
             ]
           })
-            .populate('userId', 'firstName lastName email')
+            .populate('userId', 'firstName lastName email phone')
             .populate('shopId', 'name')
             .populate('paymentMethodId', 'name paymentCode')
             .populate('shippingMethodId', 'name')
         } else {
           order = await Order.findOne({ orderNumber: id })
-            .populate('userId', 'firstName lastName email')
+            .populate('userId', 'firstName lastName email phone')
             .populate('shopId', 'name')
             .populate('paymentMethodId', 'name paymentCode')
             .populate('shippingMethodId', 'name')
         }
       } else {
         order = await Order.findOne({ orderNumber: id })
-          .populate('userId', 'firstName lastName email')
+          .populate('userId', 'firstName lastName email phone')
           .populate('shopId', 'name')
           .populate('paymentMethodId', 'name paymentCode')
           .populate('shippingMethodId', 'name')

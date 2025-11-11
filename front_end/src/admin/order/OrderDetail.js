@@ -39,20 +39,39 @@ const OrderDetail = ({ orderId, onBack }) => {
         setLoading(true);
         const response = await ApiService.get(`/order/find/${orderId}`);
 
-        // Kiểm tra xem có phải thanh toán COD hay không
-        if (response.order.payment_id && response.order.payment_id.name) {
-          const paymentMethod = response.order.payment_id.name.toLowerCase();
-          setIsCodPayment(paymentMethod.includes('cod') || paymentMethod.includes('tiền mặt') || paymentMethod.includes('cash'));
+        // Handle both old model format { order, orderDetails } and new model format (order directly)
+        let order, orderDetails;
+        if (response.order) {
+          // Old model format
+          order = response.order;
+          orderDetails = response.orderDetails || [];
+        } else {
+          // New model format - order is the response itself
+          order = response;
+          orderDetails = response.items || [];
         }
 
-        setOrderData(response.order);
-        setOrderDetails(response.orderDetails || []);
-        setCurrentOrderStatus(response.order.order_status);
-        setCurrentPaymentStatus(response.order.status_id);
+        // Kiểm tra xem có phải thanh toán COD hay không
+        // Support both old model (payment_id) and new model (paymentMethodId, paymentCode)
+        const paymentMethod = order.payment_id?.name || order.paymentMethodId?.name || order.paymentCode || '';
+        const paymentMethodLower = paymentMethod.toLowerCase();
+        setIsCodPayment(
+          paymentMethodLower.includes('cod') || 
+          paymentMethodLower.includes('tiền mặt') || 
+          paymentMethodLower.includes('cash') ||
+          order.paymentCode === 'COD'
+        );
+
+        setOrderData(order);
+        setOrderDetails(orderDetails);
+        
+        // Map status fields for compatibility
+        setCurrentOrderStatus(order.order_status || order.status || 'pending');
+        setCurrentPaymentStatus(order.status_id || order.paymentStatus || 'pending');
 
       } catch (error) {
         console.error("Error fetching order data:", error);
-        setError('Lỗi khi tải dữ liệu đơn hàng: ' + error);
+        setError('Lỗi khi tải dữ liệu đơn hàng: ' + (error.message || error));
       } finally {
         setLoading(false);
       }
@@ -61,17 +80,38 @@ const OrderDetail = ({ orderId, onBack }) => {
     fetchOrderData();
   }, [orderId]);
 
-  // Extract customer ID more robustly from orderData
+  // Extract customer ID more robustly from orderData (support both old and new model)
   useEffect(() => {
-    if (orderData && orderData.customer_id) {
-      fetchCustomerData(orderData.customer_id);
+    if (orderData) {
+      const customer = orderData.customer_id || orderData.userId;
+      
+      // If customer is already populated (object with firstName, lastName, etc.), use it directly
+      if (customer && typeof customer === 'object' && (customer.firstName || customer.email)) {
+        setCustomerData(customer);
+      } else if (customer) {
+        // Only fetch if it's just an ID (string or ObjectId)
+        fetchCustomerData(customer);
+      }
     }
   }, [orderData]);
 
-  // New effect to fetch address data when user_address_id is available
+  // New effect to fetch address data when user_address_id is available (only for old model)
   useEffect(() => {
-    if (orderData && orderData.user_address_id) {
-      fetchAddressData(orderData.user_address_id);
+    if (orderData) {
+      // New model has shippingAddress embedded, no need to fetch
+      if (orderData.shippingAddress) {
+        // Use shippingAddress directly, no need to fetch
+        return;
+      }
+      // Old model: fetch from user_address_id
+      if (orderData.user_address_id) {
+        // Check if already populated
+        if (typeof orderData.user_address_id === 'object' && orderData.user_address_id.address_line1) {
+          setAddressData(orderData.user_address_id);
+        } else {
+          fetchAddressData(orderData.user_address_id);
+        }
+      }
     }
   }, [orderData]);
 
@@ -81,23 +121,39 @@ const OrderDetail = ({ orderId, onBack }) => {
       fetchProductDetails(orderDetails);
       // Add new function call to fetch variant details
       fetchVariantDetails(orderDetails);
-      // Add new function call to fetch shop details
-      fetchShopDetails(orderDetails);
     }
   }, [orderDetails]); // Only re-run when orderDetails changes
+
+  // Separate useEffect for fetching shop details (needs both orderData and orderDetails)
+  useEffect(() => {
+    if (orderData && orderDetails && orderDetails.length > 0) {
+      fetchShopDetails(orderDetails);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderData, orderDetails]); // Include orderData for shopId in new model
 
   const fetchOrderData = async () => {
     try {
       setLoading(true);
       const response = await ApiService.get(`/order/find/${orderId}`);
 
-      setOrderData(response.order);
-      setOrderDetails(response.orderDetails || []);
-      setCurrentStatus(response.order.order_status);
+      // Handle both old model format { order, orderDetails } and new model format (order directly)
+      let order, orderDetails;
+      if (response.order) {
+        order = response.order;
+        orderDetails = response.orderDetails || [];
+      } else {
+        order = response;
+        orderDetails = response.items || [];
+      }
+
+      setOrderData(order);
+      setOrderDetails(orderDetails);
+      setCurrentStatus(order.order_status || order.status || 'pending');
 
     } catch (error) {
       console.error("Error fetching order data:", error);
-      setError('Lỗi khi tải dữ liệu đơn hàng: ' + error);
+      setError('Lỗi khi tải dữ liệu đơn hàng: ' + (error.message || error));
     } finally {
       setLoading(false);
     }
@@ -182,14 +238,38 @@ const OrderDetail = ({ orderId, onBack }) => {
     try {
       const shopIds = [];
       
-      // First, collect all unique shop IDs from the products
+      // New model: Order has shopId at order level
+      if (orderData && orderData.shopId) {
+        const shopId = typeof orderData.shopId === 'object' 
+          ? (orderData.shopId._id || orderData.shopId.id)
+          : orderData.shopId;
+        if (shopId && !shopIds.includes(shopId)) {
+          shopIds.push(shopId);
+        }
+      }
+      
+      // Collect all unique shop IDs from the products (old and new model)
       orderDetails.forEach(item => {
-        if (item.product_id && item.product_id.shop_id) {
-          // Handle shop_id whether it's an object or string
-          const shopId = typeof item.product_id.shop_id === 'object' 
-            ? item.product_id.shop_id._id 
-            : item.product_id.shop_id;
-          
+        // New model: item has productId (not product_id)
+        const product = item.productId || item.product_id;
+        if (product) {
+          // Check for shopId (new model) or shop_id (old model)
+          const shopIdField = product.shopId || product.shop_id;
+          if (shopIdField) {
+            const shopId = typeof shopIdField === 'object' 
+              ? (shopIdField._id || shopIdField.id)
+              : shopIdField;
+            
+            if (shopId && !shopIds.includes(shopId)) {
+              shopIds.push(shopId);
+            }
+          }
+        }
+        // Also check if item itself has shopId (for new model items)
+        if (item.shopId) {
+          const shopId = typeof item.shopId === 'object' 
+            ? (item.shopId._id || item.shopId.id)
+            : item.shopId;
           if (shopId && !shopIds.includes(shopId)) {
             shopIds.push(shopId);
           }
@@ -201,7 +281,7 @@ const OrderDetail = ({ orderId, onBack }) => {
       
       await Promise.all(shopIds.map(async (shopId) => {
         try {
-          const shopInfo = await ApiService.get(`/shops/public/${shopId}`, false);
+          const shopInfo = await ApiService.get(`/shop/find/${shopId}`, false);
           if (shopInfo) {
             newShopData[shopId] = shopInfo;
           }
@@ -216,23 +296,50 @@ const OrderDetail = ({ orderId, onBack }) => {
     }
   };
 
-  // New function: Get shop name for a product
+  // New function: Get shop name for a product (support both old and new model)
   const getShopName = (productItem) => {
-    if (!productItem || !productItem.shop_id) {
-      return "Không xác định";
+    // Priority 1: New model - shopId is at order level and already populated
+    if (orderData && orderData.shopId) {
+      // If shopId is already populated (object with name), use it directly
+      if (typeof orderData.shopId === 'object' && orderData.shopId.name) {
+        return orderData.shopId.name;
+      }
+      // If shopId is an ID, check shopData
+      const shopId = typeof orderData.shopId === 'object' 
+        ? (orderData.shopId._id || orderData.shopId.id)
+        : orderData.shopId;
+      if (shopId && shopData[shopId]) {
+        return shopData[shopId].name;
+      }
     }
     
-    const shopId = typeof productItem.shop_id === 'object' 
-      ? productItem.shop_id._id 
-      : productItem.shop_id;
-    
-    if (shopData[shopId]) {
-      return shopData[shopId].name;
+    // Priority 2: Check productItem if provided
+    if (productItem) {
+      // Check for shopId (new model) or shop_id (old model)
+      const shopIdField = productItem.shopId || productItem.shop_id;
+      if (shopIdField) {
+        // If populated, use name directly
+        if (typeof shopIdField === 'object' && shopIdField.name) {
+          return shopIdField.name;
+        }
+        // If it's an ID, check shopData
+        const shopId = typeof shopIdField === 'object' 
+          ? (shopIdField._id || shopIdField.id)
+          : shopIdField;
+        if (shopId && shopData[shopId]) {
+          return shopData[shopId].name;
+        }
+      }
     }
     
-    // Fallback to product's shop_id.name if available
-    if (typeof productItem.shop_id === 'object' && productItem.shop_id.name) {
-      return productItem.shop_id.name;
+    // Fallback: Try to get from orderData.shopId again (in case shopData was just loaded)
+    if (orderData && orderData.shopId) {
+      const shopId = typeof orderData.shopId === 'object' 
+        ? (orderData.shopId._id || orderData.shopId.id)
+        : orderData.shopId;
+      if (shopId && shopData[shopId]) {
+        return shopData[shopId].name;
+      }
     }
     
     return "Không xác định";
@@ -515,8 +622,11 @@ const OrderDetail = ({ orderId, onBack }) => {
     );
   };
 
-  // Get image for an order item, considering variants
+  // Get image for an order item, considering variants (support both old and new model)
   const getItemImage = (item) => {
+    // New model: item.image is directly available
+    if (item.image) return item.image;
+    
     // Check if there's a variant with image
     if (item._id && variantDetails[item._id] &&
       variantDetails[item._id].images &&
@@ -546,18 +656,23 @@ const OrderDetail = ({ orderId, onBack }) => {
     return <div className="text-red-500 p-4">Không tìm thấy thông tin đơn hàng</div>;
   }
 
-  // Tính toán tổng tiền sản phẩm
-  const subtotal = orderDetails.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  // Tính toán tổng tiền sản phẩm (support both old and new model)
+  const subtotal = orderData.subtotal || orderDetails.reduce((sum, item) => {
+    // New model: items have totalPrice
+    if (item.totalPrice) return sum + item.totalPrice;
+    // Old model: calculate from price * quantity
+    return sum + ((item.price || item.unitPrice || 0) * (item.quantity || 0));
+  }, 0);
 
-  // Phí vận chuyển
-  const shippingCost = orderData.shipping_cost || (orderData.shipping_id?.price || 0);
+  // Phí vận chuyển (support both old and new model)
+  const shippingCost = orderData.shipping_cost || orderData.shippingFee || (orderData.shipping_id?.price || orderData.shippingMethodId?.fee || 0);
 
   // Giảm giá (nếu có)
   const discountAmount = orderData.discount_amount || 0;
   const couponAmount = orderData.coupon_amount || 0;
 
-  // Tổng thanh toán - sử dụng giá trị từ API hoặc tính toán nếu cần
-  const total = orderData.total_price || (subtotal + shippingCost - discountAmount - couponAmount);
+  // Tổng thanh toán - sử dụng giá trị từ API hoặc tính toán nếu cần (support both old and new model)
+  const total = orderData.total_price || orderData.totalAmount || (subtotal + shippingCost - (orderData.discount || discountAmount) - (orderData.couponAmount || couponAmount));
 
   return (
     <div className="flex-1 bg-white">
@@ -574,14 +689,14 @@ const OrderDetail = ({ orderId, onBack }) => {
           <h1 className="text-2xl font-bold text-gray-800">Đơn hàng #{orderData.id}</h1>
 
           {/* Trạng thái đơn hàng */}
-          <span className={`ml-3 mr-3 px-3 py-1 text-xs font-medium rounded ${getStatusClass(orderData.order_status)}`}>
-            {getOrderStatusText(orderData.order_status)}
+          <span className={`ml-3 mr-3 px-3 py-1 text-xs font-medium rounded ${getStatusClass(orderData.order_status || orderData.status?.toLowerCase())}`}>
+            {getOrderStatusText(orderData.order_status || orderData.status?.toLowerCase())}
           </span>
 
           {!isCodPayment && (
             <p className="flex items-center text-sm ml-3 mr-3 px-3 py-1 text-xs font-medium rounded bg-green-100 text-green-800">
-              <span className={orderData.status_id === 'paid' ? 'text-green-500' : 'text-yellow-500'}>
-                {orderData.status_id === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
+              <span className={(orderData.status_id === 'paid' || orderData.paymentStatus === 'PAID') ? 'text-green-500' : 'text-yellow-500'}>
+                {(orderData.status_id === 'paid' || orderData.paymentStatus === 'PAID') ? 'Đã thanh toán' : 'Chưa thanh toán'}
               </span>
             </p>
           )}
@@ -598,7 +713,10 @@ const OrderDetail = ({ orderId, onBack }) => {
 
         <div className="flex items-center space-x-3">
           {/* Status update controls for non-cancelled orders */}
-          {orderData.order_status !== 'cancelled' && (
+          {(() => {
+            const status = (orderData.order_status || orderData.status || '').toLowerCase();
+            return status !== 'cancelled';
+          })() && (
             <>
               <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
                 <div>
@@ -621,21 +739,24 @@ const OrderDetail = ({ orderId, onBack }) => {
               <button
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 onClick={handleUpdate}
-                disabled={isUpdating || currentOrderStatus === orderData.order_status}
+                disabled={isUpdating || currentOrderStatus === (orderData.order_status || orderData.status?.toLowerCase())}
               >
                 {isUpdating ? 'Đang cập nhật...' : 'Cập nhật'}
               </button>
 
               {/* Cancel order button (only for pending/processing) */}
-              {(orderData.order_status === 'pending' || orderData.order_status === 'processing') && (
-                <button
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                  onClick={handleCancelOrder}
-                  disabled={isUpdating}
-                >
-                  Hủy đơn
-                </button>
-              )}
+              {(() => {
+                const status = (orderData.order_status || orderData.status || '').toLowerCase();
+                return (status === 'pending' || status === 'processing' || status === 'confirmed') && (
+                  <button
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                    onClick={handleCancelOrder}
+                    disabled={isUpdating}
+                  >
+                    Hủy đơn
+                  </button>
+                );
+              })()}
               
               {/* Thêm nút đánh dấu đã hoàn tiền nếu cần hoàn tiền */}
               {orderData.need_pay_back && (
@@ -707,9 +828,9 @@ const OrderDetail = ({ orderId, onBack }) => {
           <div>
             Thời gian đặt hàng: {formatDate(orderData.created_at)}
           </div>
-          {orderData.order_delivered_at && (
+          {(orderData.order_delivered_at || orderData.deliveredAt) && (
             <div>
-              Thời gian giao hàng: {formatDate(orderData.order_delivered_at)}
+              Thời gian giao hàng: {formatDate(orderData.order_delivered_at || orderData.deliveredAt)}
             </div>
           )}
         </div>
@@ -719,16 +840,29 @@ const OrderDetail = ({ orderId, onBack }) => {
           <h2 className="text-xl font-semibold mb-4">Trạng thái đơn hàng</h2>
           <div className="bg-white rounded-md border border-gray-200 p-4">
             <div className="flex items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${orderData.order_status !== 'cancelled' ? 'bg-green-500 text-white' : 'bg-gray-300'}`}>1</div>
-              <div className={`flex-1 h-1 ${orderData.order_status === 'pending' || orderData.order_status === 'processing' || orderData.order_status === 'shipped' || orderData.order_status === 'delivered' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+              {(() => {
+                const status = (orderData.order_status || orderData.status || '').toLowerCase();
+                const isCancelled = status === 'cancelled';
+                const isPending = status === 'pending' || status === 'pending';
+                const isProcessing = status === 'processing' || status === 'confirmed';
+                const isShipped = status === 'shipped' || status === 'shipping';
+                const isDelivered = status === 'delivered';
+                
+                return (
+                  <>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${!isCancelled ? 'bg-green-500 text-white' : 'bg-gray-300'}`}>1</div>
+                    <div className={`flex-1 h-1 ${isPending || isProcessing || isShipped || isDelivered ? 'bg-green-500' : 'bg-gray-300'}`}></div>
 
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${orderData.order_status === 'processing' || orderData.order_status === 'shipped' || orderData.order_status === 'delivered' ? 'bg-green-500 text-white' : 'bg-gray-300'}`}>2</div>
-              <div className={`flex-1 h-1 ${orderData.order_status === 'shipped' || orderData.order_status === 'delivered' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isProcessing || isShipped || isDelivered ? 'bg-green-500 text-white' : 'bg-gray-300'}`}>2</div>
+                    <div className={`flex-1 h-1 ${isShipped || isDelivered ? 'bg-green-500' : 'bg-gray-300'}`}></div>
 
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${orderData.order_status === 'shipped' || orderData.order_status === 'delivered' ? 'bg-green-500 text-white' : 'bg-gray-300'}`}>3</div>
-              <div className={`flex-1 h-1 ${orderData.order_status === 'delivered' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isShipped || isDelivered ? 'bg-green-500 text-white' : 'bg-gray-300'}`}>3</div>
+                    <div className={`flex-1 h-1 ${isDelivered ? 'bg-green-500' : 'bg-gray-300'}`}></div>
 
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${orderData.order_status === 'delivered' ? 'bg-green-500 text-white' : 'bg-gray-300'}`}>4</div>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDelivered ? 'bg-green-500 text-white' : 'bg-gray-300'}`}>4</div>
+                  </>
+                );
+              })()}
             </div>
 
             <div className="flex justify-between mt-2 text-sm">
@@ -746,16 +880,19 @@ const OrderDetail = ({ orderId, onBack }) => {
               </div>
             </div>
 
-            {orderData.order_status === 'cancelled' && (
-              <div className="mt-4 p-3 bg-red-100 text-red-700 rounded text-center">
-                Đơn hàng đã bị hủy
-                {orderData.need_pay_back && (
-                  <div className="text-orange-600 font-medium mt-2">
-                    Cần hoàn tiền cho khách hàng
-                  </div>
-                )}
-              </div>
-            )}
+            {(() => {
+              const status = (orderData.order_status || orderData.status || '').toLowerCase();
+              return status === 'cancelled' && (
+                <div className="mt-4 p-3 bg-red-100 text-red-700 rounded text-center">
+                  Đơn hàng đã bị hủy
+                  {orderData.need_pay_back && (
+                    <div className="text-orange-600 font-medium mt-2">
+                      Cần hoàn tiền cho khách hàng
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
 
@@ -773,17 +910,17 @@ const OrderDetail = ({ orderId, onBack }) => {
                     <div className="w-16 h-16 rounded-md overflow-hidden">
                       <img 
                         src={getItemImage(item)} 
-                        alt={item.product_id?.name || "Product"} 
+                        alt={item.productName || item.product_id?.name || "Product"} 
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="ml-4 flex-grow">
-                      <h3 className="font-medium">{item.product_id?.name || "Sản phẩm"}</h3>
+                      <h3 className="font-medium">{item.productName || item.product_id?.name || "Sản phẩm"}</h3>
                       
                       {/* Hiển thị thông tin shop */}
                       <div className="flex items-center text-sm text-gray-600 mt-1">
                         <Store size={14} className="mr-1 text-blue-600" />
-                        <span>Cửa hàng: {getShopName(item.product_id)}</span>
+                        <span>Cửa hàng: {getShopName(item.productId || item.product_id)}</span>
                       </div>
                       
                       {/* Hiển thị thuộc tính biến thể */}
@@ -793,10 +930,10 @@ const OrderDetail = ({ orderId, onBack }) => {
                         <div className="text-sm text-gray-600">
                           <span>Số lượng: {item.quantity}</span>
                           <span className="mx-2">|</span>
-                          <span>Đơn giá: {formatPrice(item.price)}</span>
+                          <span>Đơn giá: {formatPrice(item.price || item.unitPrice || 0)}</span>
                         </div>
                         <div className="font-medium text-blue-600">
-                          {formatPrice(item.price * item.quantity)}
+                          {formatPrice(item.totalPrice || (item.price || item.unitPrice || 0) * (item.quantity || 0))}
                         </div>
                       </div>
                     </div>
@@ -821,12 +958,16 @@ const OrderDetail = ({ orderId, onBack }) => {
                 <CreditCard size={20} className="text-gray-600" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-800">{orderData.payment_id?.name || 'Phương thức thanh toán'}</h3>
+                <h3 className="font-medium text-gray-800">
+                  {orderData.payment_id?.name || orderData.paymentMethodId?.name || orderData.paymentCode || 'Phương thức thanh toán'}
+                </h3>
                 {!isCodPayment && (
                   <p className="flex items-center text-sm">
-                    <span className={`inline-block w-2 h-2 rounded-full mr-1 ${orderData.status_id === 'paid' ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
-                    <span className={orderData.status_id === 'paid' ? 'text-green-500' : 'text-yellow-500'}>
-                      {orderData.status_id === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                    <span className={`inline-block w-2 h-2 rounded-full mr-1 ${
+                      (orderData.status_id === 'paid' || orderData.paymentStatus === 'PAID') ? 'bg-green-500' : 'bg-yellow-500'
+                    }`}></span>
+                    <span className={(orderData.status_id === 'paid' || orderData.paymentStatus === 'PAID') ? 'text-green-500' : 'text-yellow-500'}>
+                      {(orderData.status_id === 'paid' || orderData.paymentStatus === 'PAID') ? 'Đã thanh toán' : 'Chưa thanh toán'}
                     </span>
                   </p>
                 )}
@@ -838,7 +979,8 @@ const OrderDetail = ({ orderId, onBack }) => {
                 )}
                 
                 {/* Hiển thị trạng thái hoàn tiền */}
-                {orderData.status_id === 'paid' && orderData.order_status === 'cancelled' && (
+                {((orderData.status_id === 'paid' || orderData.paymentStatus === 'PAID') && 
+                  (orderData.order_status === 'cancelled' || orderData.status === 'CANCELLED')) && (
                   <div className="mt-2">
                     <p className={`flex items-center text-sm ${orderData.need_pay_back ? 'text-orange-600' : 'text-green-600'}`}>
                       <span className={`inline-block w-2 h-2 rounded-full mr-1 ${orderData.need_pay_back ? 'bg-orange-500' : 'bg-green-500'}`}></span>
@@ -977,7 +1119,9 @@ const OrderDetail = ({ orderId, onBack }) => {
                     <Truck size={20} className="text-red-500" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-800">{orderData.shipping_id?.name || 'Giao hàng tiêu chuẩn'}</h3>
+                    <h3 className="font-medium text-gray-800">
+                      {orderData.shipping_id?.name || orderData.shippingMethodId?.name || 'Giao hàng tiêu chuẩn'}
+                    </h3>
                     <p className="text-gray-600 text-sm">Dự kiến 1-3 ngày</p>
                   </div>
                   <div className="ml-auto font-semibold">{formatPrice(shippingCost)}</div>
@@ -998,14 +1142,19 @@ const OrderDetail = ({ orderId, onBack }) => {
                 <div className="flex items-start mb-4">
                   <div className="mr-3">
                     <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-                      {(customerData?.firstName || orderData.customer_id?.firstName || 'A').charAt(0)}
+                      {(customerData?.firstName || orderData.customer_id?.firstName || orderData.userId?.firstName || 'A').charAt(0)}
                     </div>
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-800">
-                      {customerData?.firstName || orderData.customer_id?.firstName || ''} {customerData?.lastName || orderData.customer_id?.lastName || ''}
+                      {customerData?.firstName || orderData.customer_id?.firstName || orderData.userId?.firstName || ''} {customerData?.lastName || orderData.customer_id?.lastName || orderData.userId?.lastName || ''}
                     </h3>
-                    <p className="text-gray-500 text-sm">ID: {orderData.customer_id?._id?.substring(0, 8) || 'N/A'}</p>
+                    <p className="text-gray-500 text-sm">ID: {(() => {
+                      const customer = orderData.customer_id || orderData.userId;
+                      if (!customer) return 'N/A';
+                      const id = typeof customer === 'object' ? (customer._id || customer.id) : customer;
+                      return id ? id.toString().substring(0, 8) : 'N/A';
+                    })()}</p>
                   </div>
                 </div>
                 <div className="space-y-2 mt-4">
@@ -1013,13 +1162,13 @@ const OrderDetail = ({ orderId, onBack }) => {
                     <svg className="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                     </svg>
-                    <span className="text-gray-600">{customerData?.email || orderData.customer_id?.email || 'Email không có sẵn'}</span>
+                    <span className="text-gray-600">{customerData?.email || orderData.customer_id?.email || orderData.userId?.email || 'Email không có sẵn'}</span>
                   </div>
                   <div className="flex items-center">
                     <svg className="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                     </svg>
-                    <span className="text-gray-600">{customerData?.phone || orderData.customer_id?.phone || 'Số điện thoại không có sẵn'}</span>
+                    <span className="text-gray-600">{customerData?.phone || orderData.customer_id?.phone || orderData.userId?.phone || 'Số điện thoại không có sẵn'}</span>
                   </div>
                 </div>
               </div>
@@ -1033,13 +1182,24 @@ const OrderDetail = ({ orderId, onBack }) => {
               </h2>
               <div className="bg-white rounded-md border border-gray-200 p-4">
                 <p className="text-gray-700">
-                  {addressData ? formatAddress(addressData) : (
-                    orderData.user_address_id ? `Đang tải địa chỉ...` : 'Địa chỉ giao hàng không có sẵn'
-                  )}
+                  {(() => {
+                    // New model: shippingAddress is embedded
+                    if (orderData.shippingAddress) {
+                      const addr = orderData.shippingAddress;
+                      return `${addr.address_line1 || ''}${addr.address_line2 ? ', ' + addr.address_line2 : ''}, ${addr.ward || ''}, ${addr.district || ''}, ${addr.city || ''}`.trim();
+                    }
+                    // Old model: fetch from user_address_id
+                    if (addressData) return formatAddress(addressData);
+                    if (orderData.user_address_id) return 'Đang tải địa chỉ...';
+                    return 'Địa chỉ giao hàng không có sẵn';
+                  })()}
                 </p>
-                {addressData && addressData.phone && (
-                  <p className="text-gray-500 text-sm mt-2">
-                    Số điện thoại: {addressData.phone}
+                <p className="text-gray-500 text-sm mt-2">
+                  Số điện thoại: {orderData.shippingAddress?.phone || addressData?.phone || 'N/A'}
+                </p>
+                {orderData.shippingAddress?.recipientName && (
+                  <p className="text-gray-500 text-sm mt-1">
+                    Người nhận: {orderData.shippingAddress.recipientName}
                   </p>
                 )}
               </div>
