@@ -26,6 +26,7 @@ const ProductManagement = () => {
 
   const { isLoggedIn, userRoles } = useAuth();
   const isAdmin = userRoles?.some(role => role === 'ROLE_ADMIN' || role === 'ADMIN');
+  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn || !isAdmin) {
